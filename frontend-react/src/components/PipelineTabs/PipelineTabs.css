@@ -1,0 +1,147 @@
+/* ... (existing styles) */
+
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 1rem 0;
+}
+
+.ml-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ml-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.ml-controls .pane-input {
+  flex: 1;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.metric-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+}
+
+.preview-table-container {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--card-bg);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+th:last-child, td:last-child {
+  border-right: none;
+}
+
+th {
+  background: var(--bg-color);
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background: rgba(37, 99, 235, 0.02);
+}
+
+.metric-v {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.metric-k {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.slider-container input {
+  width: 100%;
+  max-width: 300px;
+}
+
+.warning-banner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.pane-textarea {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.insights-output h3 {
+  margin-bottom: 1.5rem;
+  color: var(--accent-color);
+}
+
+.insights-content p {
+  margin-bottom: 1rem;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.stat-chart-container h4 {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,122 @@
+.upload-container {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.upload-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.upload-header-row .section-header {
+  margin: 0;
+  flex: 1;
+}
+
+.auto-process-toggle {
+  background: var(--card-bg);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+}
+
+.management-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.upload-dropzone.compact {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
+.upload-dropzone.compact .upload-icon {
+  margin-bottom: 0;
+}
+
+.dropzone-text h3 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.dropzone-text p {
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.datasets-list-container h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.datasets-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.dataset-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.dataset-pill:hover {
+  border-color: var(--accent-color);
+  color: var(--text-primary);
+}
+
+.dataset-pill.active {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.status-icon {
+  margin-left: 0.25rem;
+}
+
+.status-icon.success {
+  color: var(--success);
+}
+
+.active-dataset-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .management-grid {
+    grid-template-columns: 1fr;
+  }
+}

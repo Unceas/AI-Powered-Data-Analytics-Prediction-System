@@ -1,0 +1,96 @@
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-color);
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pipeline-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tabs-header {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--card-bg);
+  padding: 0.4rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.tab-btn:hover {
+  background: var(--bg-color);
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  background: var(--accent-color);
+  color: white;
+}
+
+.tab-content {
+  min-height: 400px;
+}
+
+.placeholder-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-secondary);
+}
+
+.placeholder-tab h3 {
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .tabs-header {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .tab-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    text-align: center;
+  }
+}
