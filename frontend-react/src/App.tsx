@@ -13,6 +13,11 @@ import './App.css';
 
 import type { Dataset } from './types';
 
+const getTimestamp = () => {
+  const now = new Date();
+  return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}]`;
+};
+
 function App() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>(null);
@@ -22,20 +27,33 @@ function App() {
   const activeDataset = datasets.find(d => d.id === activeDatasetId);
 
   const handleFileUpload = async (file: File, autoProcess: boolean) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    
-    // Initial stats parsing
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split('\n').filter(l => l.trim() !== '');
-      const headers = lines[0]?.split(',') || [];
-      
+    const validExt = ['.csv', '.xls', '.xlsx'];
+    const isValid = validExt.some(ext => file.name.toLowerCase().endsWith(ext));
+    if (!isValid) {
+      alert('Please upload a valid CSV or Excel file.');
+      return;
+    }
+
+    const maxFileSize = 10 * 1024 * 1024;
+    if (file.size > maxFileSize) {
+      alert('Please upload a file smaller than 10 MB.');
+      return;
+    }
+
+    const id = crypto.randomUUID();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await api.post('/upload-csv', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
       const stats = {
-        rows: lines.length - 1,
-        columns: headers.length,
+        rows: response.data.rows,
+        columns: response.data.columns.length,
         nulls: 0,
-        num_cols: headers.length,
+        num_cols: response.data.columns.length,
         cat_cols: 0
       };
 
@@ -44,9 +62,10 @@ function App() {
         name: file.name,
         file,
         stats,
-        status: { isLoaded: true, isProcessed: false, isAnalyzed: false },
+        status: { isLoaded: true, isProcessed: false, isAnalyzed: false, isModelTrained: false, isInsightsGenerated: false },
         processedData: null,
-        analyticsData: null
+        analyticsData: null,
+        logs: [{ timestamp: getTimestamp(), message: `Dataset uploaded: ${file.name}` }]
       };
 
       setDatasets(prev => [...prev, newDataset]);
@@ -55,8 +74,10 @@ function App() {
       if (autoProcess) {
         await triggerAutoProcess(id, file);
       }
-    };
-    reader.readAsText(file);
+    } catch (error) {
+      console.error('Dataset upload failed', error);
+      alert('Dataset upload failed. Please check the file and try again.');
+    }
   };
 
   const triggerAutoProcess = async (id: string, file: File) => {
@@ -77,7 +98,12 @@ function App() {
       
       setDatasets(prev => prev.map(ds => 
         ds.id === id 
-          ? { ...ds, processedData: response.data, status: { ...ds.status, isProcessed: true } }
+          ? { 
+              ...ds, 
+              processedData: response.data, 
+              status: { ...ds.status, isProcessed: true },
+              logs: [...ds.logs, { timestamp: getTimestamp(), message: 'Cleaning complete (Auto-processed)' }]
+            }
           : ds
       ));
     } catch (error) {
@@ -92,6 +118,20 @@ function App() {
         const updates: Partial<Dataset> = { status: newStatus };
         if (statusKey === 'isProcessed') updates.processedData = data;
         if (statusKey === 'isAnalyzed') updates.analyticsData = data;
+        
+        if (value && !ds.status[statusKey]) {
+          const logMsgs: Record<string, string> = {
+            'isProcessed': 'Cleaning complete',
+            'isAnalyzed': 'Analytics generated',
+            'isModelTrained': 'Model inference executed',
+            'isInsightsGenerated': 'AI insights generated'
+          };
+          const msg = logMsgs[statusKey as string];
+          if (msg) {
+            updates.logs = [...ds.logs, { timestamp: getTimestamp(), message: msg }];
+          }
+        }
+        
         return { ...ds, ...updates };
       }
       return ds;
@@ -104,7 +144,7 @@ function App() {
     { id: 'ml', label: '🤖 Machine Learning' }
   ];
 
-  const pipelineStatus = activeDataset?.status || { isLoaded: false, isProcessed: false, isAnalyzed: false };
+  const pipelineStatus = activeDataset?.status || { isLoaded: false, isProcessed: false, isAnalyzed: false, isModelTrained: false, isInsightsGenerated: false };
 
   return (
     <div className="app-container">
@@ -156,7 +196,10 @@ function App() {
                     />
                   )}
                   {activeTab === 'ml' && (
-                    <MachineLearning file={activeDataset.file} />
+                    <MachineLearning 
+                      file={activeDataset.file} 
+                      onModelTrained={() => updateDatasetStatus(activeDataset.id, 'isModelTrained', true)}
+                    />
                   )}
                 </div>
               </div>
@@ -169,13 +212,17 @@ function App() {
             dataStats={activeDataset?.stats}
             pipelineStatus={pipelineStatus}
             analyticsData={activeDataset?.analyticsData}
+            logs={activeDataset?.logs || []}
           />
         )}
 
         {currentView === 'settings' && <Settings />}
       </main>
 
-      <AIInsightsBubble datasets={datasets} />
+      <AIInsightsBubble 
+        datasets={datasets} 
+        onInsightsGenerated={(id) => updateDatasetStatus(id, 'isInsightsGenerated', true)} 
+      />
     </div>
   );
 }

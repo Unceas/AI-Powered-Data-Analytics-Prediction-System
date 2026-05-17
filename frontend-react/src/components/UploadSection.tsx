@@ -2,12 +2,7 @@ import { useRef, useState } from 'react';
 import { UploadCloud, FileText, CheckCircle, Clock } from 'lucide-react';
 import './UploadSection.css';
 
-interface Dataset {
-  id: string;
-  name: string;
-  status: { isLoaded: boolean; isProcessed: boolean; isAnalyzed: boolean };
-  stats: any;
-}
+import type { Dataset } from '../types';
 
 interface UploadSectionProps {
   onFileUpload: (file: File, autoProcess: boolean) => void;
@@ -35,10 +30,13 @@ export function UploadSection({ onFileUpload, datasets, activeDatasetId, onSelec
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
-      if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+      const validExt = ['.csv', '.xls', '.xlsx'];
+      const isValid = validExt.some(ext => file.name.toLowerCase().endsWith(ext)) || file.type.includes('spreadsheet') || file.type.includes('csv') || file.type.includes('excel');
+      
+      if (isValid) {
         onFileUpload(file, autoProcess);
       } else {
-        alert('Please upload a valid CSV file.');
+        alert('Please upload a valid CSV or Excel file.');
       }
     }
   };
@@ -77,15 +75,15 @@ export function UploadSection({ onFileUpload, datasets, activeDatasetId, onSelec
         >
           <input 
             type="file" 
-            accept=".csv" 
+            accept=".csv,.xls,.xlsx" 
             ref={fileInputRef} 
             onChange={handleFileChange} 
             style={{ display: 'none' }} 
           />
           <UploadCloud className="upload-icon" size={24} />
           <div className="dropzone-text">
-            <h3>Add New Dataset</h3>
-            <p>Click or drag CSV here</p>
+            <h3>Upload CSV / Excel Dataset</h3>
+            <p>Supports .csv .xlsx .xls</p>
           </div>
         </div>
 
@@ -116,9 +114,9 @@ export function UploadSection({ onFileUpload, datasets, activeDatasetId, onSelec
             Currently Analyzing: {activeDataset.name}
           </div>
           
-          <div className="stats-grid">
+          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             <div className="stat-card">
-              <div className="stat-value">{activeDataset.stats.rows}</div>
+              <div className="stat-value">{activeDataset.stats.rows ? activeDataset.stats.rows.toLocaleString() : 0}</div>
               <div className="stat-label">Rows</div>
             </div>
             <div className="stat-card">
@@ -126,16 +124,12 @@ export function UploadSection({ onFileUpload, datasets, activeDatasetId, onSelec
               <div className="stat-label">Columns</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">{activeDataset.stats.nulls}</div>
-              <div className="stat-label">Missing</div>
+              <div className="stat-value">{((activeDataset.stats.nulls / (activeDataset.stats.rows * activeDataset.stats.columns)) * 100 || 0).toFixed(1)}%</div>
+              <div className="stat-label">Missing Values</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">{activeDataset.stats.num_cols}</div>
-              <div className="stat-label">Numeric</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-value">{activeDataset.stats.cat_cols}</div>
-              <div className="stat-label">Categorical</div>
+              <div className="stat-value">{activeDataset.status.isProcessed ? activeDataset.stats.cat_cols : 'Pending'}</div>
+              <div className="stat-label">Features Encoded</div>
             </div>
           </div>
         </div>

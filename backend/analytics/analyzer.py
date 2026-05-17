@@ -1,45 +1,53 @@
 import pandas as pd
 import numpy as np
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Optional
 
-def analyze_dataframe(df: pd.DataFrame) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, (np.integer, np.floating)):
+        value = value.item()
+    if isinstance(value, float) and (pd.isna(value) or np.isinf(value)):
+        return None
+    if pd.isna(value):
+        return None
+    return value
+
+
+def analyze_dataframe(df: pd.DataFrame) -> Tuple[Dict[str, Any], Optional[Dict[str, Any]], Optional[Dict[str, Any]], Dict[str, Any]]:
     """
     Computes descriptive statistics, correlation matrix, and categorical summaries for a given DataFrame.
     """
     # Descriptive Statistics
-    desc_stats = df.describe().to_dict()
-    
-    # Replace NaN/Infinity with None for JSON serialization
-    for col in desc_stats:
-        for stat in desc_stats[col]:
-            val = desc_stats[col][stat]
-            if pd.isna(val) or np.isinf(val):
-                desc_stats[col][stat] = None
+    desc_stats = _json_safe(df.describe().to_dict()) if not df.empty else {}
 
     # Correlation Matrix (only for numeric columns)
     num_df = df.select_dtypes(include=[np.number])
     corr_matrix = None
     if not num_df.empty:
-        corr_df = num_df.corr().replace({np.nan: None})
-        corr_matrix = corr_df.to_dict()
+        corr_df = num_df.replace([np.inf, -np.inf], np.nan).corr()
+        corr_matrix = _json_safe(corr_df.to_dict())
         
     # Categorical Summaries
-    cat_df = df.select_dtypes(include=['object', 'category'])
+    cat_df = df.select_dtypes(include=['object', 'category', 'str'])
     cat_summaries = None
     if not cat_df.empty:
         cat_summaries = {}
         for col in cat_df.columns:
-            val_counts = cat_df[col].value_counts().head(10).to_dict()
+            val_counts = _json_safe(cat_df[col].value_counts().head(10).to_dict())
             cat_summaries[col] = {
                 "unique_count": int(cat_df[col].nunique()),
                 "top_values": val_counts
             }
             
-    distributions = {}
+    distributions: Dict[str, Any] = {}
     try:
         numeric_cols = df.select_dtypes(include=['number']).columns
         for col in numeric_cols:
-            s = df[col].dropna()
+            s = df[col].replace([np.inf, -np.inf], np.nan).dropna()
             if s.empty:
                 distributions[col] = {"bins": [], "counts": [], "min": None, "max": None}
                 continue

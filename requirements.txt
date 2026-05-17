@@ -1,12 +1,12 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 pandas
 numpy
 scikit-learn
-streamlit
 groq
 python-multipart
 python-dotenv
 requests
 httpx
+openpyxl

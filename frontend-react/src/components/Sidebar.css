@@ -1,5 +1,7 @@
 .sidebar {
   background-color: var(--sidebar-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-right: 1px solid var(--sidebar-border);
   height: 100vh;
   display: flex;

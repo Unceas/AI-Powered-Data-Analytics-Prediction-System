@@ -1,13 +1,13 @@
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 
 class ProcessingConfig(BaseModel):
-    handle_missing: str = "drop" # options: "drop", "mean", "median", "mode", "constant"
+    handle_missing: Literal["drop", "mean", "median", "mode", "constant"] = "drop"
     missing_constant: Optional[str] = None
     scale_features: bool = False
-    scaling_method: str = "standard" # options: "standard", "minmax"
+    scaling_method: Literal["standard", "minmax"] = "standard"
     encode_categorical: bool = False
-    encoding_method: str = "onehot" # options: "onehot", "label"
+    encoding_method: Literal["onehot", "label"] = "onehot"
 
 class ProcessingResponse(BaseModel):
     status: str

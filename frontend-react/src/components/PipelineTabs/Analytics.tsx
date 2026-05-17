@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Sparkles } from 'lucide-react';
 import api from '../../utils/api';
 import { 
   BarChart, 
@@ -16,11 +17,85 @@ interface AnalyticsProps {
   file: File;
   onAnalyzed: (data: any) => void;
   cachedData: any;
+  onInsightsGenerated?: () => void;
 }
 
-export function Analytics({ file, onAnalyzed, cachedData }: AnalyticsProps) {
+export function Analytics({ file, onAnalyzed, cachedData, onInsightsGenerated }: AnalyticsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<any>(cachedData);
+  const [quickInsight, setQuickInsight] = useState<string | null>(null);
+  const [typedQuickInsight, setTypedQuickInsight] = useState('');
+  const [isGeneratingQuick, setIsGeneratingQuick] = useState(false);
+
+  useEffect(() => {
+    setData(cachedData);
+  }, [cachedData]);
+
+  const generateQuickInsight = useCallback(async (analyticsData: any) => {
+    setIsGeneratingQuick(true);
+    try {
+      const response = await api.post('/generate-insights', {
+        analysis_data: analyticsData,
+        context: 'You are an AI data assistant. Provide a single, punchy 1-2 line summary of the most interesting pattern in this dataset. Be very concise and do not use bullet points.'
+      });
+      const text = response.data.insights;
+      setQuickInsight(text);
+      if (onInsightsGenerated) onInsightsGenerated();
+      
+      let i = 0;
+      setTypedQuickInsight('');
+      const interval = setInterval(() => {
+        setTypedQuickInsight(() => text.substring(0, i + 1));
+        i++;
+        if (i >= text.length) clearInterval(interval);
+      }, 5);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsGeneratingQuick(false);
+    }
+  }, [onInsightsGenerated]);
+
+  useEffect(() => {
+    if (data && !quickInsight && !isGeneratingQuick) {
+      generateQuickInsight(data);
+    }
+  }, [data, generateQuickInsight, isGeneratingQuick, quickInsight]);
+
+  const renderCorrelationMatrix = (matrix: any) => {
+    if (!matrix) return null;
+    const cols = Object.keys(matrix);
+    return (
+      <div className="correlation-heatmap" style={{ overflowX: 'auto', marginTop: '1rem', paddingBottom: '1rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '0.75rem', textAlign: 'left', background: 'var(--bg-color)', borderBottom: '1px solid var(--border-color)' }}>Feature</th>
+              {cols.map(c => <th key={c} style={{ padding: '0.75rem', background: 'var(--bg-color)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>{c.substring(0,10)}..</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {cols.map(row => (
+              <tr key={row}>
+                <td style={{ padding: '0.5rem', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid var(--border-color)' }}>{row}</td>
+                {cols.map(col => {
+                  const val = matrix[row][col];
+                  if (val === null || val === undefined) return <td key={col} style={{ border: '1px solid var(--border-color)' }}>-</td>;
+                  const absVal = Math.abs(val);
+                  const bgColor = val > 0 ? `rgba(239, 68, 68, ${absVal})` : `rgba(59, 130, 246, ${absVal})`;
+                  return (
+                    <td key={col} style={{ backgroundColor: bgColor, border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', color: absVal > 0.5 ? 'white' : 'inherit' }}>
+                      {val.toFixed(2)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   useEffect(() => {
     setData(cachedData);
@@ -90,6 +165,19 @@ export function Analytics({ file, onAnalyzed, cachedData }: AnalyticsProps) {
       </button>
 
       {data && (
+        <div className="quick-ai-summary" style={{ marginTop: '1.5rem', marginBottom: '2rem', padding: '1.25rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '0.75rem', borderLeft: '4px solid var(--accent-color)' }}>
+           <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--accent-color)' }}>
+              <Sparkles size={18} /> InsightGrid Auto-Analysis
+           </h4>
+           {isGeneratingQuick && !quickInsight ? (
+             <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }} className="pulse-text">Analyzing statistical patterns...</p>
+           ) : (
+             <p style={{ lineHeight: 1.6 }}>{typedQuickInsight}<span className="cursor-blink">|</span></p>
+           )}
+        </div>
+      )}
+
+      {data && (
         <div className="analytics-results">
           <div className="section-header">Descriptive Statistics</div>
           <div className="preview-table-container">
@@ -113,11 +201,20 @@ export function Analytics({ file, onAnalyzed, cachedData }: AnalyticsProps) {
             </table>
           </div>
 
+          {data.correlation_matrix && (
+            <>
+              <div className="section-header" style={{marginTop: '2rem'}}>Correlation Heatmap</div>
+              <div className="card">
+                 {renderCorrelationMatrix(data.correlation_matrix)}
+              </div>
+            </>
+          )}
+
           {data.categorical_summaries && (
             <>
               <div className="section-header" style={{marginTop: '2rem'}}>Categorical Feature Summaries</div>
               <div className="charts-grid">
-                {Object.entries(data.categorical_summaries).map(([feat, info]) => renderCategoricalChart(feat, info))}
+                {Object.entries(data.categorical_summaries).map(([feat, info]) => renderCategoricalChart(feat, info as any))}
               </div>
             </>
           )}

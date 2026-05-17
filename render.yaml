@@ -1,0 +1,19 @@
+# Render Blueprint — defines the backend web service
+# Docs: https://docs.render.com/blueprints
+services:
+  - type: web
+    name: insightgrid-api
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false  # You must set this manually in the Render dashboard
+      - key: APP_CORS_ORIGINS
+        sync: false  # Set to your Vercel frontend URL, e.g. https://insightgrid.vercel.app
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+    healthCheckPath: /health
+    autoDeploy: true

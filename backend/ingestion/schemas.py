@@ -1,5 +1,5 @@
 from pydantic import BaseModel, HttpUrl
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal
 
 class IngestionResponse(BaseModel):
     status: str
@@ -10,7 +10,7 @@ class IngestionResponse(BaseModel):
 
 class APIIngestionRequest(BaseModel):
     url: HttpUrl
-    method: str = "GET"
+    method: Literal["GET", "POST", "get", "post"] = "GET"
     headers: Optional[Dict[str, str]] = None
     params: Optional[Dict[str, str]] = None
     data_key: Optional[str] = None  # Key in JSON response where the list of records is stored

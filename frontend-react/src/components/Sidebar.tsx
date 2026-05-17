@@ -16,6 +16,8 @@ interface SidebarProps {
     isLoaded: boolean;
     isProcessed: boolean;
     isAnalyzed: boolean;
+    isModelTrained: boolean;
+    isInsightsGenerated: boolean;
   };
   currentView: string;
   onNavigate: (view: string) => void;
@@ -30,7 +32,7 @@ export function Sidebar({ status, currentView, onNavigate }: SidebarProps) {
       <div className="sidebar-header">
         <div className="logo-container">
           <Database className="logo-icon" size={24} />
-          {isExpanded && <span className="logo-text">AutoData</span>}
+          {isExpanded && <span className="logo-text">InsightGrid</span>}
         </div>
         <button 
           className="toggle-btn" 
@@ -45,17 +47,29 @@ export function Sidebar({ status, currentView, onNavigate }: SidebarProps) {
         <div className="nav-section">
           {isExpanded && <h3 className="section-title">Pipeline Status</h3>}
           <ul className="status-list">
-            <li className={`status-item ${status.isLoaded ? 'active' : ''}`} title="Dataset Loaded">
+            <li className={`status-item ${status.isLoaded ? 'active' : ''}`} title="Dataset Parsed">
               <span className="status-indicator"></span>
-              {isExpanded && <span>Dataset Loaded</span>}
+              {isExpanded && <span>✓ CSV/Excel Parsed</span>}
             </li>
-            <li className={`status-item ${status.isProcessed ? 'active' : ''}`} title="Data Processed">
+            <li className={`status-item ${status.isProcessed ? 'active' : ''}`} title="Null Handling">
               <span className="status-indicator"></span>
-              {isExpanded && <span>Data Processed</span>}
+              {isExpanded && <span>✓ Null Handling Completed</span>}
             </li>
-            <li className={`status-item ${status.isAnalyzed ? 'active' : ''}`} title="Analyzed">
+            <li className={`status-item ${status.isProcessed ? 'active' : ''}`} title="Feature Encoding">
               <span className="status-indicator"></span>
-              {isExpanded && <span>Analyzed</span>}
+              {isExpanded && <span>✓ Feature Encoding Applied</span>}
+            </li>
+            <li className={`status-item ${status.isAnalyzed ? 'active' : ''}`} title="Analytics Generated">
+              <span className="status-indicator"></span>
+              {isExpanded && <span>✓ Analytics Generated</span>}
+            </li>
+            <li className={`status-item ${status.isModelTrained ? 'active' : ''}`} title="Model Trained">
+              <span className="status-indicator"></span>
+              {isExpanded && <span>✓ Model Trained</span>}
+            </li>
+            <li className={`status-item ${status.isInsightsGenerated ? 'active' : ''}`} title="AI Insights">
+              <span className="status-indicator"></span>
+              {isExpanded && <span>✓ AI Insights Generated</span>}
             </li>
           </ul>
         </div>

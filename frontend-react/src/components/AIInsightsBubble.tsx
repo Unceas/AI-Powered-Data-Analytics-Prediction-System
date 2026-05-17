@@ -1,34 +1,65 @@
-import { useState } from 'react';
-import { Sparkles, X, ChevronRight, FileText } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Sparkles, X, ChevronRight, FileText, Send } from 'lucide-react';
 import api from '../utils/api';
 import './AIInsightsBubble.css';
 import type { Dataset } from '../types';
 
 interface AIInsightsBubbleProps {
   datasets: Dataset[];
+  onInsightsGenerated?: (id: string) => void;
 }
 
-export function AIInsightsBubble({ datasets }: AIInsightsBubbleProps) {
+interface ChatMessage {
+  role: 'assistant' | 'user';
+  content: string;
+}
+
+export function AIInsightsBubble({ datasets, onInsightsGenerated }: AIInsightsBubbleProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [insights, setInsights] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedDataset = datasets.find(d => d.id === selectedId);
 
-  const generateInsights = async () => {
-    if (!selectedDataset?.analyticsData) return;
+  useEffect(() => {
+    if (selectedDataset && selectedDataset.status.isAnalyzed && messages.length === 0) {
+      setMessages([{
+        role: 'assistant',
+        content: `Hi! I'm Grok. I've looked at **${selectedDataset.name}** (${selectedDataset.stats.rows.toLocaleString()} rows, ${selectedDataset.stats.columns} columns).\n\nWhat would you like to know about it?`
+      }]);
+    } else if (!selectedDataset) {
+      setMessages([]);
+    }
+  }, [selectedDataset, messages.length]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!inputValue.trim() || !selectedDataset?.analyticsData) return;
     
+    const newMessages: ChatMessage[] = [...messages, { role: 'user', content: inputValue }];
+    setMessages(newMessages);
+    setInputValue('');
     setIsLoading(true);
+    
     try {
+      const chatHistory = newMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
       const response = await api.post('/generate-insights', {
         analysis_data: selectedDataset.analyticsData,
-        context: 'You are a senior data scientist. Identify the top 3 actionable insights from this dataset. Be specific, concise, and business-focused.'
+        context: `You are Grok, an expert AI data analyst assistant. The user is asking questions about the dataset. Respond conversationally, concisely, and use the data context to answer.\n\nChat History:\n${chatHistory}`
       });
-      setInsights(response.data.insights);
+      
+      setMessages([...newMessages, { role: 'assistant', content: response.data.insights }]);
+      if (onInsightsGenerated) onInsightsGenerated(selectedDataset.id);
     } catch (error) {
-      console.error('AI Insights failed', error);
-      alert('Failed to generate insights. Ensure analytics are generated for this dataset.');
+      console.error('AI Chat failed', error);
+      setMessages([...newMessages, { role: 'assistant', content: 'Oops! I encountered an error while trying to respond.' }]);
     } finally {
       setIsLoading(false);
     }
@@ -39,7 +70,7 @@ export function AIInsightsBubble({ datasets }: AIInsightsBubbleProps) {
       <button 
         className={`ai-bubble ${isOpen ? 'active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
-        title="AI Insights"
+        title="Chat with Grok"
       >
         <Sparkles size={24} />
       </button>
@@ -48,7 +79,7 @@ export function AIInsightsBubble({ datasets }: AIInsightsBubbleProps) {
         <div className="overlay-header">
           <div className="header-title">
             <Sparkles size={20} className="text-accent" />
-            <span>AI Insights Assistant</span>
+            <span>Chat with Grok</span>
           </div>
           <button className="close-btn" onClick={() => setIsOpen(false)}>
             <X size={20} />
@@ -67,8 +98,10 @@ export function AIInsightsBubble({ datasets }: AIInsightsBubbleProps) {
                     key={ds.id}
                     className={`picker-item ${selectedId === ds.id ? 'selected' : ''}`}
                     onClick={() => {
-                      setSelectedId(ds.id);
-                      setInsights(null);
+                      if (selectedId !== ds.id) {
+                        setSelectedId(ds.id);
+                        setMessages([]);
+                      }
                     }}
                   >
                     <FileText size={16} />
@@ -82,27 +115,45 @@ export function AIInsightsBubble({ datasets }: AIInsightsBubbleProps) {
           </div>
 
           {selectedDataset && (
-            <div className="insights-workspace animate-fade-in">
-              <button 
-                className="btn-primary generate-btn"
-                onClick={generateInsights}
-                disabled={isLoading || !selectedDataset.status.isAnalyzed}
-              >
-                {isLoading ? 'Analyzing Data...' : 'Generate AI Insights'}
-              </button>
-
-              {insights && (
-                <div className="insights-text-card card">
-                  {insights.split('\n').map((line, i) => (
-                    <p key={i}>{line}</p>
-                  ))}
-                </div>
-              )}
-
-              {!selectedDataset.status.isAnalyzed && (
+            <div className="chat-workspace animate-fade-in">
+              {!selectedDataset.status.isAnalyzed ? (
                 <p className="helper-text warning">
                   Please run the Analytics pipeline for this dataset first.
                 </p>
+              ) : (
+                <div className="chat-container card">
+                  <div className="chat-messages">
+                    {messages.map((msg, idx) => (
+                      <div key={idx} className={`chat-message ${msg.role}`}>
+                        <div className="msg-content">
+                          {msg.content.split('\n').map((line, i) => <p key={i}>{line}</p>)}
+                        </div>
+                      </div>
+                    ))}
+                    {isLoading && (
+                      <div className="chat-message assistant">
+                        <div className="msg-content typing-indicator">
+                          <span></span><span></span><span></span>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                  
+                  <div className="chat-input-area">
+                    <input 
+                      type="text" 
+                      placeholder="Ask Grok about your data..." 
+                      value={inputValue}
+                      onChange={e => setInputValue(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && sendMessage()}
+                      disabled={isLoading}
+                    />
+                    <button onClick={sendMessage} disabled={isLoading || !inputValue.trim()}>
+                      <Send size={18} />
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}

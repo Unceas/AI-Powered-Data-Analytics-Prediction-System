@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Body, Form
+from fastapi import APIRouter, UploadFile, File, Body, Form, HTTPException
 from backend.ingestion.loader import load_csv_from_upload, load_from_api
 from backend.ingestion.schemas import IngestionResponse, APIIngestionRequest
 from backend.processing.schemas import ProcessingConfig, ProcessingResponse
@@ -10,6 +10,7 @@ from backend.ml.models import train_and_evaluate, detect_anomalies
 from backend.ai.schemas import AIInsightRequest, AIInsightResponse
 from backend.ai.insight_generator import generate_natural_language_insights
 import json
+from json import JSONDecodeError
 import numpy as np
 
 router = APIRouter()
@@ -63,8 +64,11 @@ async def process_csv(
     df = await load_csv_from_upload(file)
     
     # parse config
-    config_dict = json.loads(config)
-    proc_config = ProcessingConfig(**config_dict)
+    try:
+        config_dict = json.loads(config)
+        proc_config = ProcessingConfig(**config_dict)
+    except (JSONDecodeError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid processing config: {exc}")
     
     # process
     processed_df = clean_and_process(df, proc_config)
@@ -103,8 +107,8 @@ async def predict_csv(
     file: UploadFile = File(...)
 ):
     """Upload a CSV, auto-detect problem type, and train a baseline ML model."""
-    if target_column is None or target_column.strip() == "":
-        from fastapi import HTTPException
+    target_column = target_column.strip() if target_column else ""
+    if target_column == "":
         raise HTTPException(status_code=422, detail="Target column must be provided and non-empty")
     df = await load_csv_from_upload(file)
     
@@ -132,6 +136,8 @@ async def detect_anomalies_csv(
     file: UploadFile = File(...)
 ):
     """Upload a CSV and detect anomalies using Isolation Forest."""
+    if contamination <= 0 or contamination >= 0.5:
+        raise HTTPException(status_code=422, detail="Contamination must be greater than 0 and less than 0.5")
     df = await load_csv_from_upload(file)
     
     try:

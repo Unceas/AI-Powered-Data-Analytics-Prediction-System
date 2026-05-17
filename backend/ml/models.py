@@ -14,6 +14,8 @@ def train_and_evaluate(df: pd.DataFrame, target_col: str, test_size: float = 0.2
 
     # Drop rows where target is missing
     df = df.dropna(subset=[target_col])
+    if len(df) < 3:
+        raise ValueError("At least 3 rows with a non-empty target are required for training.")
     
     # Auto-detect task type (if it's an object/category or has few unique values -> classification)
     is_classification = False
@@ -24,13 +26,13 @@ def train_and_evaluate(df: pd.DataFrame, target_col: str, test_size: float = 0.2
     y = df[target_col]
 
     # For baseline, we only use numeric columns (assumes categorical was encoded in processing step)
-    X = X.select_dtypes(include=['number'])
+    X = X.select_dtypes(include=['number']).replace([float("inf"), float("-inf")], pd.NA)
     
     if X.empty:
         raise ValueError("No numeric features available for training. Please run the data processing step to encode categoricals.")
 
     # Fill any remaining NaNs in features with median just so RandomForest doesn't crash
-    X = X.fillna(X.median())
+    X = X.fillna(X.median()).fillna(0)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
@@ -67,12 +69,15 @@ def detect_anomalies(df: pd.DataFrame, contamination: float = 0.05, random_state
     Uses Isolation Forest to detect anomalies in an unsupervised manner.
     """
     # Use only numeric columns for anomaly detection
-    num_df = df.select_dtypes(include=['number']).copy()
+    if contamination <= 0 or contamination >= 0.5:
+        raise ValueError("Contamination must be greater than 0 and less than 0.5.")
+
+    num_df = df.select_dtypes(include=['number']).copy().replace([float("inf"), float("-inf")], pd.NA)
     
     if num_df.empty:
         raise ValueError("No numeric features available for anomaly detection.")
         
-    num_df = num_df.fillna(num_df.median())
+    num_df = num_df.fillna(num_df.median()).fillna(0)
     
     model = IsolationForest(contamination=contamination, random_state=random_state)
     preds = model.fit_predict(num_df)

@@ -1,3 +1,8 @@
+export interface DatasetLog {
+  timestamp: string;
+  message: string;
+}
+
 export interface Dataset {
   id: string;
   name: string;
@@ -7,7 +12,10 @@ export interface Dataset {
     isLoaded: boolean;
     isProcessed: boolean;
     isAnalyzed: boolean;
+    isModelTrained: boolean;
+    isInsightsGenerated: boolean;
   };
   processedData: any;
   analyticsData: any;
+  logs: DatasetLog[];
 }

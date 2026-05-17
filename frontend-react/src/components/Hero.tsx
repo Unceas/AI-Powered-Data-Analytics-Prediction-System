@@ -8,7 +8,7 @@ export function Hero() {
         <Zap size={14} />
         <span>AI-Enhanced Pipeline</span>
       </div>
-      <h1 className="hero-title">Autonomous Data Intelligence Platform</h1>
+      <h1 className="hero-title">InsightGrid Intelligence Platform</h1>
       <p className="hero-subtitle">
         Upload any dataset and watch it flow through ingestion → cleaning → analytics → ML → AI insights, automatically.
       </p>

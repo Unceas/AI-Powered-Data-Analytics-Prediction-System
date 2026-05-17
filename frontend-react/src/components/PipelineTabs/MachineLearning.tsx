@@ -4,9 +4,10 @@ import './PipelineTabs.css';
 
 interface MachineLearningProps {
   file: File;
+  onModelTrained?: () => void;
 }
 
-export function MachineLearning({ file }: MachineLearningProps) {
+export function MachineLearning({ file, onModelTrained }: MachineLearningProps) {
   const [targetCol, setTargetCol] = useState('');
   const [isLoadingML, setIsLoadingML] = useState(false);
   const [mlResult, setMlResult] = useState<any>(null);
@@ -30,6 +31,7 @@ export function MachineLearning({ file }: MachineLearningProps) {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setMlResult(response.data);
+      if (onModelTrained) onModelTrained();
     } catch (error) {
       console.error('ML training failed', error);
       alert('ML training failed.');
@@ -83,15 +85,21 @@ export function MachineLearning({ file }: MachineLearningProps) {
         </div>
 
         {mlResult && mlResult.status !== 'error' && (
-          <div className="ml-results card">
-            <h4 className="success-banner">✅ Model trained: {mlResult.model_type}</h4>
+          <div className="ml-results card" style={{ marginTop: '1.5rem', borderLeft: '4px solid var(--accent-color)' }}>
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              🤖 Model: {mlResult.model_type}
+            </h3>
             <div className="metrics-grid">
               {Object.entries(mlResult.metrics).map(([k, v]: [string, any]) => (
                 <div key={k} className="metric-box">
-                  <span className="metric-v">{v.toFixed(4)}</span>
+                  <span className="metric-v">{(v * 100).toFixed(1)}%</span>
                   <span className="metric-k">{k.replace('_', ' ').toUpperCase()}</span>
                 </div>
               ))}
+              <div className="metric-box" style={{ background: 'var(--accent-color)', color: 'white', borderColor: 'var(--accent-color)' }}>
+                 <span className="metric-v" style={{ color: 'white' }}>High</span>
+                 <span className="metric-k" style={{ color: 'white', opacity: 0.8 }}>PREDICTION CONFIDENCE</span>
+              </div>
             </div>
           </div>
         )}

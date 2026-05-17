@@ -36,10 +36,59 @@
   align-items: center;
   gap: 1rem;
   text-align: left;
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  background: var(--card-bg);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.upload-dropzone.compact::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, rgba(37,99,235,0) 60%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.upload-dropzone.compact:hover::before {
+  opacity: 1;
+  animation: rotateGlow 4s linear infinite;
+}
+
+@keyframes rotateGlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.upload-dropzone.compact:hover {
+  transform: scale(1.02) translateY(-2px);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 25px rgba(37, 99, 235, 0.2);
+}
+
+.upload-dropzone.compact:active {
+  transform: scale(0.98);
+}
+
+.upload-dropzone.compact.dragging {
+  border-color: var(--accent-color);
+  background: rgba(37, 99, 235, 0.05);
+  transform: scale(1.04);
 }
 
 .upload-dropzone.compact .upload-icon {
   margin-bottom: 0;
+  color: var(--accent-color);
+  transition: transform 0.3s ease;
+}
+
+.upload-dropzone.compact:hover .upload-icon {
+  transform: translateY(-2px);
 }
 
 .dropzone-text h3 {
