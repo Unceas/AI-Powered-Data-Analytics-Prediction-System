@@ -1,301 +1,190 @@
-# ⚡ InsightGrid — AI-Powered Data Analytics & Prediction System
+# AI Resume Analyzer
 
-![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688.svg)
-![React](https://img.shields.io/badge/React-Frontend-61DAFB.svg)
-![ML](https://img.shields.io/badge/Machine%20Learning-Enabled-orange.svg)
-![Status](https://img.shields.io/badge/Project-Active-brightgreen)
+An ATS-style resume analysis platform that evaluates resumes against specific job roles using NLP preprocessing, semantic skill matching, keyword density analysis, and AI-generated feedback.
 
-An AI-powered analytics platform designed for intelligent dataset processing, predictive modeling, anomaly detection, and automated insight generation using modern ML pipelines and LLM-powered interpretation systems.
-
-InsightGrid combines scalable backend services, machine learning workflows, and AI-generated analytical reasoning into a unified full-stack data intelligence platform.
+The system is designed to simulate core ATS (Applicant Tracking System) evaluation workflows while providing actionable improvement recommendations through an interactive analytics interface.
 
 ---
 
-## ✮ Engineering Motivation
+## Overview
 
-Modern analytics workflows often require multiple disconnected tools for:
+Modern hiring pipelines rely heavily on automated resume screening systems to filter candidates before manual review.
 
-* preprocessing
-* statistical analysis
-* predictive modeling
-* anomaly detection
-* insight generation
+This project focuses on building a lightweight AI-assisted resume intelligence system capable of:
 
-InsightGrid was designed to unify these capabilities into a modular AI-powered analytics system capable of transforming raw datasets into structured, interpretable intelligence pipelines.
+- extracting resume text from PDF documents
+- preprocessing and analyzing candidate skills
+- matching resumes against target job roles
+- evaluating keyword optimization strength
+- generating AI-style improvement feedback
 
-The platform focuses on:
-
-* scalable backend architecture
-* automated preprocessing workflows
-* intelligent ML orchestration
-* AI-assisted dataset interpretation
-* extensible analytics infrastructure
+The platform combines NLP concepts, scoring systems, semantic matching, and interactive visualization into a deployable Streamlit application.
 
 ---
 
-## ⟡ Core Features
+## Core Features
 
-• Automated dataset ingestion pipeline
-• CSV & Excel processing support
-• Intelligent preprocessing workflows
-• Missing value handling & feature encoding
-• Correlation analysis & statistical summaries
-• ML-powered prediction pipelines
-• Isolation Forest anomaly detection
-• LLM-generated business insights using Groq API
-• FastAPI backend architecture
-• Interactive React + Vite analytics dashboard
+- PDF resume upload and parsing
+- Automatic text extraction using PyPDF2
+- NLP preprocessing and text normalization
+- Semantic skill matching using grouped keyword aliases
+- ATS-style role-based scoring engine
+- Keyword density analysis
+- AI-generated resume feedback
+- Missing skill recommendations
+- Interactive Streamlit dashboard interface
 
 ---
 
-## ⚡ System Architecture
+## Supported Job Roles
+
+- ML Engineer
+- Backend Developer
+- Frontend Developer
+
+---
+
+## System Workflow
 
 ```bash
-Frontend (React + Vite)
-        │
-        │ REST APIs / JSON
-        ▼
-Backend (FastAPI)
-        │
-        ├── Data Processing Pipeline
-        ├── Analytics Engine
-        ├── ML Prediction Layer
-        ├── Anomaly Detection
-        └── AI Insight Generation (Groq API)
+Resume PDF
+    │
+    ▼
+PDF Text Extraction
+    │
+    ▼
+NLP Preprocessing
+    │
+    ▼
+Semantic Skill Matching
+    │
+    ├── ATS Role Scoring
+    ├── Keyword Density Analysis
+    └── Missing Skill Detection
+            │
+            ▼
+AI Feedback Generation
 ```
 
 ---
 
-## ✦ Technical Stack
+## Technical Stack
 
-| Layer          | Technologies                |
-| -------------- | --------------------------- |
-| Frontend       | React, Vite, TypeScript     |
-| Backend        | FastAPI, Python             |
-| ML & Analytics | Scikit-learn, Pandas, NumPy |
-| AI Layer       | Groq API, LLaMA 3.1         |
-| Deployment     | Vercel, Render, Railway     |
-
----
-
-## ╰┈➤ Local Development
-
-### Prerequisites
-
-* Python 3.11+
-* Node.js 18+
-* Groq API Key
+| Layer | Technologies |
+|---|---|
+| Frontend | Streamlit |
+| Backend Logic | Python |
+| PDF Processing | PyPDF2 |
+| NLP Processing | Regex-based preprocessing |
+| Analysis Engine | Semantic keyword matching |
 
 ---
 
-### Backend Setup
+## Project Structure
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/insightgrid.git
-cd insightgrid
+resume-analyzer/
 
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# Linux / macOS
-source venv/bin/activate
-
-pip install -r requirements.txt
-```
-
----
-
-### Configure Environment
-
-```bash
-cp .env.example .env
-```
-
-Add your:
-
-```env
-GROQ_API_KEY=your_api_key
-```
-
----
-
-### Start Backend Server
-
-```bash
-uvicorn backend.main:app --reload
-```
-
-API:
-
-```bash
-http://localhost:8000
-```
-
-Swagger Docs:
-
-```bash
-http://localhost:8000/docs
-```
-
----
-
-### Frontend Setup
-
-```bash
-cd frontend-react
-npm install
-npm run dev
-```
-
-Dashboard:
-
-```bash
-http://localhost:5173
-```
-
----
-
-## ⚡ Deployment
-
-### Frontend → Vercel
-
-```bash
-Build Command:
-npm run build
-
-Output Directory:
-dist
-```
-
-Environment Variable:
-
-```env
-VITE_API_URL=https://your-backend.onrender.com/api
-```
-
----
-
-### Backend → Render
-
-```bash
-Build Command:
-pip install -r requirements.txt
-```
-
-```bash
-Start Command:
-uvicorn backend.main:app --host 0.0.0.0 --port $PORT
-```
-
-Environment Variables:
-
-```env
-GROQ_API_KEY=your_groq_api_key
-APP_CORS_ORIGINS=https://your-app.vercel.app
-```
-
----
-
-### Backend → Railway
-
-Railway automatically detects the included:
-
-```bash
-Procfile
-```
-
-Add the same environment variables used for Render deployment.
-
----
-
-## ✮ API Integration Flow
-
-| Direction            | Data Flow                                                         |
-| -------------------- | ----------------------------------------------------------------- |
-| Frontend → Backend   | Dataset uploads, analytics requests, preprocessing configurations |
-| Backend → Frontend   | Predictions, processed data, AI-generated insights                |
-| Communication Format | JSON over REST APIs                                               |
-
----
-
-## 𖤍 Supported Upload Formats
-
-| Format           | Processing Handler    |
-| ---------------- | --------------------- |
-| `.csv`           | `pandas.read_csv()`   |
-| `.xlsx` / `.xls` | `pandas.read_excel()` |
-
----
-
-## ⚡ Project Structure
-
-```bash
-├── backend/
-│   ├── main.py
-│   ├── api/routes.py
-│   ├── ingestion/
-│   ├── processing/
-│   ├── analytics/
-│   ├── ml/
-│   └── ai/
-│
-├── frontend-react/
-│   ├── src/
-│   ├── vercel.json
-│   └── package.json
-│
+├── analyzer.py
+├── app_streamlit.py
 ├── requirements.txt
-├── Procfile
-├── render.yaml
-├── runtime.txt
-└── .env.example
+├── README.md
 ```
 
 ---
 
-## ⟡ Core Engineering Concepts
+## Local Development
 
-• Modular backend architecture
-• ML inference orchestration
-• Automated preprocessing pipelines
-• Statistical analytics systems
-• LLM-powered insight generation
-• Full-stack API integration
-• AI-assisted business intelligence
-• Scalable analytics infrastructure
+### Install Dependencies
 
----
+```bash
+pip install -r requirements.txt
+```
 
-## ✦ Production Roadmap
+### Run Application
 
-• Async task execution with worker queues
-• Redis caching for repeated analytics queries
-• PostgreSQL integration for persistent storage
-• Distributed ML processing pipelines
-• Cloud object storage integration (S3)
-• Real-time analytics streaming
-• Multi-user dataset management
+```bash
+streamlit run app_streamlit.py
+```
 
 ---
 
-## ⚡ Future Vision
+## ATS Analysis Capabilities
 
-InsightGrid is being designed as a scalable AI-assisted analytics infrastructure capable of evolving into a fully autonomous business intelligence and predictive analytics platform.
+### Role-Based Resume Scoring
 
-The long-term goal is to combine:
+The analyzer evaluates resumes against role-specific skill requirements.
 
-* intelligent data pipelines
-* automated ML workflows
-* AI-driven interpretation
-* scalable backend orchestration
+### Semantic Skill Detection
 
-into a unified analytics operating system.
+Related technologies and aliases are grouped together for improved matching accuracy.
+
+Example:
+
+```text
+PyTorch → Machine Learning
+ReactJS → React
+GitHub → Git
+```
+
+### Keyword Density Analysis
+
+The platform evaluates how strongly important skills are represented throughout the resume.
+
+### AI Feedback Generation
+
+The system generates ATS-style feedback including:
+
+- alignment strength
+- missing skills
+- optimization recommendations
 
 ---
 
-## 👨‍💻 Author
+## Example Output
+
+```text
+Resume Score: 85%
+
+Skills Found:
+- Python
+- SQL
+- Git
+
+Missing Skills:
+- FastAPI
+
+AI Feedback:
+- Strong alignment for Backend Developer roles
+- Recommended improving FastAPI experience
+```
+
+---
+
+## Engineering Concepts Demonstrated
+
+- NLP preprocessing pipelines
+- Semantic keyword matching
+- Rule-based AI scoring systems
+- PDF document parsing
+- Interactive analytics dashboards
+- ATS simulation workflows
+- Modular Python architecture
+
+---
+
+## Future Improvements
+
+- Resume section analysis
+- Experience-based scoring
+- Project relevance analysis
+- Better semantic similarity matching
+- Resume formatting evaluation
+- LLM integration for advanced feedback
+- Multi-role comparative scoring
+
+---
+
+## Author
 
 Ayush Kushwaha
