@@ -997,3 +997,208 @@
   box-shadow: 0 0 6px var(--accent-color);
 }
 
+/* Card borders and layouts for console feel */
+.left-orch-column.card,
+.right-insight-column.card,
+.execution-trace-panel.card,
+.dataset-intelligence-banner.card,
+.graphic-widget.card,
+.ml-inference-details.card {
+  border-radius: 4px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* Infrastructure readiness dashboard css */
+.infrastructure-readiness-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: rgba(11, 13, 20, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  min-height: 400px;
+  justify-content: space-between;
+}
+
+.panel-title-block {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-title-block h4 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+}
+
+.panel-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: -0.5rem;
+  line-height: 1.4;
+}
+
+.infrastructure-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.infra-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.75rem;
+}
+
+.infra-status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+
+.infra-status.active-dot-green {
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+
+.infra-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.infra-lbl {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.infra-val {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 1px;
+}
+
+.dormant-pipeline-blueprint {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.blueprint-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.blueprint-nodes-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
+
+.blueprint-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.blueprint-node .node-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.blueprint-node .node-lbl {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.blueprint-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin-top: -12px;
+}
+
+.right-insight-column.empty-telemetry {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-telemetry-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.telemetry-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed var(--border-color);
+}
+
+.text-muted-dark {
+  color: rgba(255, 255, 255, 0.1);
+}
+
+.live-status-dot.offline {
+  background-color: var(--text-secondary);
+  box-shadow: none;
+  opacity: 0.4;
+}
+
+.signal-light.offline {
+  background-color: var(--text-secondary);
+  box-shadow: none;
+  opacity: 0.4;
+}
+
+.live-status-dot.active-pulse {
+  animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; box-shadow: 0 0 10px var(--accent-color); }
+}
+

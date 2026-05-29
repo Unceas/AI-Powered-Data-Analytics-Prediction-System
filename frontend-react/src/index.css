@@ -28,27 +28,27 @@
 }
 
 [data-theme="dark"] {
-  /* Premium Dark Mode - Deep Charcoal & Muted Slate */
-  --bg-color: #030303;
-  --card-bg: rgba(10, 10, 13, 0.6);
-  --text-primary: #f8fafc;
+  /* Premium Dark Mode - Deep Slate & Muted Navy-Charcoal */
+  --bg-color: #06070a;
+  --card-bg: rgba(11, 13, 20, 0.5);
+  --text-primary: #e2e8f0; /* Soft white-gray */
   --text-secondary: #64748b; /* Muted gray-blue */
-  --border-color: rgba(30, 41, 59, 0.6);
+  --border-color: rgba(38, 48, 68, 0.35);
   
   --accent-color: #06b6d4; /* Neon Cyan - reserved ONLY for active/anomalies/metrics */
   --accent-hover: #22d3ee;
-  --accent-glow: rgba(6, 182, 212, 0.25);
+  --accent-glow: rgba(6, 182, 212, 0.15);
   
   --success: #10b981;
   --danger: #f43f5e;
   --warning: #f59e0b;
 
-  --sidebar-bg: rgba(5, 5, 7, 0.8);
-  --sidebar-border: rgba(30, 41, 59, 0.7);
+  --sidebar-bg: rgba(7, 8, 12, 0.9);
+  --sidebar-border: rgba(38, 48, 68, 0.4);
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.8);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.9), 0 2px 4px -1px rgba(0, 0, 0, 0.7);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.9), 0 10px 10px -5px rgba(0, 0, 0, 0.8);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.7), 0 2px 4px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -75,17 +75,18 @@ body::before {
   width: 100vw; 
   height: 100vh;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
-  background-size: 30px 30px;
+    linear-gradient(to right, rgba(255, 255, 255, 0.005) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.005) 1px, transparent 1px);
+  background-size: 24px 24px;
   z-index: -2;
   pointer-events: none;
 }
 
 [data-theme="dark"] body::before {
   background-image: 
-    linear-gradient(to right, rgba(6, 182, 212, 0.012) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(6, 182, 212, 0.012) 1px, transparent 1px);
+    linear-gradient(to right, rgba(6, 182, 212, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.015) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 body::after {
@@ -95,7 +96,7 @@ body::after {
   left: -20%;
   width: 140%;
   height: 140%;
-  background: radial-gradient(circle at 70% 30%, rgba(6, 182, 212, 0.03) 0%, transparent 60%);
+  background: radial-gradient(circle at 50% 30%, rgba(6, 182, 212, 0.02) 0%, transparent 60%);
   z-index: -1;
   pointer-events: none;
 }
