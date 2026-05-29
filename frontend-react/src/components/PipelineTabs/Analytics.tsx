@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, AlertCircle } from 'lucide-react';
 import api from '../../utils/api';
 import { 
   BarChart, 
@@ -14,22 +14,17 @@ import {
 import './PipelineTabs.css';
 
 interface AnalyticsProps {
-  file: File;
-  onAnalyzed: (data: any) => void;
-  cachedData: any;
-  onInsightsGenerated?: () => void;
+  activeDataset: any;
+  onAnalyzed: (id: string, data: any) => void;
 }
 
-export function Analytics({ file, onAnalyzed, cachedData, onInsightsGenerated }: AnalyticsProps) {
+export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<any>(cachedData);
   const [quickInsight, setQuickInsight] = useState<string | null>(null);
   const [typedQuickInsight, setTypedQuickInsight] = useState('');
   const [isGeneratingQuick, setIsGeneratingQuick] = useState(false);
 
-  useEffect(() => {
-    setData(cachedData);
-  }, [cachedData]);
+  const data = activeDataset?.analyticsData || null;
 
   const generateQuickInsight = useCallback(async (analyticsData: any) => {
     setIsGeneratingQuick(true);
@@ -40,7 +35,6 @@ export function Analytics({ file, onAnalyzed, cachedData, onInsightsGenerated }:
       });
       const text = response.data.insights;
       setQuickInsight(text);
-      if (onInsightsGenerated) onInsightsGenerated();
       
       let i = 0;
       setTypedQuickInsight('');
@@ -54,11 +48,14 @@ export function Analytics({ file, onAnalyzed, cachedData, onInsightsGenerated }:
     } finally {
       setIsGeneratingQuick(false);
     }
-  }, [onInsightsGenerated]);
+  }, []);
 
   useEffect(() => {
     if (data && !quickInsight && !isGeneratingQuick) {
       generateQuickInsight(data);
+    } else if (!data) {
+      setQuickInsight(null);
+      setTypedQuickInsight('');
     }
   }, [data, generateQuickInsight, isGeneratingQuick, quickInsight]);
 
@@ -70,21 +67,26 @@ export function Analytics({ file, onAnalyzed, cachedData, onInsightsGenerated }:
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
           <thead>
             <tr>
-              <th style={{ padding: '0.75rem', textAlign: 'left', background: 'var(--bg-color)', borderBottom: '1px solid var(--border-color)' }}>Feature</th>
-              {cols.map(c => <th key={c} style={{ padding: '0.75rem', background: 'var(--bg-color)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>{c.substring(0,10)}..</th>)}
+              <th style={{ padding: '0.75rem', textAlign: 'left', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Feature</th>
+              {cols.map(c => <th key={c} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{c.substring(0,10)}</th>)}
             </tr>
           </thead>
           <tbody>
             {cols.map(row => (
               <tr key={row}>
-                <td style={{ padding: '0.5rem', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid var(--border-color)' }}>{row}</td>
+                <td style={{ padding: '0.5rem', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>{row}</td>
                 {cols.map(col => {
                   const val = matrix[row][col];
                   if (val === null || val === undefined) return <td key={col} style={{ border: '1px solid var(--border-color)' }}>-</td>;
                   const absVal = Math.abs(val);
-                  const bgColor = val > 0 ? `rgba(239, 68, 68, ${absVal})` : `rgba(59, 130, 246, ${absVal})`;
+                  
+                  // Muted blue/red colors matching dark mode
+                  const bgColor = val > 0 
+                    ? `rgba(244, 63, 94, ${absVal * 0.4})` 
+                    : `rgba(6, 182, 212, ${absVal * 0.4})`;
+                  
                   return (
-                    <td key={col} style={{ backgroundColor: bgColor, border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', color: absVal > 0.5 ? 'white' : 'inherit' }}>
+                    <td key={col} style={{ backgroundColor: bgColor, border: '1px solid var(--border-color)', padding: '0.5rem', color: 'var(--text-primary)', fontWeight: absVal > 0.5 ? 'bold' : 'normal' }}>
                       {val.toFixed(2)}
                     </td>
                   );
@@ -97,21 +99,25 @@ export function Analytics({ file, onAnalyzed, cachedData, onInsightsGenerated }:
     );
   };
 
-  useEffect(() => {
-    setData(cachedData);
-  }, [cachedData]);
-
   const runAnalytics = async () => {
+    if (!activeDataset) return;
     setIsLoading(true);
+
+    const fileObj = (activeDataset as any).rawFile;
+    if (!fileObj) {
+      alert("No raw file reference available for this dataset.");
+      setIsLoading(false);
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fileObj);
 
     try {
       const response = await api.post('/analyze-csv', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setData(response.data);
-      onAnalyzed(response.data);
+      onAnalyzed(activeDataset.id, response.data);
     } catch (error) {
       console.error('Analytics failed', error);
       alert('Analytics failed.');
@@ -122,22 +128,22 @@ export function Analytics({ file, onAnalyzed, cachedData, onInsightsGenerated }:
 
   const renderCategoricalChart = (feat: string, info: any) => {
     const chartData = Object.entries(info.top_values).map(([name, value]) => ({ name, value }));
-    const COLORS = ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
+    const COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'];
 
     return (
       <div key={feat} className="stat-chart-container card">
-        <h4>📌 {feat} — {info.unique_count} unique values</h4>
-        <div style={{ width: '100%', height: 250 }}>
+        <h4 style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1rem' }}>📌 {feat} — {info.unique_count} unique values</h4>
+        <div style={{ width: '100%', height: 220 }}>
           <ResponsiveContainer>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
-              <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="var(--text-secondary)" fontSize={12} tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.015)" />
+              <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={10} tickLine={false} axisLine={false} />
+              <YAxis stroke="var(--text-secondary)" fontSize={10} tickLine={false} axisLine={false} />
               <Tooltip 
                 contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
-                itemStyle={{ color: 'var(--text-primary)' }}
+                itemStyle={{ color: 'var(--text-primary)', fontSize: '11px' }}
               />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={16}>
                 {chartData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
@@ -149,76 +155,101 @@ export function Analytics({ file, onAnalyzed, cachedData, onInsightsGenerated }:
     );
   };
 
+  if (!activeDataset) {
+    return (
+      <div className="tab-pane placeholder-tab card">
+        <AlertCircle size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+        <h3>No active dataset selected</h3>
+        <p>Go to the Data Manager and upload or select a dataset first.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="tab-pane">
-      <div className="pane-header">
-        <h2>Exploratory Data Analytics</h2>
-        <p>Auto-generate descriptive statistics, feature correlations, and categorical breakdowns.</p>
+    <div className="tab-pane animate-fade-in">
+      <div className="view-header" style={{ marginBottom: '1.5rem' }}>
+        <h2>Deep Exploratory Data Analytics</h2>
+        <p>Auto-generate descriptive statistics, correlation heatmaps, and distributions for features in {activeDataset.name}.</p>
       </div>
 
-      <button 
-        className="btn-primary run-btn" 
-        onClick={runAnalytics}
-        disabled={isLoading}
-      >
-        {isLoading ? 'Analyzing...' : '📊 Generate Full Analytics Report'}
-      </button>
-
-      {data && (
-        <div className="quick-ai-summary" style={{ marginTop: '1.5rem', marginBottom: '2rem', padding: '1.25rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '0.75rem', borderLeft: '4px solid var(--accent-color)' }}>
-           <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--accent-color)' }}>
-              <Sparkles size={18} /> InsightGrid Auto-Analysis
-           </h4>
-           {isGeneratingQuick && !quickInsight ? (
-             <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }} className="pulse-text">Analyzing statistical patterns...</p>
-           ) : (
-             <p style={{ lineHeight: 1.6 }}>{typedQuickInsight}<span className="cursor-blink">|</span></p>
-           )}
-        </div>
-      )}
-
-      {data && (
-        <div className="analytics-results">
-          <div className="section-header">Descriptive Statistics</div>
-          <div className="preview-table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Stat</th>
-                  {Object.keys(data.descriptive_statistics).map(col => <th key={col}>{col}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'].map(stat => (
-                  <tr key={stat}>
-                    <td style={{ fontWeight: 600 }}>{stat}</td>
-                    {Object.keys(data.descriptive_statistics).map(col => (
-                      <td key={col}>{data.descriptive_statistics[col][stat]?.toFixed(2)}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {!activeDataset.status.isProcessed ? (
+        <div className="warning-banner card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderLeft: '4px solid var(--warning)' }}>
+          <AlertCircle className="text-warning" size={20} />
+          <div>
+            <h4 style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>Preprocessing Required</h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '2px' }}>Please go to the Data Manager and run the preprocessing pipeline before generating analytics reports.</p>
           </div>
-
-          {data.correlation_matrix && (
-            <>
-              <div className="section-header" style={{marginTop: '2rem'}}>Correlation Heatmap</div>
-              <div className="card">
-                 {renderCorrelationMatrix(data.correlation_matrix)}
-              </div>
-            </>
-          )}
-
-          {data.categorical_summaries && (
-            <>
-              <div className="section-header" style={{marginTop: '2rem'}}>Categorical Feature Summaries</div>
-              <div className="charts-grid">
-                {Object.entries(data.categorical_summaries).map(([feat, info]) => renderCategoricalChart(feat, info as any))}
-              </div>
-            </>
-          )}
         </div>
+      ) : (
+        <>
+          <button 
+            className="btn-primary run-btn" 
+            onClick={runAnalytics}
+            disabled={isLoading}
+            style={{ width: 'fit-content', padding: '0.6rem 1.5rem !important', marginTop: '0', fontSize: '0.88rem' }}
+          >
+            {isLoading ? 'Analyzing...' : '📊 Generate Full Analytics Report'}
+          </button>
+
+          {data && (
+            <div className="quick-ai-summary" style={{ marginTop: '1.5rem', marginBottom: '2rem', padding: '1.25rem', background: 'rgba(6, 182, 212, 0.03)', borderRadius: '0.75rem', borderLeft: '4px solid var(--accent-color)', borderTop: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
+               <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                  <Sparkles size={16} /> INSIGHTGRID AUTO-ANALYSIS
+               </h4>
+               {isGeneratingQuick && !quickInsight ? (
+                 <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '0.85rem' }} className="pulse-text">Analyzing statistical patterns...</p>
+               ) : (
+                 <p style={{ lineHeight: 1.5, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{typedQuickInsight}<span className="cursor-blink">|</span></p>
+               )}
+            </div>
+          )}
+
+          {data && (
+            <div className="analytics-results animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div>
+                <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '0.75rem', padding: 0 }}>DESCRIPTIVE STATISTICS</div>
+                <div className="preview-table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Stat</th>
+                        {Object.keys(data.descriptive_statistics).map(col => <th key={col}>{col}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'].map(stat => (
+                        <tr key={stat}>
+                          <td style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{stat}</td>
+                          {Object.keys(data.descriptive_statistics).map(col => (
+                            <td key={col}>{data.descriptive_statistics[col][stat] !== undefined ? data.descriptive_statistics[col][stat].toFixed(2) : '-'}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {data.correlation_matrix && (
+                <div>
+                  <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '0.75rem', padding: 0 }}>CORRELATION HEATMAP</div>
+                  <div className="card" style={{ padding: '0.75rem' }}>
+                     {renderCorrelationMatrix(data.correlation_matrix)}
+                  </div>
+                </div>
+              )}
+
+              {data.categorical_summaries && Object.keys(data.categorical_summaries).length > 0 && (
+                <div>
+                  <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '0.75rem', padding: 0 }}>CATEGORICAL FEATURE SUMMARIES</div>
+                  <div className="charts-grid">
+                    {Object.entries(data.categorical_summaries).map(([feat, info]) => renderCategoricalChart(feat, info as any))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

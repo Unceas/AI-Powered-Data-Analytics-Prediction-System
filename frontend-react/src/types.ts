@@ -7,6 +7,7 @@ export interface Dataset {
   id: string;
   name: string;
   file: File;
+  rawFile?: File;
   stats: any;
   status: {
     isLoaded: boolean;
@@ -17,5 +18,8 @@ export interface Dataset {
   };
   processedData: any;
   analyticsData: any;
+  mlResult?: any;
+  anomalyResult?: any;
   logs: DatasetLog[];
+  engineState?: 'IDLE' | 'INITIALIZING' | 'VALIDATING' | 'PROCESSING' | 'ANALYZING' | 'RUNNING INFERENCE' | 'SYNTHESIZING INSIGHTS' | 'COMPLETE' | 'ERROR';
 }

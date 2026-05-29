@@ -15,21 +15,34 @@ app = FastAPI(
 )
 
 def _cors_origins() -> list[str]:
-    configured = os.getenv("APP_CORS_ORIGINS")
-    if configured:
-        return [origin.strip() for origin in configured.split(",") if origin.strip()]
-    return [
+    default_origins = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "http://localhost:5175",
+        "http://127.0.0.1:5175",
+        "http://localhost:5176",
+        "http://127.0.0.1:5176",
         "http://localhost:8501",
         "http://127.0.0.1:8501",
+        "https://insightgrid.vercel.app",
+        "https://insightgrid-unceasx.vercel.app",
+        "https://insightgrid-seven.vercel.app",
     ]
+
+    configured = os.getenv("APP_CORS_ORIGINS")
+    if configured:
+        return [origin.strip().rstrip("/") for origin in configured.split(",") if origin.strip()]
+
+    return default_origins
 
 
 # Keep local frontend development working without exposing credentialed wildcard CORS.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins(),
+    allow_origin_regex=os.getenv("APP_CORS_ORIGIN_REGEX"),
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

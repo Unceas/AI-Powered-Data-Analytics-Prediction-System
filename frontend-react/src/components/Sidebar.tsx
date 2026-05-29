@@ -4,10 +4,14 @@ import {
   Moon, 
   Sun, 
   Database, 
-  Settings,
+  Settings as SettingsIcon,
   Activity,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  Brain,
+  MessageSquareCode,
+  Layers
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -31,76 +35,118 @@ export function Sidebar({ status, currentView, onNavigate }: SidebarProps) {
     <aside className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
         <div className="logo-container">
-          <Database className="logo-icon" size={24} />
-          {isExpanded && <span className="logo-text">InsightGrid</span>}
+          <Layers className="logo-icon active-glow" size={24} />
+          {isExpanded && (
+            <div className="logo-text-wrapper">
+              <span className="logo-text">INSIGHTGRID</span>
+              <span className="logo-subtext">INTELLIGENCE PLATFORM</span>
+            </div>
+          )}
         </div>
         <button 
           className="toggle-btn" 
           onClick={() => setIsExpanded(!isExpanded)}
           title={isExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
         >
-          {isExpanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          {isExpanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
         </button>
       </div>
 
       <nav className="sidebar-nav">
         <div className="nav-section">
-          {isExpanded && <h3 className="section-title">Pipeline Status</h3>}
-          <ul className="status-list">
-            <li className={`status-item ${status.isLoaded ? 'active' : ''}`} title="Dataset Parsed">
-              <span className="status-indicator"></span>
-              {isExpanded && <span>✓ CSV/Excel Parsed</span>}
-            </li>
-            <li className={`status-item ${status.isProcessed ? 'active' : ''}`} title="Null Handling">
-              <span className="status-indicator"></span>
-              {isExpanded && <span>✓ Null Handling Completed</span>}
-            </li>
-            <li className={`status-item ${status.isProcessed ? 'active' : ''}`} title="Feature Encoding">
-              <span className="status-indicator"></span>
-              {isExpanded && <span>✓ Feature Encoding Applied</span>}
-            </li>
-            <li className={`status-item ${status.isAnalyzed ? 'active' : ''}`} title="Analytics Generated">
-              <span className="status-indicator"></span>
-              {isExpanded && <span>✓ Analytics Generated</span>}
-            </li>
-            <li className={`status-item ${status.isModelTrained ? 'active' : ''}`} title="Model Trained">
-              <span className="status-indicator"></span>
-              {isExpanded && <span>✓ Model Trained</span>}
-            </li>
-            <li className={`status-item ${status.isInsightsGenerated ? 'active' : ''}`} title="AI Insights">
-              <span className="status-indicator"></span>
-              {isExpanded && <span>✓ AI Insights Generated</span>}
-            </li>
-          </ul>
-        </div>
-
-        <div className="nav-section">
-          {isExpanded && <h3 className="section-title">Controls</h3>}
-          <button 
-            className={`nav-btn ${currentView === 'pipeline' ? 'active' : ''}`} 
-            onClick={() => onNavigate('pipeline')}
-            title="Pipeline"
-          >
-            <Database size={20} />
-            {isExpanded && <span>Pipeline</span>}
-          </button>
+          {isExpanded && <h3 className="section-title">Operations</h3>}
+          
           <button 
             className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`} 
             onClick={() => onNavigate('dashboard')}
-            title="Dashboard"
+            title="System Dashboard"
           >
-            <Activity size={20} />
-            {isExpanded && <span>Dashboard</span>}
+            <Activity size={18} />
+            {isExpanded && <span>System Dashboard</span>}
+            {isExpanded && status.isLoaded && <span className="active-dot-indicator"></span>}
           </button>
+
+          <button 
+            className={`nav-btn ${currentView === 'data-manager' ? 'active' : ''}`} 
+            onClick={() => onNavigate('data-manager')}
+            title="Data Management"
+          >
+            <Database size={18} />
+            {isExpanded && <span>Data Management</span>}
+            {isExpanded && status.isProcessed && <span className="active-dot-indicator"></span>}
+          </button>
+
+          <button 
+            className={`nav-btn ${currentView === 'analytics' ? 'active' : ''}`} 
+            onClick={() => onNavigate('analytics')}
+            title="Deep Analytics"
+          >
+            <TrendingUp size={18} />
+            {isExpanded && <span>Deep Analytics</span>}
+            {isExpanded && status.isAnalyzed && <span className="active-dot-indicator"></span>}
+          </button>
+
+          <button 
+            className={`nav-btn ${currentView === 'ml-workbench' ? 'active' : ''}`} 
+            onClick={() => onNavigate('ml-workbench')}
+            title="Auto-ML Workbench"
+          >
+            <Brain size={18} />
+            {isExpanded && <span>Auto-ML Workbench</span>}
+            {isExpanded && status.isModelTrained && <span className="active-dot-indicator"></span>}
+          </button>
+
+          <button 
+            className={`nav-btn ${currentView === 'ai-chat' ? 'active' : ''}`} 
+            onClick={() => onNavigate('ai-chat')}
+            title="Grok Assistant"
+          >
+            <MessageSquareCode size={18} />
+            {isExpanded && <span>Grok Assistant</span>}
+            {isExpanded && status.isInsightsGenerated && <span className="active-dot-indicator"></span>}
+          </button>
+
           <button 
             className={`nav-btn ${currentView === 'settings' ? 'active' : ''}`} 
             onClick={() => onNavigate('settings')}
-            title="Settings"
+            title="System Config"
           >
-            <Settings size={20} />
-            {isExpanded && <span>Settings</span>}
+            <SettingsIcon size={18} />
+            {isExpanded && <span>System Config</span>}
           </button>
         </div>
+
+        {isExpanded && (
+          <div className="nav-section status-summary-box">
+            <h3 className="section-title">Pipeline Health</h3>
+            <div className="health-status-grid">
+              <div className="health-row">
+                <span className="health-label">Ingestion</span>
+                <span className={`health-value ${status.isLoaded ? 'online' : 'offline'}`}>
+                  {status.isLoaded ? 'ONLINE' : 'PENDING'}
+                </span>
+              </div>
+              <div className="health-row">
+                <span className="health-label">Preprocessing</span>
+                <span className={`health-value ${status.isProcessed ? 'online' : 'offline'}`}>
+                  {status.isProcessed ? 'ONLINE' : 'PENDING'}
+                </span>
+              </div>
+              <div className="health-row">
+                <span className="health-label">Analytics</span>
+                <span className={`health-value ${status.isAnalyzed ? 'online' : 'offline'}`}>
+                  {status.isAnalyzed ? 'ONLINE' : 'PENDING'}
+                </span>
+              </div>
+              <div className="health-row">
+                <span className="health-label">ML Inference</span>
+                <span className={`health-value ${status.isModelTrained ? 'online' : 'offline'}`}>
+                  {status.isModelTrained ? 'ONLINE' : 'PENDING'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="sidebar-footer">
@@ -109,8 +155,8 @@ export function Sidebar({ status, currentView, onNavigate }: SidebarProps) {
           onClick={toggleTheme}
           title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
         >
-          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          {isExpanded && <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>}
+          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          {isExpanded && <span>{theme === 'light' ? 'Dark theme' : 'Light theme'}</span>}
         </button>
       </div>
     </aside>
