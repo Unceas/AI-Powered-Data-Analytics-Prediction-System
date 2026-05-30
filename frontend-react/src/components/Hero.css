@@ -35,7 +35,6 @@
   height: 6px;
   border-radius: 50%;
   background-color: var(--accent-color);
-  box-shadow: 0 0 6px var(--accent-color);
 }
 
 .system-brand-subtitle {
@@ -75,7 +74,6 @@
 
 .icon-glow {
   color: var(--accent-color);
-  filter: drop-shadow(0 0 4px var(--accent-color));
 }
 
 .status-pill.active-cyan .icon-glow.spin {

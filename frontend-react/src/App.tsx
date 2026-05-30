@@ -5,6 +5,7 @@ import { DataManager } from './components/DataManager';
 import { Analytics } from './components/PipelineTabs/Analytics';
 import { MachineLearning } from './components/PipelineTabs/MachineLearning';
 import { Dashboard } from './components/Dashboard';
+import { Diagnostics } from './components/Diagnostics';
 import { AIChatPage } from './components/AIChatPage';
 import { Settings } from './components/Settings';
 import api from './utils/api';
@@ -355,6 +356,14 @@ function App() {
             datasets={datasets}
             onSelectDataset={setActiveDatasetId}
             onNavigate={setCurrentView}
+          />
+        )}
+
+        {currentView === 'diagnostics' && (
+          <Diagnostics 
+            activeDataset={activeDataset}
+            datasets={datasets}
+            onSelectDataset={setActiveDatasetId}
           />
         )}
 

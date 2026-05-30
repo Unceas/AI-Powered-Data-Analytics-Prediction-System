@@ -62,13 +62,6 @@
 
 .logo-icon.active-glow {
   color: var(--accent-color);
-  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
-  animation: logoPulse 4s ease-in-out infinite;
-}
-
-@keyframes logoPulse {
-  0%, 100% { filter: drop-shadow(0 0 3px rgba(6, 182, 212, 0.2)); }
-  50% { filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.6)); }
 }
 
 .toggle-btn {
@@ -138,11 +131,10 @@
 }
 
 .nav-btn.active {
-  background: rgba(6, 182, 212, 0.06);
-  border-color: rgba(6, 182, 212, 0.15);
+  background: var(--accent-light);
+  border-color: var(--accent-border);
   color: var(--accent-color);
   font-weight: 600;
-  box-shadow: inset 0 0 12px rgba(6, 182, 212, 0.03);
 }
 
 .active-dot-indicator {
@@ -152,7 +144,14 @@
   height: 6px;
   border-radius: 50%;
   background-color: var(--accent-color);
-  box-shadow: 0 0 8px var(--accent-color);
+}
+
+.active-dot-indicator.processing-dot {
+  background-color: var(--warning);
+}
+
+.active-dot-indicator.complete-dot {
+  background-color: var(--success);
 }
 
 .status-summary-box {
