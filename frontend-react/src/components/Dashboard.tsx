@@ -7,7 +7,6 @@ import {
   Download,
   CheckCircle,
   Search,
-  LayoutDashboard,
   ArrowRight
 } from 'lucide-react';
 import { 
@@ -196,39 +195,183 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
     URL.revokeObjectURL(url);
   };
 
-  // If no dataset is selected, show onboarding
+  // If no dataset is selected, show System Initialization Workspace
   if (!activeDataset) {
     return (
-      <div className="dashboard-onboarding animate-fade-in">
-        <div className="onboarding-card card">
-          <div className="onboarding-icon">
-            <LayoutDashboard size={40} className="text-accent" />
+      <div className="dashboard-initialization-workspace animate-fade-in">
+        
+        {/* Left Zone - Pipeline Orchestration */}
+        <div className="workspace-panel orchestration-zone card">
+          <div className="zone-header">
+            <span className="zone-indicator dormant"></span>
+            <h3>Pipeline Orchestration Flow</h3>
           </div>
-          <h2>Welcome to InsightGrid Platform</h2>
-          <p>InsightGrid automatically parses your tabular datasets, detects outliers via unsupervised models, fits classifier networks, and provides contextual natural language reasoning.</p>
-          
-          <div className="onboarding-actions">
-            {datasets.length > 0 ? (
-              <div className="picker-block">
-                <span>Select an existing dataset:</span>
-                <select 
-                  className="dataset-dropdown-select text-center"
-                  value=""
-                  onChange={(e) => onSelectDataset(e.target.value)}
-                >
-                  <option value="" disabled>-- Select active dataset --</option>
-                  {datasets.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
+          <div className="orchestration-flow-list">
+            {[
+              { label: 'Dataset Ingestion', desc: 'Read raw data streams', step: 'INGEST' },
+              { label: 'Validation Scan', desc: 'Identify missing schema & metadata', step: 'VALIDATE' },
+              { label: 'Feature Preprocessing', desc: 'Impute missing values & scale', step: 'PROCESS' },
+              { label: 'Descriptive Analytics', desc: 'Generate distribution & correlation', step: 'ANALYZE' },
+              { label: 'Baseline Inference', desc: 'Fit Classifier & Isolation Forest', step: 'INFER' },
+              { label: 'Contextual Synthesis', desc: 'LLM natural language reasoning', step: 'SYNTHESIZE' }
+            ].map((node, i) => (
+              <div key={i} className="orchestration-node-card dormant">
+                <div className="node-icon-placeholder">{i + 1}</div>
+                <div className="node-content">
+                  <span className="node-title">{node.label}</span>
+                  <span className="node-desc">{node.desc}</span>
+                </div>
+                <span className="node-status-badge">Awaiting Input</span>
               </div>
-            ) : (
-              <button className="btn-primary" onClick={() => onNavigate('data-manager')}>
-                Get Started: Upload CSV <ArrowRight size={14} />
-              </button>
-            )}
+            ))}
           </div>
         </div>
+
+        {/* Center Zone - Session Ingestion & Capability Overview */}
+        <div className="workspace-panel initialization-center-zone">
+          <div className="initialization-card card">
+            <div className="session-header-badge">OPERATIONAL WORKSPACE INITIALIZED</div>
+            <h2>Operational Session Initialization</h2>
+            <p className="session-description">
+              Pipeline initialized for structured dataset analysis and contextual inference orchestration.
+            </p>
+
+            <div className="initialization-action-box">
+              {datasets.length > 0 ? (
+                <div className="picker-block">
+                  <label className="picker-label">SELECT RUNTIME CONTEXT DATASET</label>
+                  <div className="dropdown-action-group">
+                    <select 
+                      className="dataset-dropdown-select text-left"
+                      value=""
+                      onChange={(e) => onSelectDataset(e.target.value)}
+                    >
+                      <option value="" disabled>-- Select active dataset --</option>
+                      {datasets.map(d => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                    <button 
+                      className="btn-primary" 
+                      onClick={() => {
+                        if (datasets.length > 0) {
+                          onSelectDataset(datasets[0].id);
+                        }
+                      }}
+                    >
+                      Initialize Dataset Ingestion
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-datasets-cta">
+                  <button className="btn-primary start-session-btn" onClick={() => onNavigate('data-manager')}>
+                    <span>Start Operational Session</span>
+                    <ArrowRight size={14} />
+                  </button>
+                  <span className="alternative-subtext">OR navigate to Data Management to upload a CSV/Excel file.</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Capability Overview Grid */}
+          <div className="capabilities-grid">
+            <div className="capability-card card">
+              <span className="capability-label">Analytics Subsystem</span>
+              <h4>Descriptive Analytics</h4>
+              <ul className="capability-list">
+                <li>Correlation analysis (Pearson R)</li>
+                <li>Continuous probability density</li>
+                <li>Feature value distribution</li>
+              </ul>
+            </div>
+            
+            <div className="capability-card card">
+              <span className="capability-label">Inference Subsystem</span>
+              <h4>Machine Learning Models</h4>
+              <ul className="capability-list">
+                <li>Random Forest Classifier fits</li>
+                <li>Isolation Forest anomaly detector</li>
+                <li>Gini feature importance scoring</li>
+              </ul>
+            </div>
+
+            <div className="capability-card card">
+              <span className="capability-label">Intelligence Subsystem</span>
+              <h4>AI Explanation Layer</h4>
+              <ul className="capability-list">
+                <li>LLaMA 3.1 reasoning synthesis</li>
+                <li>Multi-stage execution logs</li>
+                <li>Attribution mapping trace</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Zone - System Readiness & Logs */}
+        <div className="workspace-panel system-readiness-zone card">
+          <div className="zone-header">
+            <h3>System Status & Metadata</h3>
+          </div>
+          
+          <div className="readiness-metrics">
+            <div className="readiness-row">
+              <span className="lbl">FastAPI API Router</span>
+              <span className="val status-green">Online</span>
+            </div>
+            <div className="readiness-row">
+              <span className="lbl">ML Runtime Engine</span>
+              <span className="val status-green">Standby</span>
+            </div>
+            <div className="readiness-row">
+              <span className="lbl">AI Synthesis Node</span>
+              <span className="val status-green">Connected</span>
+            </div>
+          </div>
+
+          <div className="divider-line"></div>
+
+          <div className="metadata-panel">
+            <h4>Recent Execution Metadata</h4>
+            <div className="meta-grid">
+              <div className="meta-item">
+                <span className="lbl">Recent Session</span>
+                <span className="val text-truncate" title="student_performance_v2.csv">student_performance_v2.csv</span>
+              </div>
+              <div className="meta-item">
+                <span className="lbl">Last Execution</span>
+                <span className="val">22:14 UTC</span>
+              </div>
+              <div className="meta-item">
+                <span className="lbl">Pipeline Duration</span>
+                <span className="val">4.2s</span>
+              </div>
+              <div className="meta-item">
+                <span className="lbl">Inference Confidence</span>
+                <span className="val">91.2%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="divider-line"></div>
+
+          <div className="trace-preview-panel">
+            <h4>Live Observability Stream</h4>
+            <div className="trace-lines-container">
+              <div className="trace-line">
+                <span className="timestamp">[22:45:11]</span> <span className="msg">ML runtime initialized</span>
+              </div>
+              <div className="trace-line">
+                <span className="timestamp">[22:45:12]</span> <span className="msg">AI synthesis layer connected</span>
+              </div>
+              <div className="trace-line">
+                <span className="timestamp">[22:45:14]</span> <span className="msg">Awaiting dataset ingestion stream</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     );
   }

@@ -348,7 +348,7 @@ function App() {
       />
       
       <main className="main-content">
-        <Hero />
+        <Hero activeDataset={activeDataset} />
         
         {currentView === 'dashboard' && (
           <Dashboard 
