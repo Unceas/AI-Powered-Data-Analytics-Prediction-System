@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Brain,
   MessageSquareCode,
-  Layers,
   LayoutDashboard
 } from 'lucide-react';
 import './Sidebar.css';
@@ -36,7 +35,7 @@ export function Sidebar({ status, currentView, onNavigate, activeDataset }: Side
     <aside className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
         <div className="logo-container">
-          <Layers className="logo-icon active-glow" size={24} />
+          <img src="/favicon.png" alt="InsightGrid Logo" className="logo-img" />
           {isExpanded && (
             <div className="logo-text-wrapper">
               <span className="logo-text">INSIGHTGRID</span>
