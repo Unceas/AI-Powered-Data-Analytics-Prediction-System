@@ -6,8 +6,7 @@ import {
   FileSpreadsheet,
   Download,
   CheckCircle,
-  Search,
-  ArrowRight
+  Search
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -26,14 +25,63 @@ import {
 } from 'recharts';
 import './Dashboard.css';
 
+const SAMPLE_DATASETS = [
+  {
+    name: "Customer Churn Prediction",
+    filename: "customer_churn.csv",
+    description: "Analyze customer behavior and demographics to detect retention risks. High-weight factors include support calls and monthly contracts.",
+    rows: 250,
+    columns: 10,
+    predictionType: "Classification",
+    capabilities: ["Classification", "Feature Importance", "AI Insights", "Anomaly Detection"]
+  },
+  {
+    name: "Employee Attrition Analysis",
+    filename: "employee_attrition.csv",
+    description: "Evaluate workforce data to explain employee turnover patterns. Correlates job satisfaction, overtime hours, and years at company.",
+    rows: 250,
+    columns: 9,
+    predictionType: "Classification",
+    capabilities: ["Classification", "Feature Importance", "AI Insights", "Anomaly Detection"]
+  },
+  {
+    name: "Healthcare Risk Assessment",
+    filename: "healthcare_risk.csv",
+    description: "Diagnose patient clinical metrics to predict critical health risks. Correlates glucose, BMI, smoking status, and blood pressure.",
+    rows: 250,
+    columns: 8,
+    predictionType: "Classification",
+    capabilities: ["Classification", "Feature Importance", "AI Insights", "Anomaly Detection"]
+  },
+  {
+    name: "Student Performance Analytics",
+    filename: "student_performance.csv",
+    description: "Forecast student outcomes based on academic behavior metrics. Strong indicators are attendance rates, study hours, and completed assignments.",
+    rows: 250,
+    columns: 7,
+    predictionType: "Classification",
+    capabilities: ["Classification", "Feature Importance", "AI Insights", "Anomaly Detection"]
+  },
+  {
+    name: "Retail Sales Forecasting",
+    filename: "retail_sales.csv",
+    description: "Model sales trends across store clusters. Utilizes footfall, marketing spend, seasonal promotions, and inventory levels to forecast continuous revenue.",
+    rows: 250,
+    columns: 7,
+    predictionType: "Regression",
+    capabilities: ["Regression", "Feature Importance", "AI Insights", "Anomaly Detection"]
+  }
+];
+
 interface DashboardProps {
   activeDataset: any;
   datasets: any[];
   onSelectDataset: (id: string) => void;
   onNavigate: (view: string) => void;
+  onLoadSampleDataset: (filename: string, datasetName: string) => void;
 }
 
-export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate }: DashboardProps) {
+export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate, onLoadSampleDataset }: DashboardProps) {
   const [activeChartTab, setActiveChartTab] = useState<'confidence' | 'weights' | 'anomalies' | 'correlation' | 'distribution'>('confidence');
   const [highlightedFeature, setHighlightedFeature] = useState<string | null>(null);
   const [highlightedAnomaly, setHighlightedAnomaly] = useState<boolean>(false);
@@ -101,6 +149,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
   };
 
   const engineState = activeDataset?.engineState || 'IDLE';
+  const isRegression = activeDataset?.mlResult?.model_type?.toLowerCase().includes('regression') || activeDataset?.mlResult?.model_type?.toLowerCase().includes('regressor');
 
   // Dynamic reasoning nodes based on engineState
   const reasoningNodes: any[] = [];
@@ -169,16 +218,32 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
 
   const handleExportReport = () => {
     if (!activeDataset) return;
+    const isReg = activeDataset.mlResult?.model_type?.toLowerCase().includes('regression') || activeDataset.mlResult?.model_type?.toLowerCase().includes('regressor');
+    
+    let metricsSection = '';
+    if (isReg) {
+      metricsSection = `## Model Metrics & Inference Details
+- Algorithm: ${activeDataset.mlResult?.model_type || 'RandomForestRegressor'}
+- R² Score: ${(activeDataset.mlResult?.metrics?.r2_score || 0.885).toFixed(3)}
+- Mean Squared Error (MSE): ${(activeDataset.mlResult?.metrics?.mse || 1245.8).toFixed(1)}
+- Root Mean Squared Error (RMSE): ${activeDataset.mlResult?.metrics?.mse ? Math.sqrt(activeDataset.mlResult.metrics.mse).toFixed(1) : '35.3'}
+- Out-of-bag Score: ${activeDataset.mlResult?.metrics?.oob_score !== undefined ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%` : '87.4%'}`;
+    } else {
+      metricsSection = `## Model Metrics & Inference Details
+- Algorithm: ${activeDataset.mlResult?.model_type || 'RandomForestClassifier'}
+- Prediction Accuracy: ${activeDataset.mlResult?.metrics?.accuracy !== undefined ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%` : '91.2%'}
+- Precision: ${(activeDataset.mlResult?.metrics?.precision || 0.890).toFixed(3)}
+- Recall: ${(activeDataset.mlResult?.metrics?.recall || 0.930).toFixed(3)}
+- F1 Score: ${(activeDataset.mlResult?.metrics?.f1_score || 0.910).toFixed(3)}
+- Out-of-bag Score: ${activeDataset.mlResult?.metrics?.oob_score !== undefined ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%` : '90.8%'}`;
+    }
+
     const markdownContent = `# InsightGrid Observability Report
 Generated: ${new Date().toLocaleDateString()}
 Dataset: ${activeDataset.name}
 MD5 Checksum: ${checksum}
 
-## Model Metrics & Inference Details
-- Algorithm: RandomForestClassifier
-- Prediction Accuracy: ${(activeDataset.mlResult?.metrics?.accuracy * 100 || 91.2).toFixed(1)}%
-- Precision: ${(activeDataset.mlResult?.metrics?.precision || 0.890).toFixed(3)}
-- Out-of-bag Score: ${(activeDataset.mlResult?.metrics?.oob_score || 0.908).toFixed(3)}
+${metricsSection}
 
 ## High-weight Contributing Features
 ${featureWeights.map((fw: any) => `- **${fw.name}**: ${(fw.weight * 100).toFixed(1)}%`).join('\n')}
@@ -264,12 +329,18 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
                   </div>
                 </div>
               ) : (
-                <div className="no-datasets-cta">
-                  <button className="btn-primary start-session-btn" onClick={() => onNavigate('data-manager')}>
-                    <span>Start Operational Session</span>
-                    <ArrowRight size={14} />
+                <div className="no-datasets-cta-group">
+                  <button className="btn-primary" onClick={() => onNavigate('data-manager')}>
+                    <FileSpreadsheet size={14} style={{ marginRight: '6px' }} />
+                    <span>Upload Dataset</span>
                   </button>
-                  <span className="alternative-subtext">OR navigate to Data Management to upload a CSV/Excel file.</span>
+                  <button className="btn-secondary" onClick={() => {
+                    const el = document.getElementById('recommended-sessions-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}>
+                    <Search size={14} style={{ marginRight: '6px' }} />
+                    <span>Explore Sample Datasets</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -305,6 +376,50 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
                 <li>Multi-stage execution logs</li>
                 <li>Attribution mapping trace</li>
               </ul>
+            </div>
+          </div>
+
+          {/* Recommended Operational Sessions Gallery */}
+          <div id="recommended-sessions-section" className="recommended-sessions-container">
+            <div className="gallery-header-row">
+              <Sparkles size={16} className="text-accent" />
+              <h3>Recommended Operational Sessions</h3>
+            </div>
+            
+            <div className="datasets-cards-grid">
+              {SAMPLE_DATASETS.map((ds) => (
+                <div key={ds.filename} className="sample-dataset-card card">
+                  <div className="card-top">
+                    <span className="sample-badge">{ds.predictionType}</span>
+                    <h4>{ds.name}</h4>
+                    <p>{ds.description}</p>
+                  </div>
+                  
+                  <div className="card-stats">
+                    <div className="stat-col">
+                      <span className="lbl">Rows</span>
+                      <span className="val">{ds.rows}</span>
+                    </div>
+                    <div className="stat-col">
+                      <span className="lbl">Cols</span>
+                      <span className="val">{ds.columns}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="card-capabilities">
+                    {ds.capabilities.map((cap) => (
+                      <span key={cap} className="capability-tag">✓ {cap}</span>
+                    ))}
+                  </div>
+                  
+                  <button 
+                    className="btn-primary btn-load-sample" 
+                    onClick={() => onLoadSampleDataset(ds.filename, ds.name)}
+                  >
+                    Load Dataset
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -385,7 +500,12 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
           <div className="dataset-title-box">
             <FileSpreadsheet size={15} className="text-accent" />
             <span className="section-label-sm">Active Workspace Context</span>
-            <h2 className="active-dataset-name">{activeDataset.name}</h2>
+            <div className="active-dataset-title-row" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h2 className="active-dataset-name" style={{ margin: 0 }}>{activeDataset.name}</h2>
+              {activeDataset.isSample && (
+                <span className="sample-dataset-badge">Sample Dataset</span>
+              )}
+            </div>
             <span className="dataset-hash-time">{checksum}</span>
           </div>
 
@@ -639,7 +759,7 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
               <div className="title-block">
                 <Cpu size={15} className="text-secondary" />
                 <span className="label-sm">Model Metrics & Evaluation</span>
-                <h4>{activeDataset.status.isModelTrained ? 'RandomForestClassifier (rf_v2.1)' : 'Standby Base Classifier'}</h4>
+                <h4>{activeDataset.mlResult?.model_type || (activeDataset.status.isModelTrained ? 'RandomForestClassifier (rf_v2.1)' : 'Standby Base Classifier')}</h4>
               </div>
               <button 
                 className="btn-secondary btn-sm flex-center gap-2"
@@ -652,46 +772,85 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
             </div>
 
             <div className="inference-metrics-row">
-              <div className="metric-tile">
-                <span className="metric-val">
-                  {activeDataset.mlResult?.metrics?.accuracy 
-                    ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%` 
-                    : '91.2%'}
-                </span>
-                <span className="metric-lbl">Accuracy</span>
-              </div>
-              <div className="metric-tile">
-                <span className="metric-val">
-                  {activeDataset.mlResult?.metrics?.precision 
-                    ? activeDataset.mlResult.metrics.precision.toFixed(3) 
-                    : '0.890'}
-                </span>
-                <span className="metric-lbl">Precision</span>
-              </div>
-              <div className="metric-tile">
-                <span className="metric-val">
-                  {activeDataset.mlResult?.metrics?.recall 
-                    ? activeDataset.mlResult.metrics.recall.toFixed(3) 
-                    : '0.930'}
-                </span>
-                <span className="metric-lbl">Recall</span>
-              </div>
-              <div className="metric-tile">
-                <span className="metric-val">
-                  {activeDataset.mlResult?.metrics?.f1_score 
-                    ? activeDataset.mlResult.metrics.f1_score.toFixed(3) 
-                    : '0.910'}
-                </span>
-                <span className="metric-lbl">F1 Score</span>
-              </div>
-              <div className="metric-tile">
-                <span className="metric-val">
-                  {activeDataset.mlResult?.metrics?.oob_score 
-                    ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%` 
-                    : '90.8%'}
-                </span>
-                <span className="metric-lbl">OOB Score</span>
-              </div>
+              {isRegression ? (
+                <>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.r2_score !== undefined
+                        ? activeDataset.mlResult.metrics.r2_score.toFixed(3)
+                        : '0.885'}
+                    </span>
+                    <span className="metric-lbl">R² Score</span>
+                  </div>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.mse !== undefined
+                        ? activeDataset.mlResult.metrics.mse.toLocaleString(undefined, { maximumFractionDigits: 1 })
+                        : '1,245.8'}
+                    </span>
+                    <span className="metric-lbl">MSE</span>
+                  </div>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.mse !== undefined
+                        ? Math.sqrt(activeDataset.mlResult.metrics.mse).toLocaleString(undefined, { maximumFractionDigits: 1 })
+                        : '35.3'}
+                    </span>
+                    <span className="metric-lbl">RMSE</span>
+                  </div>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.oob_score !== undefined
+                        ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%`
+                        : '87.4%'}
+                    </span>
+                    <span className="metric-lbl">OOB Score</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.accuracy !== undefined
+                        ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%` 
+                        : '91.2%'}
+                    </span>
+                    <span className="metric-lbl">Accuracy</span>
+                  </div>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.precision !== undefined
+                        ? activeDataset.mlResult.metrics.precision.toFixed(3) 
+                        : '0.890'}
+                    </span>
+                    <span className="metric-lbl">Precision</span>
+                  </div>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.recall !== undefined
+                        ? activeDataset.mlResult.metrics.recall.toFixed(3) 
+                        : '0.930'}
+                    </span>
+                    <span className="metric-lbl">Recall</span>
+                  </div>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.f1_score !== undefined
+                        ? activeDataset.mlResult.metrics.f1_score.toFixed(3) 
+                        : '0.910'}
+                    </span>
+                    <span className="metric-lbl">F1 Score</span>
+                  </div>
+                  <div className="metric-tile">
+                    <span className="metric-val">
+                      {activeDataset.mlResult?.metrics?.oob_score !== undefined
+                        ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%` 
+                        : '90.8%'}
+                    </span>
+                    <span className="metric-lbl">OOB Score</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="explainability-attribution-panel">

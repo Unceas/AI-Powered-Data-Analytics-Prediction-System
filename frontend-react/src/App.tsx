@@ -121,13 +121,17 @@ function App() {
       await new Promise(r => setTimeout(r, 450));
       
       const columns = processRes.data.columns || [];
-      const targetCol = columns.includes('dropout_risk') 
-        ? 'dropout_risk' 
-        : columns.includes('target')
-          ? 'target'
-          : columns[0] || 'target';
+      let targetCol = 'target';
+      if (columns.includes('churn')) targetCol = 'churn';
+      else if (columns.includes('attrition')) targetCol = 'attrition';
+      else if (columns.includes('risk')) targetCol = 'risk';
+      else if (columns.includes('pass_fail')) targetCol = 'pass_fail';
+      else if (columns.includes('sales')) targetCol = 'sales';
+      else if (columns.includes('dropout_risk')) targetCol = 'dropout_risk';
+      else if (columns.includes('target')) targetCol = 'target';
+      else targetCol = columns[0] || 'target';
 
-      addLog(id, `Fitting baseline Random Forest classifier with target: ${targetCol}...`);
+      addLog(id, `Fitting baseline Random Forest model with target: ${targetCol}...`);
       const predictFormData = new FormData();
       predictFormData.append('file', file);
       predictFormData.append('target_column', targetCol);
@@ -262,6 +266,67 @@ function App() {
     }
   };
 
+  const handleLoadSampleDataset = async (filename: string, datasetName: string) => {
+    try {
+      const response = await fetch(`/datasets/${filename}`);
+      if (!response.ok) {
+        throw new Error(`Failed to load dataset file: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      const file = new File([blob], filename, { type: 'text/csv' });
+      
+      const id = crypto.randomUUID();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const newDataset: Dataset = {
+        id,
+        name: datasetName,
+        file,
+        rawFile: file,
+        isSample: true,
+        stats: { rows: 0, columns: 0, nulls: 0, num_cols: 0, cat_cols: 0 },
+        status: { isLoaded: false, isProcessed: false, isAnalyzed: false, isModelTrained: false, isInsightsGenerated: false },
+        processedData: null,
+        analyticsData: null,
+        logs: [{ timestamp: getTimestamp(), message: 'System initialized from sample repository. Awaiting stream load...' }],
+        engineState: 'INITIALIZING'
+      };
+
+      setDatasets(prev => [...prev, newDataset]);
+      setActiveDatasetId(id);
+
+      const uploadResponse = await api.post('/upload-csv', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      const stats = {
+        rows: uploadResponse.data.rows,
+        columns: uploadResponse.data.columns.length,
+        nulls: 0,
+        num_cols: uploadResponse.data.columns.length,
+        cat_cols: 0
+      };
+
+      setDatasets(prev => prev.map(ds => 
+        ds.id === id 
+          ? { 
+              ...ds, 
+              stats, 
+              status: { ...ds.status, isLoaded: true },
+              logs: [...ds.logs, { timestamp: getTimestamp(), message: `Sample dataset loaded: ${datasetName}` }]
+            }
+          : ds
+      ));
+
+      await runFullPipeline(id, file, true);
+
+    } catch (error: any) {
+      console.error('Sample dataset load failed', error);
+      alert(`Sample dataset load failed: ${error.message || error}`);
+    }
+  };
+
   const handleManualPipelineTrigger = async (id: string, handleMissing: string, scale: boolean, encode: boolean) => {
     const ds = datasets.find(d => d.id === id);
     if (!ds || !ds.rawFile) return;
@@ -356,6 +421,7 @@ function App() {
             datasets={datasets}
             onSelectDataset={setActiveDatasetId}
             onNavigate={setCurrentView}
+            onLoadSampleDataset={handleLoadSampleDataset}
           />
         )}
 

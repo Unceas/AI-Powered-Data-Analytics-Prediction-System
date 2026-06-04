@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, IsolationForest
-from sklearn.metrics import accuracy_score, f1_score, mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, mean_squared_error, r2_score
 from typing import Tuple, Dict
 
 def train_and_evaluate(df: pd.DataFrame, target_col: str, test_size: float = 0.2, random_state: int = 42) -> Tuple[str, Dict[str, float], Dict[str, float]]:
@@ -40,20 +40,24 @@ def train_and_evaluate(df: pd.DataFrame, target_col: str, test_size: float = 0.2
     feature_importance = {}
 
     if is_classification:
-        model = RandomForestClassifier(random_state=random_state)
+        model = RandomForestClassifier(random_state=random_state, oob_score=True)
         model.fit(X_train, y_train)
         preds = model.predict(X_test)
         
         metrics['accuracy'] = float(accuracy_score(y_test, preds))
-        metrics['f1_score'] = float(f1_score(y_test, preds, average='weighted'))
+        metrics['precision'] = float(precision_score(y_test, preds, average='weighted', zero_division=0))
+        metrics['recall'] = float(recall_score(y_test, preds, average='weighted', zero_division=0))
+        metrics['f1_score'] = float(f1_score(y_test, preds, average='weighted', zero_division=0))
+        metrics['oob_score'] = float(model.oob_score_)
         model_type = "Classification (RandomForestClassifier)"
     else:
-        model = RandomForestRegressor(random_state=random_state)
+        model = RandomForestRegressor(random_state=random_state, oob_score=True)
         model.fit(X_train, y_train)
         preds = model.predict(X_test)
         
         metrics['mse'] = float(mean_squared_error(y_test, preds))
         metrics['r2_score'] = float(r2_score(y_test, preds))
+        metrics['oob_score'] = float(model.oob_score_)
         model_type = "Regression (RandomForestRegressor)"
 
     if hasattr(model, "feature_importances_"):

@@ -8,6 +8,7 @@ export interface Dataset {
   name: string;
   file: File;
   rawFile?: File;
+  isSample?: boolean;
   stats: any;
   status: {
     isLoaded: boolean;
