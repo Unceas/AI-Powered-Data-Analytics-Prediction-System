@@ -47,6 +47,7 @@ frontend-react/dist/
 # Data (optional - remove if you want to track data files)
 data/
 *.csv
+!frontend-react/public/datasets/*.csv
 test_data.csv
 
 # Pytest
