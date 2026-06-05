@@ -32,7 +32,7 @@ def analyze_dataframe(df: pd.DataFrame) -> Tuple[Dict[str, Any], Optional[Dict[s
         corr_matrix = _json_safe(corr_df.to_dict())
         
     # Categorical Summaries
-    cat_df = df.select_dtypes(include=['object', 'category', 'str'])
+    cat_df = df.select_dtypes(include=['object', 'category'])
     cat_summaries = None
     if not cat_df.empty:
         cat_summaries = {}

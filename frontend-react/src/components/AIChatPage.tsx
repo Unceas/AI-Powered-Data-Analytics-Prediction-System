@@ -43,7 +43,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
         setMessages([
           {
             role: 'assistant',
-            content: `Hello! I am Grok, your AI intelligence assistant. I have loaded **${activeDataset.name}** into memory.\n\n` + 
+            content: `Hello! I am the resident Insight Engine. I have loaded **${activeDataset.name}** into memory.\n\n` + 
                      `- Rows: **${activeDataset.stats.rows.toLocaleString()}** | Columns: **${activeDataset.stats.columns}**\n` +
                      `- Preprocessed Strategy: **Imputation (Mean) + StandardScaler**\n\n` +
                      `Ask me any questions about distributions, predictions, feature importances, or anomaly patterns.`,
@@ -63,7 +63,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
       setMessages([
         {
           role: 'assistant',
-          content: "Welcome to Grok AI Insight Engine. Select a dataset from the list to begin conversational reasoning.",
+          content: "Welcome to the Intelligence Studio. Select a dataset from the list to begin conversational reasoning.",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -99,7 +99,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
           ml_result: activeDataset.mlResult || null,
           anomaly_result: activeDataset.anomalyResult || null
         },
-        context: `You are Grok, an expert senior data scientist. The user asks: "${text}". Respond concisely, professionally, and ground all insights in the provided dataset schema. Use Markdown formatting.`
+        context: `You are the Insight Engine, an expert senior data scientist. The user asks: "${text}". Respond concisely, professionally, and ground all insights in the provided dataset schema. Use Markdown formatting.`
       });
 
       // Grounding: simulated confidence / links if response touches certain words
@@ -132,7 +132,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
   return (
     <div className="ai-chat-view animate-fade-in">
       <div className="view-header" style={{ marginBottom: '1.25rem' }}>
-        <h2>Grok AI Insight Engine</h2>
+        <h2>Intelligence Studio</h2>
         <p>Conversational LLM reasoning grounded in dataset parameters, model weights, and statistical vectors.</p>
       </div>
 
@@ -179,7 +179,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
           <div className="chat-header-bar">
             <div className="header-status">
               <Bot size={16} className="text-cyan active-glow" />
-              <span>Grok AI Agent</span>
+              <span>Intelligence Studio</span>
             </div>
             <span className="status-indicator-pill">INTELLIGENCE SYNTESIZER ACTIVE</span>
           </div>
@@ -192,7 +192,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
                 </div>
                 <div className="message-content-wrapper">
                   <div className="message-meta">
-                    <span className="author">{msg.role === 'assistant' ? 'GROK' : 'YOU'}</span>
+                    <span className="author">{msg.role === 'assistant' ? 'INSIGHT ENGINE' : 'YOU'}</span>
                     <span className="time">{msg.timestamp}</span>
                   </div>
                   <div className="message-text">
@@ -214,7 +214,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
                 <div className="msg-avatar"><Bot size={14} /></div>
                 <div className="message-content-wrapper">
                   <div className="message-meta">
-                    <span className="author">GROK</span>
+                    <span className="author">INSIGHT ENGINE</span>
                   </div>
                   <div className="typing-loader">
                     <span></span><span></span><span></span>
@@ -245,7 +245,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
           <div className="chat-input-row">
             <input 
               type="text" 
-              placeholder={activeDataset ? "Ask Grok to analyze metrics, weights, or outliers..." : "Select active dataset first..."}
+              placeholder={activeDataset ? "Ask Insight Engine to analyze metrics, weights, or outliers..." : "Select active dataset first..."}
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && sendMessage(inputValue)}

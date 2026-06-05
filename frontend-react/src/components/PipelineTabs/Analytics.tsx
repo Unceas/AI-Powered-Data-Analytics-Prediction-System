@@ -155,6 +155,30 @@ export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
     );
   };
 
+  // Helper calculations for metrics dashboard
+  const numericCols = data && data.descriptive_statistics ? Object.keys(data.descriptive_statistics) : [];
+  const totalRows = data && data.descriptive_statistics && numericCols.length > 0 ? (data.descriptive_statistics[numericCols[0]]['count'] || 0) : 0;
+  const catCols = data && data.categorical_summaries ? Object.keys(data.categorical_summaries) : [];
+
+  const topCorrelation = (() => {
+    if (!data || !data.correlation_matrix) return 'None';
+    const cols = Object.keys(data.correlation_matrix);
+    let maxVal = 0;
+    let maxPair = '';
+    for (let i = 0; i < cols.length; i++) {
+      for (let j = i + 1; j < cols.length; j++) {
+        const c1 = cols[i];
+        const c2 = cols[j];
+        const val = Math.abs(data.correlation_matrix[c1][c2] || 0);
+        if (val > maxVal && val < 0.99) {
+          maxVal = val;
+          maxPair = `${c1} / ${c2} (${data.correlation_matrix[c1][c2] > 0 ? '+' : ''}${data.correlation_matrix[c1][c2].toFixed(2)})`;
+        }
+      }
+    }
+    return maxPair || 'None';
+  })();
+
   if (!activeDataset) {
     return (
       <div className="tab-pane placeholder-tab card">
@@ -192,20 +216,67 @@ export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
           </button>
 
           {data && (
-            <div className="quick-ai-summary" style={{ marginTop: '1.5rem', marginBottom: '2rem', padding: '1.25rem', background: 'rgba(6, 182, 212, 0.03)', borderRadius: '0.75rem', borderLeft: '4px solid var(--accent-color)', borderTop: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
-               <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em' }}>
-                  <Sparkles size={16} /> INSIGHTGRID AUTO-ANALYSIS
+            <div className="dataset-intelligence-summary-box card" style={{ marginTop: '1.5rem', marginBottom: '1.5rem', padding: '1.75rem', background: 'rgba(6, 182, 212, 0.02)', borderRadius: '0.75rem', borderLeft: '4px solid var(--accent-color)', borderTop: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', width: '100%' }}>
+               <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', color: 'var(--accent-color)', fontSize: '1.1rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                  <Sparkles size={20} /> DATASET INTELLIGENCE SUMMARY
                </h4>
                {isGeneratingQuick && !quickInsight ? (
-                 <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '0.85rem' }} className="pulse-text">Analyzing statistical patterns...</p>
+                 <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '0.95rem' }} className="pulse-text">Analyzing statistical patterns...</p>
                ) : (
-                 <p style={{ lineHeight: 1.5, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{typedQuickInsight}<span className="cursor-blink">|</span></p>
+                 <div style={{ lineHeight: 1.7, fontSize: '0.98rem', color: 'var(--text-primary)', fontWeight: '400' }}>
+                   {typedQuickInsight.split('\n').map((para, pIdx) => (
+                     <p key={pIdx} style={{ marginBottom: '0.75rem' }}>{para}</p>
+                   ))}
+                   <span className="cursor-blink">|</span>
+                 </div>
                )}
             </div>
           )}
 
           {data && (
+            <div className="analytics-key-metrics card" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.005)' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Key Statistical Metrics</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Observations (Rows)</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{totalRows.toLocaleString()}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Continuous Features</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{numericCols.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Categorical Features</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{catCols.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Strongest Linear Link</span>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--accent-color)', marginTop: '0.35rem' }}>{topCorrelation}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {data && (
             <div className="analytics-results animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {data.correlation_matrix && (
+                <div>
+                  <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '0.75rem', padding: 0 }}>CORRELATION HEATMAP</div>
+                  <div className="card" style={{ padding: '0.75rem' }}>
+                     {renderCorrelationMatrix(data.correlation_matrix)}
+                  </div>
+                </div>
+              )}
+
+              {data.categorical_summaries && Object.keys(data.categorical_summaries).length > 0 && (
+                <div>
+                  <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '0.75rem', padding: 0 }}>CATEGORICAL FEATURE SUMMARIES</div>
+                  <div className="charts-grid">
+                    {Object.entries(data.categorical_summaries).map(([feat, info]) => renderCategoricalChart(feat, info as any))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '0.75rem', padding: 0 }}>DESCRIPTIVE STATISTICS</div>
                 <div className="preview-table-container">
@@ -229,24 +300,6 @@ export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
                   </table>
                 </div>
               </div>
-
-              {data.correlation_matrix && (
-                <div>
-                  <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '0.75rem', padding: 0 }}>CORRELATION HEATMAP</div>
-                  <div className="card" style={{ padding: '0.75rem' }}>
-                     {renderCorrelationMatrix(data.correlation_matrix)}
-                  </div>
-                </div>
-              )}
-
-              {data.categorical_summaries && Object.keys(data.categorical_summaries).length > 0 && (
-                <div>
-                  <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '0.75rem', padding: 0 }}>CATEGORICAL FEATURE SUMMARIES</div>
-                  <div className="charts-grid">
-                    {Object.entries(data.categorical_summaries).map(([feat, info]) => renderCategoricalChart(feat, info as any))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </>

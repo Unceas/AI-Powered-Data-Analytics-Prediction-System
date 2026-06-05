@@ -375,8 +375,8 @@
   padding: 1rem;
   border-radius: 0.375rem;
   border: 1px solid var(--border-color);
-  min-height: 180px;
-  max-height: 280px;
+  min-height: 350px;
+  flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -419,3 +419,47 @@
   padding: 2rem 0;
   font-style: italic;
 }
+
+/* Split Workspace layout refinements */
+.diagnostics-header-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem !important;
+}
+
+.diagnostics-split-workspace {
+  display: grid;
+  grid-template-columns: 1.2fr 1.1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.diagnostics-left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.diagnostics-left-panel .diagnostics-main-card {
+  flex: 1;
+  min-height: auto;
+}
+
+.diagnostics-right-panel {
+  display: flex;
+}
+
+.diagnostics-right-panel .execution-trace-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+@media (max-width: 1024px) {
+  .diagnostics-split-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+

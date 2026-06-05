@@ -29,7 +29,7 @@ export function AIInsightsBubble({ datasets, onInsightsGenerated }: AIInsightsBu
     if (selectedDataset && selectedDataset.status.isAnalyzed && messages.length === 0) {
       setMessages([{
         role: 'assistant',
-        content: `Hi! I'm Grok. I've looked at **${selectedDataset.name}** (${selectedDataset.stats.rows.toLocaleString()} rows, ${selectedDataset.stats.columns} columns).\n\nWhat would you like to know about it?`
+        content: `Hi! I am the Insight Engine. I've looked at **${selectedDataset.name}** (${selectedDataset.stats.rows.toLocaleString()} rows, ${selectedDataset.stats.columns} columns).\n\nWhat would you like to know about it?`
       }]);
     } else if (!selectedDataset) {
       setMessages([]);
@@ -52,7 +52,7 @@ export function AIInsightsBubble({ datasets, onInsightsGenerated }: AIInsightsBu
       const chatHistory = newMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
       const response = await api.post('/generate-insights', {
         analysis_data: selectedDataset.analyticsData,
-        context: `You are Grok, an expert AI data analyst assistant. The user is asking questions about the dataset. Respond conversationally, concisely, and use the data context to answer.\n\nChat History:\n${chatHistory}`
+        context: `You are the Insight Engine, an expert AI data analyst assistant. The user is asking questions about the dataset. Respond conversationally, concisely, and use the data context to answer.\n\nChat History:\n${chatHistory}`
       });
       
       setMessages([...newMessages, { role: 'assistant', content: response.data.insights }]);
@@ -70,7 +70,7 @@ export function AIInsightsBubble({ datasets, onInsightsGenerated }: AIInsightsBu
       <button 
         className={`ai-bubble ${isOpen ? 'active' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
-        title="Chat with Grok"
+        title="Chat with Insight Engine"
       >
         <Sparkles size={24} />
       </button>
@@ -79,7 +79,7 @@ export function AIInsightsBubble({ datasets, onInsightsGenerated }: AIInsightsBu
         <div className="overlay-header">
           <div className="header-title">
             <Sparkles size={20} className="text-accent" />
-            <span>Chat with Grok</span>
+            <span>Chat with Insight Engine</span>
           </div>
           <button className="close-btn" onClick={() => setIsOpen(false)}>
             <X size={20} />
@@ -143,7 +143,7 @@ export function AIInsightsBubble({ datasets, onInsightsGenerated }: AIInsightsBu
                   <div className="chat-input-area">
                     <input 
                       type="text" 
-                      placeholder="Ask Grok about your data..." 
+                      placeholder="Ask Insight Engine about your data..." 
                       value={inputValue}
                       onChange={e => setInputValue(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && sendMessage()}

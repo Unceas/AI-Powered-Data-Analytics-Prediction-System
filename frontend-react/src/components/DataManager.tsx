@@ -3,17 +3,36 @@ import { UploadCloud, FileText, Clock, Settings, ArrowRight } from 'lucide-react
 import './DataManager.css';
 import type { Dataset } from '../types';
 
+const SAMPLE_DATASETS_INFO = [
+  { filename: "customer_churn.csv", name: "Customer Churn Prediction" },
+  { filename: "employee_attrition.csv", name: "Employee Attrition Analysis" },
+  { filename: "healthcare_risk.csv", name: "Healthcare Risk Assessment" },
+  { filename: "student_performance.csv", name: "Student Performance Analytics" },
+  { filename: "retail_sales.csv", name: "Retail Sales Forecasting" }
+];
+
 interface DataManagerProps {
   datasets: Dataset[];
   activeDatasetId: string | null;
   onFileUpload: (file: File, autoProcess: boolean) => void;
   onSelectDataset: (id: string) => void;
   onManualPipelineTrigger: (id: string, handleMissing: string, scale: boolean, encode: boolean) => void;
+  onLoadSampleDataset?: (filename: string, datasetName: string) => void;
+  onNavigate?: (view: string) => void;
 }
 
-export function DataManager({ datasets, activeDatasetId, onFileUpload, onSelectDataset, onManualPipelineTrigger }: DataManagerProps) {
+export function DataManager({ 
+  datasets, 
+  activeDatasetId, 
+  onFileUpload, 
+  onSelectDataset, 
+  onManualPipelineTrigger,
+  onLoadSampleDataset,
+  onNavigate
+}: DataManagerProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [autoProcess, setAutoProcess] = useState(true);
+  const [selectedSample, setSelectedSample] = useState("customer_churn.csv");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Preprocessing states
@@ -112,6 +131,33 @@ export function DataManager({ datasets, activeDatasetId, onFileUpload, onSelectD
               />
               <span>Auto-process pipeline on ingest</span>
             </label>
+          </div>
+
+          <div className="sample-dataset-ingest-bar">
+            <span className="divider-label">OR</span>
+            <div className="sample-action-row">
+              <select 
+                className="sample-select text-left"
+                value={selectedSample}
+                onChange={(e) => setSelectedSample(e.target.value)}
+              >
+                {SAMPLE_DATASETS_INFO.map(item => (
+                  <option key={item.filename} value={item.filename}>{item.name}</option>
+                ))}
+              </select>
+              <button 
+                className="btn-secondary btn-use-sample"
+                onClick={() => {
+                  const item = SAMPLE_DATASETS_INFO.find(x => x.filename === selectedSample);
+                  if (item && onLoadSampleDataset) {
+                    onLoadSampleDataset(item.filename, item.name);
+                    if (onNavigate) onNavigate('diagnostics');
+                  }
+                }}
+              >
+                Use Sample Dataset
+              </button>
+            </div>
           </div>
         </div>
 

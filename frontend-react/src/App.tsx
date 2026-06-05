@@ -170,7 +170,7 @@ function App() {
           ml_result: predictRes.data,
           anomaly_result: anomalyRes.data
         },
-        context: "You are Grok, the resident system AI. Synthesize 3 concise, highly professional business insights grounded in the anomaly analysis and model metrics."
+        context: "You are the resident system AI. Synthesize 3 concise, highly professional business insights grounded in the anomaly analysis and model metrics."
       });
 
       await new Promise(r => setTimeout(r, 450));
@@ -440,6 +440,8 @@ function App() {
             onFileUpload={handleFileUpload}
             onSelectDataset={setActiveDatasetId}
             onManualPipelineTrigger={handleManualPipelineTrigger}
+            onLoadSampleDataset={handleLoadSampleDataset}
+            onNavigate={setCurrentView}
           />
         )}
 

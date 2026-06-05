@@ -113,10 +113,10 @@ export function Sidebar({ status, currentView, onNavigate, activeDataset }: Side
           <button 
             className={`nav-btn ${currentView === 'ai-chat' ? 'active' : ''}`} 
             onClick={() => onNavigate('ai-chat')}
-            title="Grok Assistant"
+            title="Intelligence Studio"
           >
             <MessageSquareCode size={18} />
-            {isExpanded && <span>Grok Assistant</span>}
+            {isExpanded && <span>Intelligence Studio</span>}
             {isExpanded && status.isInsightsGenerated && <span className="active-dot-indicator"></span>}
           </button>
 
