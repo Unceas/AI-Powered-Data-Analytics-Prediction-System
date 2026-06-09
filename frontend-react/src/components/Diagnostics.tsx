@@ -48,10 +48,12 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
     return () => clearInterval(interval);
   }, [engineState]);
 
-  // Handle auto-scrolling for logs
+  // Handle auto-scrolling for logs (removed forced scroll to prevent jumping when active)
+  /*
   useEffect(() => {
     consoleEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeDataset?.logs]);
+  */
 
   // Fallback default logs if dataset has none
   const defaultLogs = [

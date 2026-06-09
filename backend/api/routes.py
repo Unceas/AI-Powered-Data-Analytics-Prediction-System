@@ -164,7 +164,7 @@ async def detect_anomalies_csv(
 @router.post("/generate-insights", response_model=AIInsightResponse)
 async def generate_insights(request: AIInsightRequest = Body(...)):
     """Generate human-readable insights from data analysis using Gemini API."""
-    insights = generate_natural_language_insights(request.analysis_data, request.context)
+    insights = generate_natural_language_insights(request.analysis_data, request.context, request.dataset_name)
     
     return AIInsightResponse(
         status="success",

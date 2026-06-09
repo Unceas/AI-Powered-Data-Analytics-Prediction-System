@@ -170,7 +170,8 @@ function App() {
           ml_result: predictRes.data,
           anomaly_result: anomalyRes.data
         },
-        context: "You are the resident system AI. Synthesize 3 concise, highly professional business insights grounded in the anomaly analysis and model metrics."
+        context: "You are the resident system AI. Synthesize 3 concise, highly professional business insights grounded in the anomaly analysis and model metrics.",
+        dataset_name: file.name
       });
 
       await new Promise(r => setTimeout(r, 450));
@@ -186,8 +187,9 @@ function App() {
         { 
           analyticsData: {
             ...analyzeRes.data,
-            aiInsightsText: insightsRes.data.insights
-          }
+            aiInsightsText: Array.isArray(insightsRes.data.insights) ? "" : (insightsRes.data.insights || "")
+          },
+          insights: Array.isArray(insightsRes.data.insights) ? insightsRes.data.insights : []
         }
       );
 

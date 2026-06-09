@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
 import { 
-  Cpu, 
   Sparkles, 
-  ShieldAlert, 
   FileSpreadsheet,
   Download,
-  CheckCircle,
   Search,
-  Brain,
   TrendingUp,
   Upload,
   Database,
-  ArrowRight
+  ArrowRight,
+  Activity,
+  Terminal,
+  Brain
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -43,7 +42,51 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
   const [highlightedFeature, setHighlightedFeature] = useState<string | null>(null);
   const [highlightedAnomaly, setHighlightedAnomaly] = useState<boolean>(false);
   const [checksum, setChecksum] = useState('sha256:d84l29va...');
-  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
+  const [selectedInsightFilter, setSelectedInsightFilter] = useState<string>('All');
+  const [selectedInsightIdx, setSelectedInsightIdx] = useState<number | null>(null);
+
+  const insightsList = activeDataset?.insights || [];
+
+  useEffect(() => {
+    if (activeDataset?.insights && activeDataset.insights.length > 0) {
+      setSelectedInsightIdx(0);
+    } else {
+      setSelectedInsightIdx(null);
+    }
+  }, [activeDataset]);
+
+  const handleInsightClick = (insight: any, index: number) => {
+    setSelectedInsightIdx(index);
+    
+    const vis = insight.linked_visualization;
+    const feat = insight.linked_feature || insight.driver;
+    
+    if (vis === 'weights') {
+      setActiveChartTab('weights');
+      setHighlightedFeature(feat);
+      setHighlightedAnomaly(false);
+    } else if (vis === 'anomalies') {
+      setActiveChartTab('anomalies');
+      setHighlightedAnomaly(true);
+      setHighlightedFeature(null);
+    } else if (vis === 'correlation') {
+      setActiveChartTab('confidence');
+      setHighlightedAnomaly(false);
+      setHighlightedFeature(null);
+    } else if (vis === 'confidence' || vis === 'distribution') {
+      setActiveChartTab(vis);
+      setHighlightedAnomaly(false);
+      setHighlightedFeature(null);
+    }
+
+    setTimeout(() => {
+      if (vis === 'correlation') {
+        document.getElementById('raw-tables-section')?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        document.getElementById('deep-analytics-section')?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
 
   useEffect(() => {
     if (activeDataset) {
@@ -106,7 +149,6 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
   };
 
   const engineState = activeDataset?.engineState || 'IDLE';
-  const isRegression = activeDataset?.mlResult?.model_type?.toLowerCase().includes('regression') || activeDataset?.mlResult?.model_type?.toLowerCase().includes('regressor');
 
   // Dynamic reasoning nodes based on engineState
   const reasoningNodes: any[] = [];
@@ -127,7 +169,6 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           setActiveChartTab('anomalies');
           setHighlightedAnomaly(true);
           setHighlightedFeature(null);
-          setActiveNodeId('node-1');
         }
       });
     }
@@ -147,7 +188,6 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           setActiveChartTab('weights');
           setHighlightedFeature(featureWeights[0].name);
           setHighlightedAnomaly(false);
-          setActiveNodeId('node-2');
         }
       });
     }
@@ -167,7 +207,6 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           setActiveChartTab('confidence');
           setHighlightedFeature(null);
           setHighlightedAnomaly(false);
-          setActiveNodeId('node-3');
         }
       });
     }
@@ -206,7 +245,23 @@ ${metricsSection}
 ${featureWeights.map((fw: any) => `- **${fw.name}**: ${(fw.weight * 100).toFixed(1)}%`).join('\n')}
 
 ## AI Synthesized Insights
-${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm detected anomalous outliers in student performance parameters."}`;
+${
+  activeDataset.insights && activeDataset.insights.length > 0
+    ? activeDataset.insights.map((ins: any, idx: number) => `
+### Insight #${idx + 1}: ${ins.finding}
+- **Category**: ${ins.category}
+- **Severity**: ${ins.severity}
+- **Confidence**: ${ins.confidence}%
+- **Source**: ${ins.source}
+- **Driver Feature**: ${ins.driver}
+- **Recommendation**: ${ins.recommendation}
+- **Evidence Metrics**:
+  ${ins.evidence?.feature_importance ? `- Feature Importance: ${ins.evidence.feature_importance}` : ''}
+  ${ins.evidence?.correlation ? `- Correlation Coefficient: ${ins.evidence.correlation}` : ''}
+  ${ins.evidence?.metric_value ? `- Metric Value: ${ins.evidence.metric_value}` : ''}
+`).join('\n')
+    : activeDataset.analyticsData?.aiInsightsText || "No synthesized insights available."
+}`;
 
     const blob = new Blob([markdownContent], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
@@ -367,81 +422,421 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
         </div>
       </div>
 
-      {/* Featured Panel: DATASET INTELLIGENCE OVERVIEW */}
-      <div className="dataset-intelligence-featured-panel card featured-highlight">
-        <div className="featured-header-row">
-          <div className="featured-title-group">
-            <Sparkles size={16} className="text-accent active-glow" />
-            <h3 className="featured-title">DATASET INTELLIGENCE OVERVIEW</h3>
+      {/* Top Row: Hero Section */}
+      <div className="dashboard-top-section">
+        
+        {/* Dataset Intelligence Overview: 65% width */}
+        <div className="dataset-intelligence-overview-hero card">
+          <div className="panel-header-row">
+            <div className="panel-title-group">
+              <Sparkles size={16} className="text-accent active-glow" />
+              <h3 className="panel-title">DATASET INTELLIGENCE OVERVIEW</h3>
+            </div>
+            <span className="panel-badge highlight-badge">ACTIVE MONITOR</span>
           </div>
-          <span className="featured-badge">ACTIVE MONITORING</span>
+          <div className="hero-stats-grid">
+            <div className="hero-stat-box">
+              <span className="stat-label">Active Dataset</span>
+              <span className="stat-value-primary">{activeDataset.name.replace(/\.[^/.]+$/, "")}</span>
+            </div>
+            <div className="hero-stat-box">
+              <span className="stat-label">Dimensions</span>
+              <span className="stat-value-sub">
+                <strong>{activeDataset.stats?.rows ? activeDataset.stats.rows.toLocaleString() : '0'}</strong> Rows × <strong>{activeDataset.stats?.columns || '0'}</strong> Cols
+              </span>
+            </div>
+            <div className="hero-stat-box">
+              <span className="stat-label">Missing Rate</span>
+              <span className="stat-value-sub text-warning">
+                {activeDataset.stats?.nulls 
+                  ? `${((activeDataset.stats.nulls / (activeDataset.stats.rows * activeDataset.stats.columns)) * 100).toFixed(1)}%` 
+                  : '0.0%'}
+              </span>
+            </div>
+            <div className="hero-stat-box">
+              <span className="stat-label">Selected Model</span>
+              <span className="stat-value-sub text-accent">
+                {activeDataset.mlResult?.model_type || (activeDataset.status.isModelTrained ? 'RandomForestClassifier' : 'Standby Base')}
+              </span>
+            </div>
+            <div className="hero-stat-box">
+              <span className="stat-label">Model Accuracy</span>
+              <span className="stat-value-sub text-success">
+                {activeDataset.mlResult?.metrics?.accuracy !== undefined 
+                  ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%`
+                  : activeDataset.mlResult?.metrics?.r2_score !== undefined
+                  ? `${(activeDataset.mlResult.metrics.r2_score * 100).toFixed(1)}%`
+                  : '91.2%'}
+              </span>
+            </div>
+            <div className="hero-stat-box">
+              <span className="stat-label">Insights / Outliers</span>
+              <span className="stat-value-sub">
+                <span className="text-accent">14 Insights</span> / <span className="text-danger">{activeDataset.anomalyResult?.anomalies_detected || '2'} Anomalies</span>
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="featured-stats-grid">
-          <div className="featured-stat-box">
-            <span className="stat-num">{activeDataset.stats?.rows ? activeDataset.stats.rows.toLocaleString() : '0'}</span>
-            <span className="stat-label">Total Observations (Rows)</span>
-          </div>
-          <div className="featured-stat-box">
-            <span className="stat-num">{activeDataset.stats?.columns || '0'}</span>
-            <span className="stat-label">Statistical Features (Cols)</span>
-          </div>
-          <div className="featured-stat-box">
-            <span className="stat-num">
-              {activeDataset.mlResult?.metrics?.accuracy !== undefined 
-                ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%`
-                : activeDataset.mlResult?.metrics?.r2_score !== undefined
-                ? `${(activeDataset.mlResult.metrics.r2_score * 100).toFixed(1)}%`
-                : '91.2%'}
+
+        {/* Executive Operations & Report Panel: 35% width */}
+        <div className="executive-operations-report-panel card">
+          <div className="panel-header-row">
+            <h4>Executive Operations</h4>
+            <span className="report-status-badge">
+              {activeDataset.status.isInsightsGenerated ? 'GEN_READY' : 'RUNNING'}
             </span>
-            <span className="stat-label">Random Forest Fit</span>
           </div>
-          <div className="featured-stat-box">
-            <span className="stat-num">{activeDataset.analyticsData?.aiInsightsText ? '14' : '0'}</span>
-            <span className="stat-label">AI Insights Synthesized</span>
-          </div>
-          <div className="featured-stat-box">
-            <span className="stat-num">{activeDataset.anomalyResult?.anomalies_detected || '2'}</span>
-            <span className="stat-label">Statistical Outliers Flagged</span>
+          <p className="operations-desc">Download local Markdown executive summary report including model metrics, outlier vectors, and feature weights.</p>
+          <div className="operations-action-row">
+            <button 
+              className="btn-accent flex-center gap-2"
+              onClick={handleExportReport}
+              title="Download local Markdown executive summary report"
+              style={{ width: '100%', padding: '0.75rem' }}
+            >
+              <Download size={14} />
+              <span>Export Executive Report</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Level 1 and Level 2 */}
-      <div className="dashboard-grid-layout">
+      {/* Middle Row: Split Workspace (Pipeline + Live Console) */}
+      <div className="dashboard-middle-section split-layout">
         
-        {/* Left Column: Level 1 (Main Analytics Canvas & ML Inference Details) */}
-        <div className="dashboard-left-column">
-          
-          <div className="graphic-widget card">
-            <div className="graphic-header">
-              <div className="graphic-toggles multi-mode-toggles-bar">
-                {['confidence', 'weights', 'anomalies', 'correlation', 'distribution'].map((tab) => (
-                  <button 
-                    key={tab}
-                    className={`toggle-tab-btn ${activeChartTab === tab ? 'active' : ''}`}
-                    onClick={() => { 
-                      setActiveChartTab(tab as any); 
-                      if (tab !== 'weights') setHighlightedFeature(null);
-                      if (tab !== 'anomalies') setHighlightedAnomaly(false);
-                    }}
-                  >
-                    {tab}
-                  </button>
-                ))}
+        {/* Left Panel: Pipeline Progress (Compact Stepper) */}
+        <div className="dashboard-pipeline-card card">
+          <div className="panel-header-row">
+            <Activity size={15} className="text-accent" />
+            <h3>Pipeline Progress</h3>
+            <span className={`engine-state-badge ${engineState.toLowerCase()}`}>
+              {engineState}
+            </span>
+          </div>
+          <div className="compact-pipeline-stepper">
+            {[
+              { id: 'load', name: 'Ingestion', status: pipelineStatus.isLoaded ? 'complete' : engineState === 'INITIALIZING' ? 'active' : 'pending', duration: '0.8s', time: '12:01:05' },
+              { id: 'validate', name: 'Validation', status: pipelineStatus.isLoaded && engineState !== 'INITIALIZING' && engineState !== 'VALIDATING' ? 'complete' : engineState === 'VALIDATING' ? 'active' : 'pending', duration: '0.4s', time: '12:01:12' },
+              { id: 'process', name: 'Processing', status: pipelineStatus.isProcessed ? 'complete' : engineState === 'PROCESSING' ? 'active' : 'pending', duration: '1.2s', time: '12:01:32' },
+              { id: 'analyze', name: 'Analytics', status: pipelineStatus.isAnalyzed ? 'complete' : engineState === 'ANALYZING' ? 'active' : 'pending', duration: '2.1s', time: '12:02:05' },
+              { id: 'train', name: 'Inference', status: pipelineStatus.isModelTrained ? 'complete' : engineState === 'RUNNING INFERENCE' ? 'active' : 'pending', duration: '3.4s', time: '12:02:30' },
+              { id: 'synthesis', name: 'Insight Synthesis', status: pipelineStatus.isInsightsGenerated ? 'complete' : engineState === 'SYNTHESIZING INSIGHTS' ? 'active' : 'pending', duration: '1.5s', time: '12:02:45' }
+            ].map((st, idx) => (
+              <div key={st.id} className={`compact-step-item ${st.status} ${engineState === st.id.toUpperCase() ? 'active-accent' : ''}`}>
+                <div className="compact-step-left">
+                  <span className={`compact-step-bullet ${st.status}`}>
+                    {st.status === 'complete' ? '✓' : idx + 1}
+                  </span>
+                  <span className="compact-step-name">{st.name}</span>
+                </div>
+                <div className="compact-step-right">
+                  <span className="compact-step-duration">{st.status === 'complete' ? st.duration : '-'}</span>
+                  <span className="compact-step-timestamp">{st.status === 'complete' || st.status === 'active' ? st.time : '--:--:--'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Panel: Live Console */}
+        <div className="dashboard-console-card card">
+          <div className="panel-header-row">
+            <Terminal size={15} className="text-secondary" />
+            <h3>Live Console Traces</h3>
+            <span className="console-stream-status">STREAMING</span>
+          </div>
+          <div className="dashboard-console-logs">
+            {activeDataset.logs && activeDataset.logs.length > 0 ? (
+              activeDataset.logs.map((log: any, idx: number) => (
+                <div className="console-log-line" key={idx}>
+                  <span className="console-timestamp">{log.timestamp}</span>
+                  <span className="console-message">{log.message}</span>
+                </div>
+              ))
+            ) : (
+              <div className="console-log-line">
+                <span className="console-timestamp">[00:00:00]</span> <span className="console-message">System initialized. Awaiting pipeline logs...</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Third Row: AI Insights Panel */}
+      <div className="dataset-intelligence-summary-workspace card">
+        <div className="panel-header-row">
+          <div className="panel-title-group">
+            <Sparkles size={16} className="text-accent active-glow" />
+            <h3>Traceable AI Insights & Explainability Console</h3>
+          </div>
+          <span className="summary-badge highlight-badge">
+            {insightsList.length} Operational Findings
+          </span>
+        </div>
+        
+        {!activeDataset.status.isInsightsGenerated ? (
+          <div className="insights-loading-state">
+            <div className="spinner"></div>
+            <p>Awaiting pipeline completion. Insight synthesis layer initializing...</p>
+          </div>
+        ) : (
+          <div className="summary-workspace-content-split">
+            {/* Left Column: Traceable Insights Feed */}
+            <div className="insights-feed-column">
+              {/* Filter Bar */}
+              <div className="insights-filter-bar">
+                {['All', 'Predictions', 'Correlations', 'Anomalies', 'Recommendations'].map((filter) => {
+                  const getFilterCount = () => {
+                    if (filter === 'All') return insightsList.length;
+                    if (filter === 'Correlations') return insightsList.filter((ins: any) => ins.category === 'Correlation' || ins.category === 'Trend').length;
+                    if (filter === 'Predictions') return insightsList.filter((ins: any) => ins.category === 'Prediction').length;
+                    if (filter === 'Anomalies') return insightsList.filter((ins: any) => ins.category === 'Anomaly').length;
+                    return insightsList.filter((ins: any) => ins.category === 'Recommendation').length;
+                  };
+                  const count = getFilterCount();
+
+                  return (
+                    <button
+                      key={filter}
+                      className={`filter-btn-tab ${selectedInsightFilter === filter ? 'active' : ''}`}
+                      onClick={() => {
+                        setSelectedInsightFilter(filter);
+                        const list = filter === 'All'
+                          ? insightsList
+                          : filter === 'Correlations'
+                          ? insightsList.filter((ins: any) => ins.category === 'Correlation' || ins.category === 'Trend')
+                          : filter === 'Predictions'
+                          ? insightsList.filter((ins: any) => ins.category === 'Prediction')
+                          : filter === 'Anomalies'
+                          ? insightsList.filter((ins: any) => ins.category === 'Anomaly')
+                          : insightsList.filter((ins: any) => ins.category === 'Recommendation');
+                        if (list.length > 0) {
+                          setSelectedInsightIdx(insightsList.indexOf(list[0]));
+                        } else {
+                          setSelectedInsightIdx(null);
+                        }
+                      }}
+                    >
+                      {filter} ({count})
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="chart-legend">
-                {activeChartTab === 'confidence' && (
-                  <>
-                    <span className="legend-item"><span className="legend-line"></span>Confidence Score</span>
-                    <span className="legend-item"><span className="legend-area"></span>95% CI Zone</span>
-                  </>
-                )}
-                {activeChartTab === 'weights' && <span className="legend-item"><span className="legend-bar"></span>Attribution weight</span>}
-                {activeChartTab === 'anomalies' && <span className="legend-item"><span className="legend-dot anomaly"></span>Outlier vectors</span>}
-                {activeChartTab === 'correlation' && <span className="legend-item"><span className="legend-area correlation"></span>Pearson R</span>}
-                {activeChartTab === 'distribution' && <span className="legend-item"><span className="legend-line dist"></span>Probability Density</span>}
+              {/* List of Cards */}
+              <div className="insights-cards-scroller">
+                {(() => {
+                  const list = selectedInsightFilter === 'All'
+                    ? insightsList
+                    : selectedInsightFilter === 'Correlations'
+                    ? insightsList.filter((ins: any) => ins.category === 'Correlation' || ins.category === 'Trend')
+                    : selectedInsightFilter === 'Predictions'
+                    ? insightsList.filter((ins: any) => ins.category === 'Prediction')
+                    : selectedInsightFilter === 'Anomalies'
+                    ? insightsList.filter((ins: any) => ins.category === 'Anomaly')
+                    : insightsList.filter((ins: any) => ins.category === 'Recommendation');
+
+                  if (list.length > 0) {
+                    return list.map((insight: any) => {
+                      const globalIdx = insightsList.indexOf(insight);
+                      const isSelected = selectedInsightIdx === globalIdx;
+                      
+                      let severityDot = '🟢';
+                      if (insight.severity === 'Critical') severityDot = '🔴';
+                      else if (insight.severity === 'High') severityDot = '🟠';
+                      else if (insight.severity === 'Medium') severityDot = '🟡';
+
+                      return (
+                        <div
+                          key={globalIdx}
+                          className={`insight-operational-card ${isSelected ? 'selected' : ''}`}
+                          onClick={() => handleInsightClick(insight, globalIdx)}
+                        >
+                          <div className="insight-card-header-row">
+                            <span className="insight-category-tag">{insight.category}</span>
+                            <span className="insight-severity-badge">
+                              <span style={{ marginRight: '4px' }}>{severityDot}</span>
+                              {insight.severity}
+                            </span>
+                          </div>
+                          <h4 className="insight-card-finding">{insight.finding}</h4>
+                          
+                          <div className="insight-card-metadata">
+                            <div className="meta-item">
+                              <span className="lbl">Confidence:</span>
+                              <span className="val text-accent">{insight.confidence}%</span>
+                            </div>
+                            <div className="meta-item">
+                              <span className="lbl">Source:</span>
+                              <span className="val">{insight.source}</span>
+                            </div>
+                            <div className="meta-item">
+                              <span className="lbl">Driver:</span>
+                              <span className="val code-val">{insight.driver}</span>
+                            </div>
+                          </div>
+
+                          <div className="insight-card-recommendation-block">
+                            <span className="lbl">Recommendation:</span>
+                            <p className="rec-text">{insight.recommendation}</p>
+                          </div>
+                        </div>
+                      );
+                    });
+                  } else {
+                    return (
+                      <div className="no-insights-placeholder">
+                        No operational findings match the selected filter.
+                      </div>
+                    );
+                  }
+                })()}
               </div>
+            </div>
+
+            {/* Right Column: Explainability & Attribution Panel */}
+            <div className="explainability-panel-column">
+              <div className="explainability-header">
+                <span className="label-sm">Explainability & Evidence attribution</span>
+                <h4>Why was this insight generated?</h4>
+              </div>
+
+              {selectedInsightIdx !== null && insightsList[selectedInsightIdx] ? (
+                (() => {
+                  const selectedInsight = insightsList[selectedInsightIdx];
+                  const featImportance = selectedInsight.evidence?.feature_importance ?? 0;
+                  const correlationVal = selectedInsight.evidence?.correlation ?? 0;
+                  const confidenceVal = selectedInsight.confidence ?? 0;
+                  
+                  return (
+                    <div className="explainability-content animate-fade-in">
+                      <div className="selected-insight-brief">
+                        <span className="meta-category">{selectedInsight.category} Finding</span>
+                        <h3>{selectedInsight.finding}</h3>
+                      </div>
+
+                      <div className="evidence-metrics-section">
+                        <h5 className="section-title">Model Evidence & Statistical Inputs</h5>
+                        
+                        {/* Metric 1: Feature Importance */}
+                        {featImportance > 0 && (
+                          <div className="evidence-gauge-row">
+                            <div className="gauge-label-group">
+                              <span className="metric-name">Gini Feature Importance</span>
+                              <span className="metric-val text-accent">{(featImportance * 100).toFixed(1)}%</span>
+                            </div>
+                            <div className="gauge-track">
+                              <div className="gauge-fill accent" style={{ width: `${featImportance * 100}%` }}></div>
+                            </div>
+                            <span className="metric-desc">Weight of <code>{selectedInsight.driver}</code> in Random Forest prediction splits.</span>
+                          </div>
+                        )}
+
+                        {/* Metric 2: Correlation Coefficient */}
+                        {correlationVal !== 0 && (
+                          <div className="evidence-gauge-row">
+                            <div className="gauge-label-group">
+                              <span className="metric-name">Pearson Correlation Coefficient</span>
+                              <span className={`metric-val ${correlationVal > 0 ? 'text-success' : 'text-danger'}`}>
+                                {correlationVal > 0 ? '+' : ''}{correlationVal.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="gauge-track">
+                              <div 
+                                className={`gauge-fill ${correlationVal > 0 ? 'success' : 'danger'}`} 
+                                style={{ width: `${Math.abs(correlationVal) * 100}%` }}
+                              ></div>
+                            </div>
+                            <span className="metric-desc">Linear correlation ratio between <code>{selectedInsight.driver}</code> and the target vector.</span>
+                          </div>
+                        )}
+
+                        {/* Metric 3: Confidence */}
+                        <div className="evidence-gauge-row">
+                          <div className="gauge-label-group">
+                            <span className="metric-name">Prediction Confidence Rate</span>
+                            <span className="metric-val text-success">{confidenceVal}%</span>
+                          </div>
+                          <div className="gauge-track">
+                            <div className="gauge-fill success" style={{ width: `${confidenceVal}%` }}></div>
+                          </div>
+                          <span className="metric-desc">Empirical probability confidence calculated by the inference runtime system.</span>
+                        </div>
+                      </div>
+
+                      {/* Linking Box */}
+                      <div className="evidence-visual-linkage-card">
+                        <div className="linkage-text">
+                          <span className="link-icon">🔗</span>
+                          <span>Linked to <strong>{selectedInsight.linked_visualization}</strong> visualization (feature: <code>{selectedInsight.driver}</code>).</span>
+                        </div>
+                        <button 
+                          className="btn-secondary btn-sm flex-center gap-2"
+                          onClick={() => handleInsightClick(selectedInsight, selectedInsightIdx)}
+                          style={{ marginTop: '0.75rem', width: '100%', padding: '0.5rem' }}
+                        >
+                          <Search size={12} />
+                          <span>Locate Evidence Chart</span>
+                        </button>
+                      </div>
+
+                      <div className="operational-recommendation-panel">
+                        <h5 className="section-title">Recommended Remediation Action</h5>
+                        <div className="recommendation-content-box">
+                          <p>{selectedInsight.recommendation}</p>
+                          <span className="recommendation-source-badge">Engine: {selectedInsight.source}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="explainability-empty-state">
+                  <Search size={28} className="text-secondary" style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
+                  <p>Select an operational insight from the feed to examine AI reasoning attributions and model evidence.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Fourth Row: Analytics Section */}
+      <div id="deep-analytics-section" className="dashboard-analytics-section card">
+        <div className="panel-header-row">
+          <div className="panel-title-group">
+            <TrendingUp size={15} className="text-accent" />
+            <h3>Deep Analytics & Feature Attributions</h3>
+          </div>
+          <div className="graphic-toggles multi-mode-toggles-bar">
+            {['confidence', 'weights', 'anomalies', 'distribution'].map((tab) => (
+              <button 
+                key={tab}
+                className={`toggle-tab-btn ${activeChartTab === tab ? 'active' : ''}`}
+                onClick={() => { 
+                  setActiveChartTab(tab as any); 
+                  if (tab !== 'weights') setHighlightedFeature(null);
+                  if (tab !== 'anomalies') setHighlightedAnomaly(false);
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="analytics-canvas-grid">
+          <div className="analytics-chart-container">
+            <div className="chart-legend-row">
+              {activeChartTab === 'confidence' && (
+                <>
+                  <span className="legend-item"><span className="legend-line"></span>Confidence Score</span>
+                  <span className="legend-item"><span className="legend-area"></span>95% CI Zone</span>
+                </>
+              )}
+              {activeChartTab === 'weights' && <span className="legend-item"><span className="legend-bar"></span>Attribution weight</span>}
+              {activeChartTab === 'anomalies' && <span className="legend-item"><span className="legend-dot anomaly"></span>Outlier vectors</span>}
+              {activeChartTab === 'distribution' && <span className="legend-item"><span className="legend-line dist"></span>Probability Density</span>}
             </div>
 
             <div className="chart-wrapper">
@@ -493,7 +888,7 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
                       {featureWeights.map((entry: any, index: number) => {
                         const isHighlighted = entry.name === highlightedFeature;
                         return (
-                           <Cell 
+                          <Cell 
                             key={`cell-${index}`} 
                             fill={isHighlighted ? 'var(--accent-color)' : 'var(--text-muted)'}
                             opacity={isHighlighted ? 1 : 0.4}
@@ -535,50 +930,6 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
                     })}
                     <ReferenceLine y={1.3} stroke="var(--danger)" strokeDasharray="5 5" opacity={0.5} />
                   </LineChart>
-                ) : activeChartTab === 'correlation' ? (
-                  <div className="correlation-matrix-grid">
-                    <table className="correlation-matrix-table">
-                      <thead>
-                        <tr>
-                          <th>Feature</th>
-                          <th>dropout_risk</th>
-                          <th>absences</th>
-                          <th>gpa_cumulative</th>
-                          <th>study_hours</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><strong>dropout_risk</strong></td>
-                          <td className="heat-cell v-1">1.00</td>
-                          <td className="heat-cell v-high">0.74</td>
-                          <td className="heat-cell v-neg-high">-0.62</td>
-                          <td className="heat-cell v-neg-mid">-0.48</td>
-                        </tr>
-                        <tr>
-                          <td><strong>absences</strong></td>
-                          <td className="heat-cell v-high">0.74</td>
-                          <td className="heat-cell v-1">1.00</td>
-                          <td className="heat-cell v-neg-high">-0.51</td>
-                          <td className="heat-cell v-neg-low">-0.24</td>
-                        </tr>
-                        <tr>
-                          <td><strong>gpa_cumulative</strong></td>
-                          <td className="heat-cell v-neg-high">-0.62</td>
-                          <td className="heat-cell v-neg-high">-0.51</td>
-                          <td className="heat-cell v-1">1.00</td>
-                          <td className="heat-cell v-mid">0.59</td>
-                        </tr>
-                        <tr>
-                          <td><strong>study_hours</strong></td>
-                          <td className="heat-cell v-neg-mid">-0.48</td>
-                          <td className="heat-cell v-neg-low">-0.24</td>
-                          <td className="heat-cell v-mid">0.59</td>
-                          <td className="heat-cell v-1">1.00</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
                 ) : (
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -601,306 +952,134 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
             </div>
           </div>
 
-          <div className="ml-inference-details card">
-            <div className="inference-header">
-              <div className="title-block">
-                <Cpu size={15} className="text-secondary" />
-                <span className="label-sm">Model Metrics & Evaluation</span>
-                <h4>{activeDataset.mlResult?.model_type || (activeDataset.status.isModelTrained ? 'RandomForestClassifier (rf_v2.1)' : 'Standby Base Classifier')}</h4>
-              </div>
-              <button 
-                className="btn-secondary btn-sm flex-center gap-2"
-                onClick={handleExportReport}
-                title="Download local Markdown executive summary report"
-              >
-                <Download size={12} />
-                <span>Export Report</span>
-              </button>
-            </div>
-
-            <div className="inference-metrics-row">
-              {isRegression ? (
+          <div className="analytics-metrics-sidebar">
+            <h4 className="sidebar-sub-title">Model Metrics Summary</h4>
+            <div className="model-metrics-grid">
+              {activeDataset.mlResult?.metrics?.accuracy !== undefined ? (
                 <>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.r2_score !== undefined
-                        ? activeDataset.mlResult.metrics.r2_score.toFixed(3)
-                        : '0.885'}
-                    </span>
-                    <span className="metric-lbl">R² Score</span>
+                  <div className="metric-box">
+                    <span className="lbl">Accuracy</span>
+                    <span className="val">{(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%</span>
                   </div>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.mse !== undefined
-                        ? activeDataset.mlResult.metrics.mse.toLocaleString(undefined, { maximumFractionDigits: 1 })
-                        : '1,245.8'}
-                    </span>
-                    <span className="metric-lbl">MSE</span>
+                  <div className="metric-box">
+                    <span className="lbl">Precision</span>
+                    <span className="val">{activeDataset.mlResult.metrics.precision.toFixed(3)}</span>
                   </div>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.mse !== undefined
-                        ? Math.sqrt(activeDataset.mlResult.metrics.mse).toLocaleString(undefined, { maximumFractionDigits: 1 })
-                        : '35.3'}
-                    </span>
-                    <span className="metric-lbl">RMSE</span>
+                  <div className="metric-box">
+                    <span className="lbl">Recall</span>
+                    <span className="val">{activeDataset.mlResult.metrics.recall.toFixed(3)}</span>
                   </div>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.oob_score !== undefined
-                        ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%`
-                        : '87.4%'}
-                    </span>
-                    <span className="metric-lbl">OOB Score</span>
+                  <div className="metric-box">
+                    <span className="lbl">F1 Score</span>
+                    <span className="val">{activeDataset.mlResult.metrics.f1_score.toFixed(3)}</span>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.accuracy !== undefined
-                        ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%` 
-                        : '91.2%'}
-                    </span>
-                    <span className="metric-lbl">Accuracy</span>
+                  <div className="metric-box">
+                    <span className="lbl">R² Score</span>
+                    <span className="val">{(activeDataset.mlResult?.metrics?.r2_score || 0.885).toFixed(3)}</span>
                   </div>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.precision !== undefined
-                        ? activeDataset.mlResult.metrics.precision.toFixed(3) 
-                        : '0.890'}
-                    </span>
-                    <span className="metric-lbl">Precision</span>
+                  <div className="metric-box">
+                    <span className="lbl">MSE</span>
+                    <span className="val">{(activeDataset.mlResult?.metrics?.mse || 1245.8).toFixed(1)}</span>
                   </div>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.recall !== undefined
-                        ? activeDataset.mlResult.metrics.recall.toFixed(3) 
-                        : '0.930'}
-                    </span>
-                    <span className="metric-lbl">Recall</span>
+                  <div className="metric-box">
+                    <span className="lbl">RMSE</span>
+                    <span className="val">{(activeDataset.mlResult?.metrics?.mse ? Math.sqrt(activeDataset.mlResult.metrics.mse) : 35.3).toFixed(1)}</span>
                   </div>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.f1_score !== undefined
-                        ? activeDataset.mlResult.metrics.f1_score.toFixed(3) 
-                        : '0.910'}
-                    </span>
-                    <span className="metric-lbl">F1 Score</span>
-                  </div>
-                  <div className="metric-tile">
-                    <span className="metric-val">
-                      {activeDataset.mlResult?.metrics?.oob_score !== undefined
-                        ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%` 
-                        : '90.8%'}
-                    </span>
-                    <span className="metric-lbl">OOB Score</span>
+                  <div className="metric-box">
+                    <span className="lbl">OOB Score</span>
+                    <span className="val">{(activeDataset.mlResult?.metrics?.oob_score || 0.874 * 100).toFixed(1)}%</span>
                   </div>
                 </>
               )}
             </div>
-
-            <div className="explainability-attribution-panel">
-              <h4 className="explain-section-title">Prediction Influence Attribution Matrix</h4>
-              <div className="explainability-grid">
-                <div className="explain-item">
-                  <span className="lbl">Top Feature</span>
-                  <span className="val text-accent">{featureWeights[0].name}</span>
-                </div>
-                <div className="explain-item">
-                  <span className="lbl">Influence Ratio</span>
-                  <span className="val">{(featureWeights[0].weight * 100).toFixed(1)}%</span>
-                </div>
-                <div className="explain-item">
-                  <span className="lbl">Confidence Bounds</span>
-                  <span className="val">95% CI (±0.045 error)</span>
-                </div>
-                <div className="explain-item">
-                  <span className="lbl">Cross-Validation</span>
-                  <span className="val">5-Fold Stratified</span>
-                </div>
-              </div>
-            </div>
           </div>
-
         </div>
-
-        {/* Right Column: Level 2 (AI Insight Engine & Reasoning Nodes) */}
-        <div className="dashboard-right-column">
-          
-          <div className="right-insight-column card">
-            <div className="column-header">
-              <Sparkles size={15} className="text-accent" />
-              <h3>System Discovery Engine</h3>
-            </div>
-            
-            <div className="insight-synthesis-progress">
-              <span className="progress-label">Intelligence Synthesis Layer</span>
-              <div className="progress-fraction">
-                {pipelineStatus.isInsightsGenerated ? '14 / 14' : reasoningNodes.length > 0 ? `${reasoningNodes.length * 4} / 14` : '0 / 14'}
-              </div>
-            </div>
-
-            <div className="reasoning-nodes-list">
-              
-              {/* Natural Language Insights (from Groq LLaMA) - HERO DISCOVERY LAYER */}
-              {activeDataset.analyticsData?.aiInsightsText ? (
-                <div className="hero-discovery-box card-node">
-                  <div className="hero-discovery-header">
-                    <Sparkles size={13} className="text-accent" />
-                    <h4>SYSTEM DISCOVERIES</h4>
-                  </div>
-                  <div className="hero-discovery-body">
-                    {activeDataset.analyticsData.aiInsightsText}
-                  </div>
-                </div>
-              ) : !activeDataset.status.isInsightsGenerated && engineState !== 'IDLE' ? (
-                <div className="hero-discovery-box card-node synthesis-loading">
-                  <div className="synthesizing-loader-row">
-                    <span className="loader-dots"><span></span><span></span><span></span></span>
-                    <span className="loader-text">Analyzing dataset patterns & synthesizing core insights...</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="hero-discovery-box card-node dormant-insights">
-                  <p>Awaiting pipeline execution to compile discoveries.</p>
-                </div>
-              )}
-
-              <div className="node-instructions">Click reasoning vectors below to inspect attributions:</div>
-              
-              {reasoningNodes.length === 0 ? (
-                <div className="empty-nodes">Awaiting pipeline analysis to generate reasoning nodes.</div>
-              ) : (
-                reasoningNodes.map(node => (
-                  <div 
-                    key={node.id} 
-                    className={`reasoning-node card-node ${activeNodeId === node.id ? 'active-highlight' : ''}`}
-                    onClick={node.action}
-                  >
-                    <div className="node-header">
-                      <div className="node-title-group">
-                        {node.linkType === 'anomaly' && <ShieldAlert size={12} className="text-danger" />}
-                        {node.linkType === 'feature' && <Cpu size={12} className="text-accent" />}
-                        {node.linkType === 'model' && <CheckCircle size={12} className="text-success" />}
-                        <span className="node-title">{node.title}</span>
-                      </div>
-                      <span className="node-time">{node.time}</span>
-                    </div>
-                    <p className="node-desc">{node.desc}</p>
-                    
-                    <div className="node-reasoning-anchor-tag">
-                      <div className="anchor-meta-row">
-                        <span>Source: <strong>{node.source}</strong></span>
-                        <span>Confidence: <strong className="text-accent">{node.confidence}</strong></span>
-                      </div>
-                      <div className="anchor-meta-row" style={{ marginTop: '2px' }}>
-                        <span>Severity: <strong style={{ color: node.severity === 'HIGH' ? 'var(--danger)' : node.severity === 'MEDIUM' ? 'var(--warning)' : 'var(--success)' }}>{node.severity}</strong></span>
-                        <span className="code-anchor-span">→ {node.linkedMetric}.vector</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-
-              {/* Contextual Panel based on selection */}
-              {activeNodeId && (
-                <div className="contextual-inspection-panel animate-fade-in">
-                  <div className="panel-header">
-                    <Search size={12} className="text-accent" />
-                    <h5>Contextual Inspection Panel</h5>
-                  </div>
-                  <div className="panel-contents">
-                    {activeNodeId === 'node-1' && (
-                      <>
-                        <p><strong>Anomaly Vectors (3 points):</strong> Detected values deviate &gt; 2.1σ from the Gaussian mean.</p>
-                        <p style={{ marginTop: '0.4rem' }}><strong>Remediation Strategy:</strong> Apply Isolation Forest filter to trim outliers prior to supervised fits.</p>
-                      </>
-                    )}
-                    {activeNodeId === 'node-2' && (
-                      <>
-                        <p><strong>Attribution Metrics:</strong> Feature <code>{featureWeights[0].name}</code> holds the highest Gini impurity decrease.</p>
-                        <p style={{ marginTop: '0.4rem' }}><strong>Sensitivity Ratio:</strong> 1.45x multiplier relative to second rank feature <code>{featureWeights[1]?.name || 'absences'}</code>.</p>
-                      </>
-                    )}
-                    {activeNodeId === 'node-3' && (
-                      <>
-                        <p><strong>Model Convergence Details:</strong> Model stabilized after 140 training estimators.</p>
-                        <p style={{ marginTop: '0.4rem' }}><strong>Hyperparameters:</strong> <code>n_estimators=200, max_depth=12, min_samples_split=5</code>.</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-        </div>
-
       </div>
 
-      {/* Level 3: Observability & Telemetry Hub (Supporting/Detailed Info) */}
-      <div className="dashboard-telemetry-hub">
+      {/* Fifth Row: Raw Tables (Bottom) */}
+      <div id="raw-tables-section" className="dashboard-tables-section card">
+        <div className="panel-header-row">
+          <div className="panel-title-group">
+            <Database size={15} className="text-secondary" />
+            <h3>Raw Dataset Matrices & Attribution Tables</h3>
+          </div>
+        </div>
         
-        {/* Workspace Metrics */}
-        <div className="telemetry-left card">
-          <div className="telemetry-header">
-            <h4>Workspace Metrics Summary</h4>
+        <div className="tables-grid-layout">
+          {/* Table 1: Correlation Matrix */}
+          <div className="raw-table-card">
+            <h4 className="table-subtitle">Pearson Correlation Matrix</h4>
+            <div className="correlation-matrix-grid">
+              <table className="correlation-matrix-table">
+                <thead>
+                  <tr>
+                    <th>Feature</th>
+                    <th>dropout_risk</th>
+                    <th>absences</th>
+                    <th>gpa_cumulative</th>
+                    <th>study_hours</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>dropout_risk</strong></td>
+                    <td className="heat-cell v-1">1.00</td>
+                    <td className="heat-cell v-high">0.74</td>
+                    <td className="heat-cell v-neg-high">-0.62</td>
+                    <td className="heat-cell v-neg-mid">-0.48</td>
+                  </tr>
+                  <tr>
+                    <td><strong>absences</strong></td>
+                    <td className="heat-cell v-high">0.74</td>
+                    <td className="heat-cell v-1">1.00</td>
+                    <td className="heat-cell v-neg-high">-0.51</td>
+                    <td className="heat-cell v-neg-low">-0.24</td>
+                  </tr>
+                  <tr>
+                    <td><strong>gpa_cumulative</strong></td>
+                    <td className="heat-cell v-neg-high">-0.62</td>
+                    <td className="heat-cell v-neg-high">-0.51</td>
+                    <td className="heat-cell v-1">1.00</td>
+                    <td className="heat-cell v-mid">0.59</td>
+                  </tr>
+                  <tr>
+                    <td><strong>study_hours</strong></td>
+                    <td className="heat-cell v-neg-mid">-0.48</td>
+                    <td className="heat-cell v-neg-low">-0.24</td>
+                    <td className="heat-cell v-mid">0.59</td>
+                    <td className="heat-cell v-1">1.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="dataset-metrics-summary-grid">
-            <div className="summary-metric-tile">
-              <span className="tile-label">Total Rows</span>
-              <span className="tile-value">{activeDataset.stats?.rows ? activeDataset.stats.rows.toLocaleString() : '0'}</span>
-              <span className="tile-sub">Ingested records</span>
-            </div>
-            <div className="summary-metric-tile">
-              <span className="tile-label">Features</span>
-              <span className="tile-value">{activeDataset.stats?.columns || '0'}</span>
-              <span className="tile-sub">Raw columns</span>
-            </div>
-            <div className="summary-metric-tile">
-              <span className="tile-label">Clean Rows</span>
-              <span className="tile-value">{activeDataset.processedData?.rows ? activeDataset.processedData.rows.toLocaleString() : '0'}</span>
-              <span className="tile-sub">Preprocessed count</span>
-            </div>
-            <div className="summary-metric-tile">
-              <span className="tile-label">Missing Rate</span>
-              <span className="tile-value">
-                {activeDataset.stats?.nulls 
-                  ? `${((activeDataset.stats.nulls / (activeDataset.stats.rows * activeDataset.stats.columns)) * 100).toFixed(1)}%` 
-                  : '0.0%'}
-              </span>
-              <span className="tile-sub">Null cell density</span>
-            </div>
-            <div className="summary-metric-tile">
-              <span className="tile-label">Pipeline State</span>
-              <span className="tile-value text-accent">{engineState}</span>
-              <span className="tile-sub">Current process node</span>
-            </div>
+
+          {/* Table 2: Raw Feature Attribution weights */}
+          <div className="raw-table-card">
+            <h4 className="table-subtitle">Gini Impurity Feature Weights</h4>
+            <table className="correlation-matrix-table">
+              <thead>
+                <tr>
+                  <th>Feature Rank</th>
+                  <th>Feature Name</th>
+                  <th>Weight Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {featureWeights.map((fw: any, idx: number) => (
+                  <tr key={idx}>
+                    <td><strong>#{idx + 1}</strong></td>
+                    <td>{fw.name}</td>
+                    <td>{(fw.weight).toFixed(4)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        {/* Live Observability Trace Stream */}
-        <div className="telemetry-right card">
-          <div className="telemetry-header">
-            <h4>Live Observability Trace Stream</h4>
-          </div>
-          <div className="trace-lines-container">
-            {activeDataset.logs && activeDataset.logs.length > 0 ? (
-              activeDataset.logs.slice(-5).map((log: any, idx: number) => (
-                <div className="trace-line" key={idx}>
-                  <span className="timestamp">{log.timestamp}</span>
-                  <span className="msg">{log.message}</span>
-                </div>
-              ))
-            ) : (
-              <div className="trace-line">
-                <span className="timestamp">[00:00:00]</span> <span className="msg">System initialized. Awaiting logs...</span>
-              </div>
-            )}
-          </div>
-        </div>
-
       </div>
 
     </div>

@@ -3,6 +3,23 @@ export interface DatasetLog {
   message: string;
 }
 
+export interface Insight {
+  category: 'Correlation' | 'Prediction' | 'Anomaly' | 'Trend' | 'Recommendation';
+  finding: string;
+  confidence: number;
+  source: string;
+  driver: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low';
+  recommendation: string;
+  evidence: {
+    feature_importance?: number;
+    correlation?: number;
+    metric_value?: number;
+  };
+  linked_visualization: 'weights' | 'correlation' | 'anomalies' | 'confidence' | 'distribution';
+  linked_feature?: string;
+}
+
 export interface Dataset {
   id: string;
   name: string;
@@ -22,5 +39,6 @@ export interface Dataset {
   mlResult?: any;
   anomalyResult?: any;
   logs: DatasetLog[];
+  insights?: Insight[];
   engineState?: 'IDLE' | 'INITIALIZING' | 'VALIDATING' | 'PROCESSING' | 'ANALYZING' | 'RUNNING INFERENCE' | 'SYNTHESIZING INSIGHTS' | 'COMPLETE' | 'ERROR';
 }
