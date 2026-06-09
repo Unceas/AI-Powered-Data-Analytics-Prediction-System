@@ -8,7 +8,10 @@ import {
   CheckCircle,
   Search,
   Brain,
-  TrendingUp
+  TrendingUp,
+  Upload,
+  Database,
+  ArrowRight
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -26,59 +29,6 @@ import {
   ReferenceLine
 } from 'recharts';
 import './Dashboard.css';
-
-const SAMPLE_DATASETS = [
-  {
-    name: "Customer Churn Prediction",
-    filename: "customer_churn.csv",
-    description: "Analyze customer behavior and demographics to detect retention risks. High-weight factors include support calls and monthly contracts.",
-    rows: 250,
-    columns: 10,
-    predictionType: "Classification",
-    category: "Telecom",
-    capabilities: ["Classification", "Feature Importance", "AI Insights", "Anomaly Detection"]
-  },
-  {
-    name: "Employee Attrition Analysis",
-    filename: "employee_attrition.csv",
-    description: "Evaluate workforce data to explain employee turnover patterns. Correlates job satisfaction, overtime hours, and years at company.",
-    rows: 250,
-    columns: 9,
-    predictionType: "Classification",
-    category: "HR Analytics",
-    capabilities: ["Classification", "Feature Importance", "AI Insights", "Anomaly Detection"]
-  },
-  {
-    name: "Healthcare Risk Assessment",
-    filename: "healthcare_risk.csv",
-    description: "Diagnose patient clinical metrics to predict critical health risks. Correlates glucose, BMI, smoking status, and blood pressure.",
-    rows: 250,
-    columns: 8,
-    predictionType: "Classification",
-    category: "Clinical",
-    capabilities: ["Classification", "Feature Importance", "AI Insights", "Anomaly Detection"]
-  },
-  {
-    name: "Student Performance Analytics",
-    filename: "student_performance.csv",
-    description: "Forecast student outcomes based on academic behavior metrics. Strong indicators are attendance rates, study hours, and completed assignments.",
-    rows: 250,
-    columns: 7,
-    predictionType: "Classification",
-    category: "Education",
-    capabilities: ["Classification", "Feature Importance", "AI Insights", "Anomaly Detection"]
-  },
-  {
-    name: "Retail Sales Forecasting",
-    filename: "retail_sales.csv",
-    description: "Model sales trends across store clusters. Utilizes footfall, marketing spend, seasonal promotions, and inventory levels to forecast continuous revenue.",
-    rows: 250,
-    columns: 7,
-    predictionType: "Regression",
-    category: "Retail",
-    capabilities: ["Regression", "Feature Importance", "AI Insights", "Anomaly Detection"]
-  }
-];
 
 interface DashboardProps {
   activeDataset: any;
@@ -275,151 +225,108 @@ ${activeDataset.analyticsData?.aiInsightsText || "Isolation Forest algorithm det
         {/* Section 1: Hero */}
         <header className="landing-hero">
           <div className="landing-logo-title">INSIGHTGRID</div>
-          <h1 className="landing-headline">AI-Assisted Analytics & Observability Platform</h1>
+          <h1 className="landing-headline">Talk to Data</h1>
           <p className="landing-subtext">
-            Transform datasets into predictions, anomaly detection, automated analytics, and explainable intelligence.
-          </p>
-          <p className="landing-subtext-muted">
-            Analyze structured data through machine learning, operational analytics, and contextual AI reasoning.
+            AI-Assisted Analytics & Observability Platform
           </p>
         </header>
 
         {/* Section 2: Primary Actions Grid */}
         <section className="primary-actions-section">
-          <h2 className="landing-section-title">Operational Entry Points</h2>
           <div className="actions-grid">
-            <div className="action-card card">
+            <div className="action-card card" onClick={() => onNavigate('data-manager')}>
               <div className="action-card-header">
-                <FileSpreadsheet size={20} className="text-accent" />
+                <Upload size={20} className="text-accent" />
                 <h3>Upload Dataset</h3>
               </div>
-              <p className="action-desc">Upload CSV or Excel files and begin analysis.</p>
-              <button className="btn-action" onClick={() => onNavigate('data-manager')}>
-                Start Analysis
+              <p className="action-desc">Ingest and preprocess custom CSV or Excel files.</p>
+              <button className="btn-action">
+                Upload File <ArrowRight size={12} style={{ marginLeft: '4px' }} />
               </button>
             </div>
 
-            <div className="action-card card">
+            <div className="action-card card" onClick={() => onNavigate('data-manager')}>
               <div className="action-card-header">
-                <Search size={20} className="text-accent" />
+                <Database size={20} className="text-accent" />
                 <h3>Explore Sample Datasets</h3>
               </div>
-              <p className="action-desc">Instantly experience InsightGrid using curated datasets.</p>
-              <button 
-                className="btn-action" 
-                onClick={() => {
-                  const el = document.getElementById('recommended-sessions-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                Explore Datasets
+              <p className="action-desc">Browse curated data repositories and presets.</p>
+              <button className="btn-action">
+                Explore Samples <ArrowRight size={12} style={{ marginLeft: '4px' }} />
               </button>
             </div>
 
-            <div className="action-card card">
-              <div className="action-card-header">
-                <Brain size={20} className="text-accent" />
-                <h3>AutoML Workbench</h3>
-              </div>
-              <p className="action-desc">Train and compare machine learning models.</p>
-              <button className="btn-action" onClick={() => onNavigate('ml-workbench')}>
-                Open Workbench
-              </button>
-            </div>
-
-            <div className="action-card card">
+            <div className="action-card card" onClick={() => onNavigate('analytics')}>
               <div className="action-card-header">
                 <TrendingUp size={20} className="text-accent" />
                 <h3>Deep Analytics</h3>
               </div>
-              <p className="action-desc">Explore correlations, trends, anomalies, and distributions.</p>
-              <button className="btn-action" onClick={() => onNavigate('analytics')}>
-                Open Analytics
+              <p className="action-desc">Explore data correlations, outliers, and distributions.</p>
+              <button className="btn-action">
+                Run Analytics <ArrowRight size={12} style={{ marginLeft: '4px' }} />
               </button>
             </div>
 
-            <div className="action-card card">
+            <div className="action-card card" onClick={() => onNavigate('ml-workbench')}>
+              <div className="action-card-header">
+                <Brain size={20} className="text-accent" />
+                <h3>AutoML Workbench</h3>
+              </div>
+              <p className="action-desc">Train, evaluate, and compare predictive models.</p>
+              <button className="btn-action">
+                Open AutoML <ArrowRight size={12} style={{ marginLeft: '4px' }} />
+              </button>
+            </div>
+
+            <div className="action-card card" onClick={() => onNavigate('ai-chat')}>
               <div className="action-card-header">
                 <Sparkles size={20} className="text-accent" />
-                <h3>AI Copilot</h3>
+                <h3>Insight Engine</h3>
               </div>
-              <p className="action-desc">Interact with analytical findings and generated insights.</p>
-              <button className="btn-action" onClick={() => onNavigate('ai-chat')}>
-                Launch Copilot
+              <p className="action-desc">Query AI about findings and request system reasoning.</p>
+              <button className="btn-action">
+                Query AI <ArrowRight size={12} style={{ marginLeft: '4px' }} />
               </button>
             </div>
           </div>
         </section>
 
-        {/* Section 3: Sample Dataset Preview */}
-        <section id="recommended-sessions-section" className="recommended-sessions-section">
-          <div className="section-header-row">
-            <Sparkles size={18} className="text-accent" />
-            <h2 className="landing-section-title">Recommended Datasets</h2>
-          </div>
-          <p className="section-subtitle">Select a curated dataset to run through our automated pipeline.</p>
-          
-          <div className="datasets-cards-grid">
-            {SAMPLE_DATASETS.map((ds) => (
-              <div key={ds.filename} className="lightweight-dataset-card card">
-                <div className="card-top">
-                  <div className="card-badge-row">
-                    <span className="sample-badge">{ds.predictionType}</span>
-                    <span className="sample-category-badge">{ds.category}</span>
-                  </div>
-                  <h4>{ds.name}</h4>
-                  <p>{ds.description}</p>
-                </div>
-                
-                <div className="card-stats">
-                  <div className="stat-col">
-                    <span className="lbl">Rows</span>
-                    <span className="val">{ds.rows}</span>
-                  </div>
-                  <div className="stat-col">
-                    <span className="lbl">Cols</span>
-                    <span className="val">{ds.columns}</span>
-                  </div>
-                </div>
-                
-                <button 
-                  className="btn-load-sample" 
-                  onClick={() => {
-                    onLoadSampleDataset(ds.filename, ds.name);
-                    onNavigate('diagnostics');
-                  }}
-                >
-                  Load Dataset
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Section 4: Recent Sessions */}
+        {/* Section 3: Recent Sessions */}
         <section className="recent-sessions-section">
-          <h2 className="landing-section-title">Recent Analyses</h2>
+          <h2 className="recent-sessions-title">Recent Sessions</h2>
           <div className="recent-sessions-list">
-            <div className="recent-session-item card">
+            <div 
+              className="recent-session-item card interactive-session"
+              onClick={() => {
+                onLoadSampleDataset('customer_churn.csv', 'Customer Churn Prediction');
+                onNavigate('diagnostics');
+              }}
+            >
               <div className="session-left">
-                <FileSpreadsheet size={16} className="text-muted" />
-                <span className="session-name">Customer Churn Prediction</span>
+                <FileSpreadsheet size={16} className="text-accent" />
+                <span className="session-name">Customer Churn Analysis</span>
               </div>
-              <span className="session-time">Completed 2 hours ago</span>
-            </div>
-            <div className="recent-session-item card">
-              <div className="session-left">
-                <FileSpreadsheet size={16} className="text-muted" />
-                <span className="session-name">Employee Attrition Analysis</span>
+              <div className="session-right-meta">
+                <span className="session-time">Completed 2h ago</span>
+                <span className="session-launch-hint">Load Session →</span>
               </div>
-              <span className="session-time">Completed Yesterday</span>
             </div>
-            <div className="recent-session-item card">
+            
+            <div 
+              className="recent-session-item card interactive-session"
+              onClick={() => {
+                onLoadSampleDataset('healthcare_risk.csv', 'Healthcare Risk Assessment');
+                onNavigate('diagnostics');
+              }}
+            >
               <div className="session-left">
-                <FileSpreadsheet size={16} className="text-muted" />
+                <FileSpreadsheet size={16} className="text-accent" />
                 <span className="session-name">Healthcare Risk Assessment</span>
               </div>
-              <span className="session-time">Completed Last Week</span>
+              <div className="session-right-meta">
+                <span className="session-time">Completed Yesterday</span>
+                <span className="session-launch-hint">Load Session →</span>
+              </div>
             </div>
           </div>
         </section>
