@@ -9,6 +9,9 @@ import { Diagnostics } from './components/Diagnostics';
 import { AIChatPage } from './components/AIChatPage';
 import { Settings } from './components/Settings';
 import api from './utils/api';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { IntelligenceReport } from './components/IntelligenceReport';
 import './App.css';
 
 import type { Dataset } from './types';
@@ -25,8 +28,51 @@ function App() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   const activeDataset = datasets.find(d => d.id === activeDatasetId);
+
+  const generateReport = async () => {
+    if (!activeDataset) return;
+    setIsGeneratingReport(true);
+    // Wait for the hidden component to render Recharts fully without animations
+    await new Promise(r => setTimeout(r, 1200));
+
+    try {
+      const reportRoot = document.getElementById('pdf-report-render-root');
+      if (!reportRoot) {
+        throw new Error('Report container element not found.');
+      }
+
+      const pages = reportRoot.querySelectorAll('.report-page');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i] as HTMLElement;
+        const canvas = await html2canvas(page, {
+          scale: 2, // Retain high resolution/crispness
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+        if (i > 0) {
+          pdf.addPage();
+        }
+        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+      }
+
+      const filename = `InsightGrid_Intelligence_Report_${activeDataset.name.replace(/\.[^/.]+$/, "")}.pdf`;
+      pdf.save(filename);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("An error occurred during PDF report generation.");
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
 
   const updateState = useCallback((id: string, state: Dataset['engineState'], logMsg?: string, statusUpdates?: any, extraData?: any) => {
     setDatasets(prev => prev.map(ds => {
@@ -424,6 +470,7 @@ function App() {
             onSelectDataset={setActiveDatasetId}
             onNavigate={setCurrentView}
             onLoadSampleDataset={handleLoadSampleDataset}
+            onGenerateReport={generateReport}
           />
         )}
 
@@ -451,6 +498,7 @@ function App() {
           <Analytics 
             activeDataset={activeDataset}
             onAnalyzed={handleAnalyzed}
+            onGenerateReport={generateReport}
           />
         )}
 
@@ -467,11 +515,30 @@ function App() {
             datasets={datasets}
             activeDatasetId={activeDatasetId}
             onSelectDataset={setActiveDatasetId}
+            onGenerateReport={generateReport}
           />
         )}
 
         {currentView === 'settings' && <Settings />}
       </main>
+
+      {/* Hidden container for PDF generation rendering */}
+      {activeDataset && isGeneratingReport && (
+        <div id="pdf-report-render-root" style={{ position: 'absolute', left: '-9999px', top: 0, width: '800px', zIndex: -1000 }}>
+          <IntelligenceReport activeDataset={activeDataset} />
+        </div>
+      )}
+
+      {/* Premium Loader Overlay for PDF Generation */}
+      {isGeneratingReport && (
+        <div className="pdf-generation-overlay">
+          <div className="pdf-generation-spinner-box">
+            <div className="spinner"></div>
+            <h4>Generating Intelligence Report</h4>
+            <p>Compiling statistics, rendering vector charts, and synthesizing recommendations...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

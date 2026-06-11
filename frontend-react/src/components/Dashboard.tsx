@@ -35,9 +35,10 @@ interface DashboardProps {
   onSelectDataset: (id: string) => void;
   onNavigate: (view: string) => void;
   onLoadSampleDataset: (filename: string, datasetName: string) => void;
+  onGenerateReport: () => void;
 }
 
-export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate, onLoadSampleDataset }: DashboardProps) {
+export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate, onLoadSampleDataset, onGenerateReport }: DashboardProps) {
   const [activeChartTab, setActiveChartTab] = useState<'confidence' | 'weights' | 'anomalies' | 'correlation' | 'distribution'>('confidence');
   const [highlightedFeature, setHighlightedFeature] = useState<string | null>(null);
   const [highlightedAnomaly, setHighlightedAnomaly] = useState<boolean>(false);
@@ -212,65 +213,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
     }
   }
 
-  const handleExportReport = () => {
-    if (!activeDataset) return;
-    const isReg = activeDataset.mlResult?.model_type?.toLowerCase().includes('regression') || activeDataset.mlResult?.model_type?.toLowerCase().includes('regressor');
-    
-    let metricsSection = '';
-    if (isReg) {
-      metricsSection = `## Model Metrics & Inference Details
-- Algorithm: ${activeDataset.mlResult?.model_type || 'RandomForestRegressor'}
-- R² Score: ${(activeDataset.mlResult?.metrics?.r2_score || 0.885).toFixed(3)}
-- Mean Squared Error (MSE): ${(activeDataset.mlResult?.metrics?.mse || 1245.8).toFixed(1)}
-- Root Mean Squared Error (RMSE): ${activeDataset.mlResult?.metrics?.mse ? Math.sqrt(activeDataset.mlResult.metrics.mse).toFixed(1) : '35.3'}
-- Out-of-bag Score: ${activeDataset.mlResult?.metrics?.oob_score !== undefined ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%` : '87.4%'}`;
-    } else {
-      metricsSection = `## Model Metrics & Inference Details
-- Algorithm: ${activeDataset.mlResult?.model_type || 'RandomForestClassifier'}
-- Prediction Accuracy: ${activeDataset.mlResult?.metrics?.accuracy !== undefined ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%` : '91.2%'}
-- Precision: ${(activeDataset.mlResult?.metrics?.precision || 0.890).toFixed(3)}
-- Recall: ${(activeDataset.mlResult?.metrics?.recall || 0.930).toFixed(3)}
-- F1 Score: ${(activeDataset.mlResult?.metrics?.f1_score || 0.910).toFixed(3)}
-- Out-of-bag Score: ${activeDataset.mlResult?.metrics?.oob_score !== undefined ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%` : '90.8%'}`;
-    }
 
-    const markdownContent = `# InsightGrid Observability Report
-Generated: ${new Date().toLocaleDateString()}
-Dataset: ${activeDataset.name}
-MD5 Checksum: ${checksum}
-
-${metricsSection}
-
-## High-weight Contributing Features
-${featureWeights.map((fw: any) => `- **${fw.name}**: ${(fw.weight * 100).toFixed(1)}%`).join('\n')}
-
-## AI Synthesized Insights
-${
-  activeDataset.insights && activeDataset.insights.length > 0
-    ? activeDataset.insights.map((ins: any, idx: number) => `
-### Insight #${idx + 1}: ${ins.finding}
-- **Category**: ${ins.category}
-- **Severity**: ${ins.severity}
-- **Confidence**: ${ins.confidence}%
-- **Source**: ${ins.source}
-- **Driver Feature**: ${ins.driver}
-- **Recommendation**: ${ins.recommendation}
-- **Evidence Metrics**:
-  ${ins.evidence?.feature_importance ? `- Feature Importance: ${ins.evidence.feature_importance}` : ''}
-  ${ins.evidence?.correlation ? `- Correlation Coefficient: ${ins.evidence.correlation}` : ''}
-  ${ins.evidence?.metric_value ? `- Metric Value: ${ins.evidence.metric_value}` : ''}
-`).join('\n')
-    : activeDataset.analyticsData?.aiInsightsText || "No synthesized insights available."
-}`;
-
-    const blob = new Blob([markdownContent], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `InsightGrid_Report_${activeDataset.name.replace(/\.[^/.]+$/, "")}.md`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
 
   // If no dataset is selected, show System Initialization Workspace
   if (!activeDataset) {
@@ -482,20 +425,42 @@ ${
         <div className="executive-operations-report-panel card">
           <div className="panel-header-row">
             <h4>Executive Operations</h4>
-            <span className="report-status-badge">
-              {activeDataset.status.isInsightsGenerated ? 'GEN_READY' : 'RUNNING'}
-            </span>
+            {activeDataset.status.isInsightsGenerated ? (
+              <span className="report-status-badge" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.25)', borderRadius: '4px', padding: '2px 8px', fontSize: '0.68rem', fontWeight: 'bold' }}>
+                Report Ready
+              </span>
+            ) : (
+              <span className="report-status-badge" style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '4px', padding: '2px 8px', fontSize: '0.68rem', fontWeight: 'bold' }}>
+                STANDBY
+              </span>
+            )}
           </div>
-          <p className="operations-desc">Download local Markdown executive summary report including model metrics, outlier vectors, and feature weights.</p>
+          <p className="operations-desc">
+            {activeDataset.status.isInsightsGenerated 
+              ? "Your automated business intelligence report is ready for export. Includes model attribution matrices, statistical summaries, and AI recommendations."
+              : "Awaiting analytics pipeline completion to synthesize model metrics, feature importances, and statistical summaries."}
+          </p>
           <div className="operations-action-row">
             <button 
-              className="btn-accent flex-center gap-2"
-              onClick={handleExportReport}
-              title="Download local Markdown executive summary report"
-              style={{ width: '100%', padding: '0.75rem' }}
+              className={`flex-center gap-2 ${activeDataset.status.isInsightsGenerated ? 'btn-accent' : 'btn-secondary'}`}
+              onClick={onGenerateReport}
+              disabled={!activeDataset.status.isInsightsGenerated}
+              title="Generate and download premium A4 PDF intelligence report"
+              style={{ 
+                width: '100%', 
+                padding: '0.75rem', 
+                cursor: activeDataset.status.isInsightsGenerated ? 'pointer' : 'not-allowed',
+                opacity: activeDataset.status.isInsightsGenerated ? 1 : 0.5,
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
-              <Download size={14} />
-              <span>Export Executive Report</span>
+              <Download size={14} style={{ marginRight: '6px' }} />
+              <span>Generate Intelligence Report</span>
             </button>
           </div>
         </div>

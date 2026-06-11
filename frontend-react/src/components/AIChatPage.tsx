@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, FileText, ChevronRight, Brain, Bot } from 'lucide-react';
+import { Send, FileText, ChevronRight, Brain, Bot, Download } from 'lucide-react';
 import api from '../utils/api';
 import './AIChatPage.css';
 import type { Dataset } from '../types';
@@ -8,6 +8,7 @@ interface AIChatPageProps {
   datasets: Dataset[];
   activeDatasetId: string | null;
   onSelectDataset: (id: string) => void;
+  onGenerateReport?: () => void;
 }
 
 interface ChatMessage {
@@ -20,7 +21,7 @@ interface ChatMessage {
   };
 }
 
-export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AIChatPageProps) {
+export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGenerateReport }: AIChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -176,12 +177,36 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset }: AICha
 
         {/* Right Side: Chat Workspace */}
         <div className="chat-workspace-panel card">
-          <div className="chat-header-bar">
+          <div className="chat-header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="header-status">
               <Bot size={16} className="text-cyan active-glow" />
               <span>Intelligence Studio</span>
             </div>
-            <span className="status-indicator-pill">INTELLIGENCE SYNTESIZER ACTIVE</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              {activeDataset && activeDataset.status.isInsightsGenerated && onGenerateReport && (
+                <button
+                  onClick={onGenerateReport}
+                  title="Generate premium A4 PDF intelligence report"
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    fontSize: '0.75rem',
+                    borderRadius: '0.35rem',
+                    background: 'rgba(6, 182, 212, 0.15)',
+                    color: 'var(--accent-color)',
+                    border: '1px solid rgba(6, 182, 212, 0.25)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontWeight: 600,
+                    gap: '4px'
+                  }}
+                >
+                  <Download size={12} />
+                  <span>Generate Report</span>
+                </button>
+              )}
+              <span className="status-indicator-pill">INTELLIGENCE SYNTESIZER ACTIVE</span>
+            </div>
           </div>
 
           <div className="messages-scroller">

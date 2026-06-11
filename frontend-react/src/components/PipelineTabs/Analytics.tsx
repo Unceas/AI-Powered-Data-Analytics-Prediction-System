@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import { Sparkles, AlertCircle, Download } from 'lucide-react';
 import api from '../../utils/api';
 import { 
   BarChart, 
@@ -16,9 +16,10 @@ import './PipelineTabs.css';
 interface AnalyticsProps {
   activeDataset: any;
   onAnalyzed: (id: string, data: any) => void;
+  onGenerateReport?: () => void;
 }
 
-export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
+export function Analytics({ activeDataset, onAnalyzed, onGenerateReport }: AnalyticsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [quickInsight, setQuickInsight] = useState<string | null>(null);
   const [typedQuickInsight, setTypedQuickInsight] = useState('');
@@ -33,7 +34,18 @@ export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
         analysis_data: analyticsData,
         context: 'You are an AI data assistant. Provide a single, punchy 1-2 line summary of the most interesting pattern in this dataset. Be very concise and do not use bullet points.'
       });
-      const text = response.data.insights;
+      const rawInsights = response.data.insights;
+      let text = '';
+      if (Array.isArray(rawInsights)) {
+        text = rawInsights.map(ins => ins.finding || String(ins)).join('\n');
+      } else if (typeof rawInsights === 'string') {
+        text = rawInsights;
+      } else if (rawInsights && typeof rawInsights === 'object') {
+        text = rawInsights.insights || JSON.stringify(rawInsights);
+      } else {
+        text = 'No insights generated.';
+      }
+
       setQuickInsight(text);
       
       let i = 0;
@@ -44,7 +56,9 @@ export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
         if (i >= text.length) clearInterval(interval);
       }, 5);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to generate quick insight:", error);
+      setQuickInsight('Failed to generate quick insights.');
+      setTypedQuickInsight('Failed to generate quick insights.');
     } finally {
       setIsGeneratingQuick(false);
     }
@@ -206,14 +220,39 @@ export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
         </div>
       ) : (
         <>
-          <button 
-            className="btn-primary run-btn" 
-            onClick={runAnalytics}
-            disabled={isLoading}
-            style={{ width: 'fit-content', padding: '0.6rem 1.5rem !important', marginTop: '0', fontSize: '0.88rem' }}
-          >
-            {isLoading ? 'Analyzing...' : '📊 Generate Full Analytics Report'}
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '0', flexWrap: 'wrap' }}>
+            <button 
+              className="btn-primary run-btn" 
+              onClick={runAnalytics}
+              disabled={isLoading}
+              style={{ width: 'fit-content', padding: '0.6rem 1.5rem !important', marginTop: '0', fontSize: '0.88rem' }}
+            >
+              {isLoading ? 'Analyzing...' : '📊 Generate Full Analytics Report'}
+            </button>
+            {data && onGenerateReport && (
+              <button 
+                className="btn-secondary" 
+                onClick={onGenerateReport}
+                style={{ 
+                  width: 'fit-content', 
+                  padding: '0.6rem 1.5rem', 
+                  fontSize: '0.88rem', 
+                  border: '1px solid var(--border-color)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  borderRadius: '0.4rem', 
+                  background: 'transparent', 
+                  color: 'var(--text-primary)', 
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                <Download size={14} />
+                <span>Generate Intelligence Report</span>
+              </button>
+            )}
+          </div>
 
           {data && (
             <div className="dataset-intelligence-summary-box card" style={{ marginTop: '1.5rem', marginBottom: '1.5rem', padding: '1.75rem', background: 'rgba(6, 182, 212, 0.02)', borderRadius: '0.75rem', borderLeft: '4px solid var(--accent-color)', borderTop: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', width: '100%' }}>
@@ -291,9 +330,14 @@ export function Analytics({ activeDataset, onAnalyzed }: AnalyticsProps) {
                       {['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'].map(stat => (
                         <tr key={stat}>
                           <td style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{stat}</td>
-                          {Object.keys(data.descriptive_statistics).map(col => (
-                            <td key={col}>{data.descriptive_statistics[col][stat] !== undefined ? data.descriptive_statistics[col][stat].toFixed(2) : '-'}</td>
-                          ))}
+                          {Object.keys(data.descriptive_statistics).map(col => {
+                            const val = data.descriptive_statistics[col][stat];
+                            return (
+                              <td key={col}>
+                                {typeof val === 'number' ? val.toFixed(2) : (val !== null && val !== undefined ? String(val) : '-')}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>
