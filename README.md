@@ -29,16 +29,14 @@ The platform focuses on:
 
 ## Core Features
 
-- Automated dataset ingestion pipeline
-- CSV & Excel processing support
-- Intelligent preprocessing workflows
-- Missing value handling & feature encoding
-- Correlation analysis & statistical summaries
-- ML-powered prediction pipelines
-- Isolation Forest anomaly detection
-- LLM-generated business insights using Groq API
-- FastAPI backend architecture
-- Interactive React + Vite analytics dashboard
+- **Action-Centric Hero Workspace**: Clean landing dashboard featuring guided entry points, quick sessions launch, and recent telemetry metadata.
+- **Automated Dataset Ingestion Pipeline**: Full support for CSV & Excel spreadsheets.
+- **Intelligent Preprocessing & ML Orchestration**: Configurable missing value imputations, variable scaling, and feature encoding.
+- **3x3 Dataset Intelligence Overview Grid**: Displays 9 real-time metrics including Dimensions, Missing Value ratios, Model Accuracy, Anomalies, and Report readiness.
+- **Side-by-Side Split Workspace Layout**: Monitor ML progress traces alongside streaming console logs in real time.
+- **Executive Intelligence Report Engine**: PDF business report generator compiling dataset statistics, feature attributions, correlation heatmaps, and outlier summaries.
+- **Traceable AI Explanation Layer**: Conversational Insight Engine (powered by LLaMA 3.1 & Groq API) linking natural-language reasoning nodes directly to dataset components.
+- **Unified Accordion System Configuration**: Accordion-style preferences (Theme toggling, font sizing, density spacing, default algorithms, AI detail limits) synchronized with LocalStorage.
 
 ---
 

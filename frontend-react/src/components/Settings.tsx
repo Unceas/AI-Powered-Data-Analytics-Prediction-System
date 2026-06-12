@@ -8,10 +8,10 @@ export function Settings() {
   
   // Accordion state
   const [expandedCategories, setExpandedCategories] = useState<{ [key: string]: boolean }>({
-    appearance: true,
-    analytics: true,
-    insights: true,
-    reports: true,
+    appearance: false,
+    analytics: false,
+    insights: false,
+    reports: false,
   });
 
   const toggleCategory = (key: string) => {
