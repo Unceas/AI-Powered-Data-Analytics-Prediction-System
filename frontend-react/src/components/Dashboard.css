@@ -1432,6 +1432,8 @@
   text-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
 }
 
+
+
 .landing-headline {
   font-family: var(--font-display); /* Space Grotesk */
   font-size: 3.5rem;
@@ -1439,9 +1441,8 @@
   line-height: 1.1;
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #ffffff 40%, var(--accent-color) 100%);
+  background: linear-gradient(135deg, var(--text-primary) 40%, var(--accent-color) 100%);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .landing-subtext {
