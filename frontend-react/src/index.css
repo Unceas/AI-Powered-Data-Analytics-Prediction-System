@@ -6,9 +6,9 @@
   --card-bg: #ffffff;
   --active-card-bg: #f1f5f9;
   --focused-bg: #e2e8f0;
-  --text-primary: #0f172a;      /* Deep slate */
-  --text-secondary: #475569;    /* Muted slate */
-  --text-muted: #94a3b8;        /* Light slate */
+  --text-primary: #090d16;      /* Darker primary text */
+  --text-secondary: #334155;    /* Darker slate 700 for high visibility */
+  --text-muted: #64748b;        /* Darker slate 500 for captions */
   --border-color: rgba(0, 0, 0, 0.04); /* Fainter borders */
   
   --accent-color: #0284c7;      /* Sky Blue Accent */

@@ -72,7 +72,6 @@ export function DataManager({
 }: DataManagerProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [autoProcess, setAutoProcess] = useState(true);
-  const [selectedSample, setSelectedSample] = useState("customer_churn.csv");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Preprocessing states
