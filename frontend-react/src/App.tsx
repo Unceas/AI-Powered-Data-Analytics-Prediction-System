@@ -30,6 +30,14 @@ function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
+  // Initialize custom user preferences on mount
+  useState(() => {
+    const savedFontSize = localStorage.getItem('app-font-size') || 'standard';
+    const savedDensity = localStorage.getItem('app-density') || 'standard';
+    document.documentElement.setAttribute('data-font-size', savedFontSize);
+    document.documentElement.setAttribute('data-density', savedDensity);
+  });
+
   const activeDataset = datasets.find(d => d.id === activeDatasetId);
 
   const generateReport = async () => {

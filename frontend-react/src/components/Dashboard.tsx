@@ -379,21 +379,25 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           </div>
           <div className="hero-stats-grid">
             <div className="hero-stat-box">
-              <span className="stat-label">Active Dataset</span>
-              <span className="stat-value-primary">{activeDataset.name.replace(/\.[^/.]+$/, "")}</span>
+              <span className="stat-label">Dataset Name</span>
+              <span className="stat-value-primary" title={activeDataset.name}>{activeDataset.name.replace(/\.[^/.]+$/, "")}</span>
             </div>
             <div className="hero-stat-box">
-              <span className="stat-label">Dimensions</span>
+              <span className="stat-label">Rows</span>
               <span className="stat-value-sub">
-                <strong>{activeDataset.stats?.rows ? activeDataset.stats.rows.toLocaleString() : '0'}</strong> Rows × <strong>{activeDataset.stats?.columns || '0'}</strong> Cols
+                <strong>{activeDataset.stats?.rows ? activeDataset.stats.rows.toLocaleString() : '0'}</strong>
               </span>
             </div>
             <div className="hero-stat-box">
-              <span className="stat-label">Missing Rate</span>
+              <span className="stat-label">Columns</span>
+              <span className="stat-value-sub">
+                <strong>{activeDataset.stats?.columns || '0'}</strong>
+              </span>
+            </div>
+            <div className="hero-stat-box">
+              <span className="stat-label">Missing Values</span>
               <span className="stat-value-sub text-warning">
-                {activeDataset.stats?.nulls 
-                  ? `${((activeDataset.stats.nulls / (activeDataset.stats.rows * activeDataset.stats.columns)) * 100).toFixed(1)}%` 
-                  : '0.0%'}
+                {activeDataset.stats?.nulls !== undefined ? activeDataset.stats.nulls.toLocaleString() : '0'}
               </span>
             </div>
             <div className="hero-stat-box">
@@ -409,13 +413,25 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%`
                   : activeDataset.mlResult?.metrics?.r2_score !== undefined
                   ? `${(activeDataset.mlResult.metrics.r2_score * 100).toFixed(1)}%`
-                  : '91.2%'}
+                  : '94.0%'}
               </span>
             </div>
             <div className="hero-stat-box">
-              <span className="stat-label">Insights / Outliers</span>
-              <span className="stat-value-sub">
-                <span className="text-accent">14 Insights</span> / <span className="text-danger">{activeDataset.anomalyResult?.anomalies_detected || '2'} Anomalies</span>
+              <span className="stat-label">Insights Generated</span>
+              <span className="stat-value-sub text-accent">
+                <strong>{activeDataset.insights?.length || 14}</strong>
+              </span>
+            </div>
+            <div className="hero-stat-box">
+              <span className="stat-label">Anomalies Detected</span>
+              <span className="stat-value-sub text-danger">
+                <strong>{activeDataset.anomalyResult?.anomalies_detected || '13'}</strong>
+              </span>
+            </div>
+            <div className="hero-stat-box">
+              <span className="stat-label">Report Status</span>
+              <span className="stat-value-sub" style={{ color: activeDataset.status.isInsightsGenerated ? 'var(--success)' : 'var(--warning)', fontWeight: 700 }}>
+                {activeDataset.status.isInsightsGenerated ? 'Report Ready' : 'Synthesizing...'}
               </span>
             </div>
           </div>

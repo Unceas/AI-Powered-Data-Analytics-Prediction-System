@@ -1,17 +1,260 @@
-import { Settings as SettingsIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Sliders, Shield, Palette, FileText, CheckCircle2 } from 'lucide-react';
+import { useTheme } from '../hooks/useTheme';
+import './Settings.css';
 
 export function Settings() {
+  const { theme, setTheme } = useTheme();
+  
+  // Appearance
+  const [fontSize, setFontSizeState] = useState(() => localStorage.getItem('app-font-size') || 'standard');
+  const [density, setDensityState] = useState(() => localStorage.getItem('app-density') || 'standard');
+  
+  // Analytics
+  const [defaultModel, setDefaultModel] = useState(() => localStorage.getItem('settings-default-model') || 'randomforest');
+  const [autoProcess, setAutoProcess] = useState(() => {
+    const saved = localStorage.getItem('settings-auto-process');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [confidenceThreshold, setConfidenceThreshold] = useState(() => {
+    const saved = localStorage.getItem('settings-confidence-threshold');
+    return saved !== null ? parseFloat(saved) : 0.85;
+  });
+
+  // AI Settings
+  const [insightDetail, setInsightDetail] = useState(() => localStorage.getItem('settings-insight-detail') || 'detailed');
+  const [recommendationDepth, setRecommendationDepth] = useState(() => localStorage.getItem('settings-recommendation-depth') || 'medium');
+
+  // Report Settings
+  const [reportFormat, setReportFormat] = useState(() => localStorage.getItem('settings-report-format') || 'pdf');
+  const [includeBranding, setIncludeBranding] = useState(() => {
+    const saved = localStorage.getItem('settings-include-branding');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Apply Font Size and Density instantly
+  const setFontSize = (size: string) => {
+    setFontSizeState(size);
+    document.documentElement.setAttribute('data-font-size', size);
+    localStorage.setItem('app-font-size', size);
+  };
+
+  const setDensity = (dens: string) => {
+    setDensityState(dens);
+    document.documentElement.setAttribute('data-density', dens);
+    localStorage.setItem('app-density', dens);
+  };
+
+  // Sync settings when loaded
+  useEffect(() => {
+    document.documentElement.setAttribute('data-font-size', fontSize);
+    document.documentElement.setAttribute('data-density', density);
+  }, [fontSize, density]);
+
+  const handleSave = () => {
+    localStorage.setItem('settings-default-model', defaultModel);
+    localStorage.setItem('settings-auto-process', String(autoProcess));
+    localStorage.setItem('settings-confidence-threshold', String(confidenceThreshold));
+    localStorage.setItem('settings-insight-detail', insightDetail);
+    localStorage.setItem('settings-recommendation-depth', recommendationDepth);
+    localStorage.setItem('settings-report-format', reportFormat);
+    localStorage.setItem('settings-include-branding', String(includeBranding));
+    
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
+  };
+
   return (
-    <div className="tab-pane">
+    <div className="tab-pane settings-tab-view animate-fade-in">
       <div className="pane-header">
-        <h2>App Settings</h2>
-        <p>Configure your preferences and system parameters.</p>
+        <h2>System Config</h2>
+        <p>Manage execution models, telemetry visualizations, white-label branding, and local configurations.</p>
       </div>
 
-      <div className="placeholder-tab card">
-        <SettingsIcon size={48} className="upload-icon" style={{ opacity: 0.2 }} />
-        <h3>Coming Soon</h3>
-        <p>Settings and configurations are currently under development.</p>
+      <div className="settings-grid">
+        {/* Panel 1: Appearance */}
+        <div className="settings-card card">
+          <div className="settings-card-header">
+            <Palette size={18} className="text-accent" />
+            <h3>Appearance & UI Preferences</h3>
+          </div>
+          <div className="settings-card-content">
+            <div className="form-group">
+              <label className="form-label">Theme</label>
+              <div className="theme-toggle-row">
+                <button 
+                  className={`btn-toggle-option ${theme === 'dark' ? 'active' : ''}`}
+                  onClick={() => setTheme('dark')}
+                >
+                  Dark Mode
+                </button>
+                <button 
+                  className={`btn-toggle-option ${theme === 'light' ? 'active' : ''}`}
+                  onClick={() => setTheme('light')}
+                >
+                  Light Mode
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Font Scaling</label>
+              <select 
+                className="form-select"
+                value={fontSize}
+                onChange={(e) => setFontSize(e.target.value)}
+              >
+                <option value="compact">Compact (Smaller UI fonts)</option>
+                <option value="standard">Standard (Default scaling)</option>
+                <option value="large">Spacious (Accessible text)</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Grid Layout Density</label>
+              <select 
+                className="form-select"
+                value={density}
+                onChange={(e) => setDensity(e.target.value)}
+              >
+                <option value="high">High Density (Compact spacing)</option>
+                <option value="standard">Standard Density (Comfortable spacing)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel 2: Analytics Configuration */}
+        <div className="settings-card card">
+          <div className="settings-card-header">
+            <Sliders size={18} className="text-accent" />
+            <h3>Analytics & Model Pipeline</h3>
+          </div>
+          <div className="settings-card-content">
+            <div className="form-group">
+              <label className="form-label">Default Predictive Model</label>
+              <select 
+                className="form-select"
+                value={defaultModel}
+                onChange={(e) => setDefaultModel(e.target.value)}
+              >
+                <option value="randomforest">Random Forest Classifier</option>
+                <option value="xgboost">XGBoost (Gradient Boosted Trees)</option>
+                <option value="logisticregression">Logistic Regression (Linear solver)</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Confidence Threshold</label>
+              <div className="slider-container">
+                <input 
+                  type="range" 
+                  min="0.50" 
+                  max="0.99" 
+                  step="0.01" 
+                  className="slider"
+                  value={confidenceThreshold}
+                  onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
+                />
+                <span className="slider-value font-mono">{(confidenceThreshold * 100).toFixed(0)}%</span>
+              </div>
+              <span className="form-help">Lowering threshold reports findings with lower certainty.</span>
+            </div>
+
+            <div className="form-group">
+              <label className="form-checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={autoProcess}
+                  onChange={(e) => setAutoProcess(e.target.checked)}
+                />
+                <span>Auto-run model training on file load</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel 3: AI Insights */}
+        <div className="settings-card card">
+          <div className="settings-card-header">
+            <Shield size={18} className="text-accent" />
+            <h3>Traceable AI Insights</h3>
+          </div>
+          <div className="settings-card-content">
+            <div className="form-group">
+              <label className="form-label">Insight Detail Level</label>
+              <select 
+                className="form-select"
+                value={insightDetail}
+                onChange={(e) => setInsightDetail(e.target.value)}
+              >
+                <option value="summary">Summary (Bullet points only)</option>
+                <option value="detailed">Detailed (Statistical context)</option>
+                <option value="forensic">Forensic (Deep feature-split diagnostics)</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Recommendation Depth</label>
+              <select 
+                className="form-select"
+                value={recommendationDepth}
+                onChange={(e) => setRecommendationDepth(e.target.value)}
+              >
+                <option value="low">Low (General business tip)</option>
+                <option value="medium">Medium (Targeted actionable tasks)</option>
+                <option value="high">High (Full step-by-step remediation plan)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel 4: Report Export Options */}
+        <div className="settings-card card">
+          <div className="settings-card-header">
+            <FileText size={18} className="text-accent" />
+            <h3>Report Export System</h3>
+          </div>
+          <div className="settings-card-content">
+            <div className="form-group">
+              <label className="form-label">Default Export Format</label>
+              <select 
+                className="form-select"
+                value={reportFormat}
+                onChange={(e) => setReportFormat(e.target.value)}
+              >
+                <option value="pdf">PDF (Printable Document Format)</option>
+                <option value="html">Interactive HTML Page</option>
+                <option value="markdown">Markdown Spreadsheet (.md)</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-checkbox-label">
+                <input 
+                  type="checkbox" 
+                  checked={includeBranding}
+                  onChange={(e) => setIncludeBranding(e.target.checked)}
+                />
+                <span>Include InsightGrid branding headers</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-save-bar">
+        <button className="btn-primary btn-save-settings" onClick={handleSave}>
+          Save Configuration Defaults
+        </button>
+        {saveSuccess && (
+          <span className="save-toast animate-fade-in">
+            <CheckCircle2 size={16} className="text-success" />
+            Settings saved successfully!
+          </span>
+        )}
       </div>
     </div>
   );

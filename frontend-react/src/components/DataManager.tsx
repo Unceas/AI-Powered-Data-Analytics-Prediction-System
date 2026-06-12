@@ -1,14 +1,54 @@
 import { useRef, useState } from 'react';
-import { UploadCloud, FileText, Clock, Settings, ArrowRight } from 'lucide-react';
+import { UploadCloud, FileText, Clock, Settings, ArrowRight, Database } from 'lucide-react';
 import './DataManager.css';
 import type { Dataset } from '../types';
 
 const SAMPLE_DATASETS_INFO = [
-  { filename: "customer_churn.csv", name: "Customer Churn Prediction" },
-  { filename: "employee_attrition.csv", name: "Employee Attrition Analysis" },
-  { filename: "healthcare_risk.csv", name: "Healthcare Risk Assessment" },
-  { filename: "student_performance.csv", name: "Student Performance Analytics" },
-  { filename: "retail_sales.csv", name: "Retail Sales Forecasting" }
+  { 
+    filename: "customer_churn.csv", 
+    name: "Customer Churn Prediction",
+    industry: "Telecom",
+    rows: 7043,
+    cols: 21,
+    type: "Classification (Binary)",
+    capabilities: "Identify high-risk accounts, isolate behavioral drivers, determine retention actions"
+  },
+  { 
+    filename: "healthcare_risk.csv", 
+    name: "Healthcare Risk Assessment",
+    industry: "Healthcare",
+    rows: 10000,
+    cols: 15,
+    type: "Classification / Risk Analysis",
+    capabilities: "Model re-admission probability, identify critical outliers, score diagnostic alerts"
+  },
+  {
+    filename: "employee_attrition.csv",
+    name: "Employee Attrition Analysis",
+    industry: "Human Resources",
+    rows: 1470,
+    cols: 35,
+    type: "Classification (Binary)",
+    capabilities: "Analyze flight-risk probability, test compensation sensitivity, isolate satisfaction indices"
+  },
+  { 
+    filename: "student_performance.csv", 
+    name: "Student Performance Analytics",
+    industry: "Education",
+    rows: 1000,
+    cols: 17,
+    type: "Classification / Regression",
+    capabilities: "Map academic risk thresholds, forecast final exam outcomes, optimize study programs"
+  },
+  { 
+    filename: "retail_sales.csv", 
+    name: "Retail Sales Forecasting",
+    industry: "Retail / E-Commerce",
+    rows: 8523,
+    cols: 12,
+    type: "Regression (Numerical)",
+    capabilities: "Predict weekly store sales, analyze seasonal holiday peaks, allocate store inventory"
+  }
 ];
 
 interface DataManagerProps {
@@ -132,33 +172,6 @@ export function DataManager({
               <span>Auto-process pipeline on ingest</span>
             </label>
           </div>
-
-          <div className="sample-dataset-ingest-bar">
-            <span className="divider-label">OR</span>
-            <div className="sample-action-row">
-              <select 
-                className="sample-select text-left"
-                value={selectedSample}
-                onChange={(e) => setSelectedSample(e.target.value)}
-              >
-                {SAMPLE_DATASETS_INFO.map(item => (
-                  <option key={item.filename} value={item.filename}>{item.name}</option>
-                ))}
-              </select>
-              <button 
-                className="btn-secondary btn-use-sample"
-                onClick={() => {
-                  const item = SAMPLE_DATASETS_INFO.find(x => x.filename === selectedSample);
-                  if (item && onLoadSampleDataset) {
-                    onLoadSampleDataset(item.filename, item.name);
-                    if (onNavigate) onNavigate('diagnostics');
-                  }
-                }}
-              >
-                Use Sample Dataset
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Datasets Repository */}
@@ -195,6 +208,49 @@ export function DataManager({
               ))
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Explore Sample Datasets Presets Grid */}
+      <div className="sample-presets-container card">
+        <div className="widget-title">
+          <Database size={16} className="text-cyan" />
+          <h3>EXPLORE SAMPLE DATASETS PRESETS</h3>
+        </div>
+        <div className="sample-presets-grid">
+          {SAMPLE_DATASETS_INFO.map(item => (
+            <div key={item.filename} className="sample-preset-card card interactive">
+              <div className="sample-card-header">
+                <span className="sample-industry-badge">{item.industry}</span>
+                <h4>{item.name}</h4>
+              </div>
+              <div className="sample-card-meta-grid">
+                <div className="meta-item">
+                  <span className="lbl">Dimensions</span>
+                  <span className="val">{item.rows.toLocaleString()} Rows × {item.cols} Columns</span>
+                </div>
+                <div className="meta-item">
+                  <span className="lbl">Analysis Type</span>
+                  <span className="val">{item.type}</span>
+                </div>
+              </div>
+              <div className="sample-card-capabilities">
+                <span className="lbl">Target Capabilities:</span>
+                <p>{item.capabilities}</p>
+              </div>
+              <button 
+                className="btn-primary btn-sm btn-load-sample"
+                onClick={() => {
+                  if (onLoadSampleDataset) {
+                    onLoadSampleDataset(item.filename, item.name);
+                    if (onNavigate) onNavigate('dashboard');
+                  }
+                }}
+              >
+                Launch Preset Session →
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
