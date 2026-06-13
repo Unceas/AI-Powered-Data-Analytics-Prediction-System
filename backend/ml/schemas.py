@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 class MLPredictionResponse(BaseModel):
     status: str
@@ -7,6 +7,8 @@ class MLPredictionResponse(BaseModel):
     model_type: str
     metrics: Dict[str, float]
     feature_importance: Optional[Dict[str, float]] = None
+    reliability_score: Optional[int] = 90
+    reliability_details: Optional[Dict[str, float]] = None
 
 class AnomalyDetectionResponse(BaseModel):
     status: str

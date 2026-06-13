@@ -8,3 +8,5 @@ class AnalyticsResponse(BaseModel):
     correlation_matrix: Optional[Dict[str, Any]] = None
     categorical_summaries: Optional[Dict[str, Any]] = None
     distributions: Optional[Dict[str, Any]] = None
+    dataset_health_score: Optional[int] = 100
+    dataset_health_details: Optional[Dict[str, float]] = None

@@ -90,7 +90,7 @@ async def analyze_csv(file: UploadFile = File(...)):
     """Upload a CSV and generate descriptive statistics and correlations."""
     df = await load_csv_from_upload(file)
     
-    desc_stats, corr_matrix, cat_summaries, distributions = analyze_dataframe(df)
+    desc_stats, corr_matrix, cat_summaries, distributions, health_score, health_details = analyze_dataframe(df)
     
     return AnalyticsResponse(
         status="success",
@@ -98,7 +98,9 @@ async def analyze_csv(file: UploadFile = File(...)):
         descriptive_statistics=desc_stats,
         correlation_matrix=corr_matrix,
         categorical_summaries=cat_summaries,
-        distributions=distributions
+        distributions=distributions,
+        dataset_health_score=health_score,
+        dataset_health_details=health_details
     )
 
 @router.post("/predict-csv", response_model=MLPredictionResponse)
@@ -113,7 +115,7 @@ async def predict_csv(
     df = await load_csv_from_upload(file)
     
     try:
-        model_type, metrics, feature_importance = train_and_evaluate(df, target_col=target_column)
+        model_type, metrics, feature_importance, reliability_score, reliability_details = train_and_evaluate(df, target_col=target_column)
     except ValueError as e:
         return MLPredictionResponse(
             status="error",
@@ -127,7 +129,9 @@ async def predict_csv(
         message="Model trained successfully",
         model_type=model_type,
         metrics=metrics,
-        feature_importance=feature_importance
+        feature_importance=feature_importance,
+        reliability_score=reliability_score,
+        reliability_details=reliability_details
     )
 
 @router.post("/detect-anomalies", response_model=AnomalyDetectionResponse)

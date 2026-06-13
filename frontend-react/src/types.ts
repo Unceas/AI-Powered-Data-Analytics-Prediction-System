@@ -6,6 +6,7 @@ export interface DatasetLog {
 export interface Insight {
   category: 'Correlation' | 'Prediction' | 'Anomaly' | 'Trend' | 'Recommendation';
   finding: string;
+  impact: string;
   confidence: number;
   source: string;
   driver: string;
@@ -27,6 +28,10 @@ export interface Dataset {
   rawFile?: File;
   isSample?: boolean;
   stats: any;
+  dataset_health_score?: number;
+  dataset_health_details?: any;
+  reliability_score?: number;
+  reliability_details?: any;
   status: {
     isLoaded: boolean;
     isProcessed: boolean;

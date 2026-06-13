@@ -167,7 +167,17 @@ function App() {
       addLog(id, 'Generating continuous probability density bands...');
       await new Promise(r => setTimeout(r, 300));
       
-      updateState(id, 'ANALYZING', 'Exploratory data analysis report successfully compiled. (duration: 410ms)', { isAnalyzed: true }, { analyticsData: analyzeRes.data });
+      updateState(
+        id, 
+        'ANALYZING', 
+        'Exploratory data analysis report successfully compiled. (duration: 410ms)', 
+        { isAnalyzed: true }, 
+        { 
+          analyticsData: analyzeRes.data,
+          dataset_health_score: analyzeRes.data.dataset_health_score,
+          dataset_health_details: analyzeRes.data.dataset_health_details
+        }
+      );
       await new Promise(r => setTimeout(r, 450));
 
       // Stage 5: RUNNING INFERENCE
@@ -207,7 +217,12 @@ function App() {
         'RUNNING INFERENCE', 
         `Inference complete. Isolation Forest tagged ${anomalyRes.data.anomalies_detected} outliers. (duration: 780ms)`, 
         { isModelTrained: true }, 
-        { mlResult: predictRes.data, anomalyResult: anomalyRes.data }
+        { 
+          mlResult: predictRes.data, 
+          anomalyResult: anomalyRes.data,
+          reliability_score: predictRes.data.reliability_score,
+          reliability_details: predictRes.data.reliability_details
+        }
       );
       await new Promise(r => setTimeout(r, 450));
 
