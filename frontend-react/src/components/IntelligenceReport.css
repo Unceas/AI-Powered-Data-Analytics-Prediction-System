@@ -1,7 +1,7 @@
 /* Light Theme Report Styles for PDF Compilation */
 .light-theme-report {
-  --accent-color: #0284c7;
-  --accent-light: rgba(2, 132, 199, 0.08);
+  --accent-color: #0f172a;
+  --accent-light: rgba(15, 23, 42, 0.05);
   --border-color: #e2e8f0;
   --card-bg: #ffffff;
   --text-primary: #0f172a;
@@ -85,7 +85,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: #0f172a;
-  border-left: 3px solid #0284c7;
+  border-left: 3px solid #D4B16A;
   padding-left: 10px;
   margin-bottom: 4px;
 }
@@ -127,7 +127,7 @@
 
 .report-header-brand .brand-slogan {
   font-size: 0.7rem;
-  color: #0284c7;
+  color: #A27B38;
   font-weight: 700;
   text-transform: uppercase;
   margin-top: -2px;
@@ -144,7 +144,7 @@
 .report-cover-main .decor-line {
   width: 60px;
   height: 6px;
-  background-color: #0284c7;
+  background-color: #D4B16A;
   margin-bottom: 16px;
 }
 
@@ -211,7 +211,7 @@
 /* PAGE 2: EXECUTIVE SUMMARY & STRUCTURE STYLING */
 .executive-summary-block {
   background: #f8fafc;
-  border-left: 4px solid #0284c7;
+  border-left: 4px solid #D4B16A;
   padding: 20px;
   border-radius: 4px;
 }
@@ -251,7 +251,7 @@
 }
 
 .struct-card .text-accent {
-  color: #0284c7;
+  color: #A27B38;
 }
 
 .struct-card .text-warning {
@@ -457,8 +457,8 @@
 }
 
 .roadmap-milestone.long::before {
-  border-color: #0284c7;
-  background-color: #0284c7;
+  border-color: #B8894D;
+  background-color: #B8894D;
 }
 
 .milestone-indicator {
@@ -477,7 +477,7 @@
 }
 
 .roadmap-milestone.long .milestone-indicator {
-  color: #0284c7;
+  color: #B8894D;
 }
 
 .milestone-content h4 {

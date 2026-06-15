@@ -133,7 +133,7 @@ export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetect
             {mlResult && mlResult.status !== 'error' && (
               <div className="ml-results card animate-fade-in" style={{ marginTop: '1.5rem', borderLeft: '4px solid var(--accent-color)' }}>
                 <h4 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  <Cpu size={16} className="text-cyan" /> MODEL TYPE: {mlResult.model_type}
+                  <Cpu size={16} className="text-accent" /> MODEL TYPE: {mlResult.model_type}
                 </h4>
                 <div className="metrics-grid">
                   {Object.entries(mlResult.metrics).map(([k, v]: [string, any]) => (
@@ -142,7 +142,7 @@ export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetect
                       <span className="metric-k">{k.replace('_', ' ')}</span>
                     </div>
                   ))}
-                  <div className="metric-box" style={{ background: 'rgba(6, 182, 212, 0.05)', borderColor: 'rgba(6, 182, 212, 0.2)' }}>
+                  <div className="metric-box" style={{ background: 'var(--accent-light)', borderColor: 'var(--accent-border)' }}>
                      <span className="metric-v" style={{ color: 'var(--accent-color)' }}>High</span>
                      <span className="metric-k" style={{ color: 'var(--text-secondary)' }}>PREDICTION CONFIDENCE</span>
                   </div>

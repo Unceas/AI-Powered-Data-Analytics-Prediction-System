@@ -1201,18 +1201,25 @@
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sample-preset-card:hover .btn-load-sample {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .btn-load-sample:hover {
   background: var(--accent-light);
   border-color: var(--accent-color);
   color: var(--accent-color);
-  transform: translateY(-1px);
+  transform: translateY(-1px) !important;
 }
 
 .btn-load-sample:active {
-  transform: translateY(0);
+  transform: translateY(0) !important;
 }
 
 .sample-dataset-badge {
@@ -1429,7 +1436,7 @@
   margin-bottom: 0.75rem;
   text-transform: uppercase;
   opacity: 1;
-  text-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+  text-shadow: 0 0 20px rgba(var(--accent-rgb), 0.1);
 }
 
 
@@ -1483,10 +1490,10 @@
 }
 
 .action-card:hover {
-  border-color: rgba(0, 212, 255, 0.35);
+  border-color: var(--yellow-hover-border);
   transform: translateY(-4px);
-  background: var(--active-card-bg);
-  box-shadow: var(--shadow-md), 0 0 15px rgba(0, 212, 255, 0.05);
+  background: var(--yellow-hover-bg);
+  box-shadow: var(--shadow-md), 0 0 15px var(--yellow-hover-glow);
 }
 
 .action-card-header {
@@ -1530,8 +1537,8 @@
 }
 
 .action-card:hover .btn-action {
-  background: rgba(0, 212, 255, 0.08);
-  border-color: rgba(0, 212, 255, 0.25);
+  background: var(--accent-light);
+  border-color: var(--accent-border);
   color: var(--accent-color);
 }
 
@@ -1576,8 +1583,8 @@
 }
 
 .recent-session-item:hover {
-  border-color: rgba(0, 212, 255, 0.25);
-  background: var(--active-card-bg);
+  border-color: var(--yellow-hover-border);
+  background: var(--yellow-hover-bg);
 }
 
 .session-left {
@@ -1619,7 +1626,9 @@
 
 /* Featured Intelligence Panel Styles */
 .dataset-intelligence-featured-panel {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.03) 0%, rgba(56, 189, 248, 0.01) 100%);
+  background: radial-gradient(circle at top left, rgba(212, 177, 106, 0.06), transparent 75%), 
+              linear-gradient(135deg, var(--accent-light) 0%, rgba(255, 255, 255, 0) 100%);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
   border-left: 4px solid var(--accent-color);
   padding: 1.5rem !important;
@@ -1627,7 +1636,7 @@
   flex-direction: column;
   gap: 1.25rem;
   box-shadow: var(--shadow-sm);
-  border-radius: 0.75rem;
+  border-radius: 18px;
 }
 
 .featured-header-row {
@@ -1656,8 +1665,8 @@
   font-weight: 800;
   letter-spacing: 0.05em;
   color: var(--accent-color);
-  background: rgba(6, 182, 212, 0.08);
-  border: 1px solid rgba(6, 182, 212, 0.15);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-border);
   padding: 0.2rem 0.6rem;
   border-radius: 99px;
   text-transform: uppercase;
@@ -1916,6 +1925,8 @@
 
 /* AI Dataset Intelligence Summary workspace */
 .dataset-intelligence-summary-workspace {
+  background: radial-gradient(circle at bottom right, rgba(212, 177, 106, 0.05), transparent 70%), var(--card-bg);
+  border-radius: 18px !important;
   padding: 1.5rem !important;
   display: flex;
   flex-direction: column;
@@ -2382,6 +2393,8 @@
 
 /* Deep Analytics & Attribution section */
 .dashboard-analytics-section {
+  background: radial-gradient(circle at top right, rgba(212, 177, 106, 0.05), transparent 70%), var(--card-bg);
+  border-radius: 18px !important;
   padding: 1.5rem !important;
   display: flex;
   flex-direction: column;
@@ -2539,14 +2552,14 @@
 }
 
 .snapshot-card.clickable:hover {
-  border-color: var(--color-accent, #3b82f6);
-  background: rgba(59, 130, 246, 0.03);
+  border-color: var(--accent-color);
+  background: var(--accent-light);
 }
 
 .snapshot-card.clickable.expanded {
-  border-color: var(--color-accent, #3b82f6);
-  background: rgba(30, 41, 59, 0.85);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  border-color: var(--accent-color);
+  background: var(--active-card-bg);
+  box-shadow: var(--shadow-md);
 }
 
 .snapshot-card .card-top {
@@ -2577,8 +2590,8 @@
 }
 
 .snapshot-card .card-badge.reliability {
-  color: var(--color-accent, #3b82f6);
-  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent-color);
+  background: var(--accent-light);
 }
 
 .snapshot-card .card-badge.insights {
@@ -2646,8 +2659,8 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: #0f172a;
-  border: 1px solid var(--color-accent, #3b82f6);
+  background: var(--active-card-bg);
+  border: 1px solid var(--accent-color);
   border-top: none;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
@@ -2815,23 +2828,23 @@
 }
 
 .timeline-audit-item.active .timeline-node-dot {
-  background: var(--color-accent, #3b82f6);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  background: var(--accent-color);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6);
   animation: pulse-node 1.5s infinite alternate;
 }
 
 .timeline-audit-item.active .timeline-step-name {
-  color: var(--color-accent, #3b82f6);
+  color: var(--accent-color);
 }
 
 .timeline-audit-item.active .timeline-step-time {
-  color: var(--color-accent, #3b82f6);
+  color: var(--accent-color);
   font-weight: bold;
 }
 
 .timeline-audit-item.active .timeline-content {
-  border-color: rgba(59, 130, 246, 0.25);
-  background: rgba(59, 130, 246, 0.02);
+  border-color: var(--accent-border);
+  background: var(--accent-light);
 }
 
 @keyframes pulse-node {
@@ -2890,7 +2903,7 @@
 }
 
 .flowpath-step.finding {
-  border-left: 2px solid var(--color-accent, #3b82f6);
+  border-left: 2px solid var(--accent-color);
 }
 
 .flowpath-step.impact {
@@ -2909,7 +2922,7 @@
 }
 
 .flowpath-step.finding .step-badge-title {
-  color: var(--color-accent, #3b82f6);
+  color: var(--accent-color);
 }
 
 .flowpath-step.impact .step-badge-title {

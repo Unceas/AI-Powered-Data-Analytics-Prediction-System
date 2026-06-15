@@ -1,27 +1,32 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
-  /* Premium Light Theme */
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --active-card-bg: #f1f5f9;
-  --focused-bg: #e2e8f0;
-  --text-primary: #090d16;      /* Darker primary text */
-  --text-secondary: #334155;    /* Darker slate 700 for high visibility */
-  --text-muted: #64748b;        /* Darker slate 500 for captions */
-  --border-color: rgba(0, 0, 0, 0.04); /* Fainter borders */
+  /* Premium Light Theme - Warm Sand & Editorial Ivory */
+  --bg-color: #FAF8F5;          /* Light Sand background */
+  --sidebar-bg: #F5F2EB;        /* Warm Ivory sidebar */
+  --card-bg: #FFFFFF;           /* Crisp white card surface */
+  --active-card-bg: #FAF8F5;    /* Active card highlight */
+  --focused-bg: #EAE6DC;        /* Focused input/component */
+  --text-primary: #1C1917;      /* Graphite / Near Black primary text */
+  --text-secondary: #57534E;    /* Muted Graphite secondary text */
+  --text-muted: #A8A29E;        /* Sandy Stone muted captions */
+  --border-color: rgba(28, 25, 23, 0.08); /* Warm border overlay */
   
-  --accent-color: #0284c7;      /* Sky Blue Accent */
-  --accent-hover: #0369a1;
-  --accent-light: rgba(2, 132, 199, 0.04);
-  --accent-border: rgba(2, 132, 199, 0.08);
+  --accent-rgb: 184, 137, 77;   /* Soft Gold / Bronze RGB */
+  --accent-color: #A27B38;      /* Muted Gold for readability */
+  --accent-hover: #8C6228;      /* Soft Bronze hover */
+  --accent-light: rgba(184, 137, 77, 0.05);
+  --accent-border: rgba(184, 137, 77, 0.15);
+
+  --yellow-hover-bg: #FAF6E8;   /* Warm Ivory hover highlight */
+  --yellow-hover-border: #E1C58B; /* Soft Gold hover border */
+  --yellow-hover-glow: rgba(212, 177, 106, 0.15);
   
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
   
-  --sidebar-bg: #ffffff;
-  --sidebar-border: rgba(0, 0, 0, 0.04);
+  --sidebar-border: rgba(28, 25, 23, 0.06);
   
   --font-family: 'Inter', sans-serif;
   --font-display: 'Space Grotesk', sans-serif;
@@ -32,47 +37,52 @@
   --element-gap: 1.25rem;
   
   /* Text Size Scale */
-  --fs-xs: 0.75rem;     /* 12px */
-  --fs-sm: 0.8125rem;   /* 13px */
-  --fs-base: 0.875rem;  /* 14px */
-  --fs-md: 0.9375rem;   /* 15px */
-  --fs-lg: 1rem;        /* 16px */
-  --fs-xl: 1.125rem;    /* 18px */
-  --fs-2xl: 1.25rem;    /* 20px */
-  --fs-3xl: 1.5rem;     /* 24px */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.875rem;
+  --fs-md: 0.9375rem;
+  --fs-lg: 1rem;
+  --fs-xl: 1.125rem;
+  --fs-2xl: 1.25rem;
+  --fs-3xl: 1.5rem;
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.03), 0 4px 6px -2px rgba(0, 0, 0, 0.01);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 [data-theme="dark"] {
-  /* Premium Dark Theme - Slate-Charcoal base, flat look */
-  --bg-color: #05070D;          /* Layer 0: App Background */
-  --sidebar-bg: #0B1220;        /* Layer 1: Navigation Surface */
-  --card-bg: #101827;           /* Layer 2: Standard Cards */
-  --active-card-bg: #131F34;    /* Layer 3: Active Cards */
-  --focused-bg: #162742;        /* Layer 4: Focused Components */
+  /* Premium Dark Theme - Graphite & Gold Terminal */
+  --bg-color: #080808;          /* Layer 0: Near Black */
+  --sidebar-bg: #111111;        /* Layer 1: Charcoal Navigation */
+  --card-bg: #181818;           /* Layer 2: Surface Cards */
+  --active-card-bg: #202020;    /* Layer 3: Elevated Cards */
+  --focused-bg: #282828;        /* Layer 4: Focused Components */
 
-  --text-primary: #f1f5f9;      /* Crisp slate-white */
-  --text-secondary: #94a3b8;    /* Muted slate-grey */
-  --text-muted: #4b5563;        /* Dark slate-grey */
-  --border-color: rgba(255, 255, 255, 0.03); /* Fainter borders */
+  --text-primary: #F5F2EB;      /* Warm White */
+  --text-secondary: #C9C4B8;    /* Muted Warm White */
+  --text-muted: #8E8A80;        /* Sandy Stone */
+  --border-color: rgba(255, 255, 255, 0.05); /* Faint gray borders */
   
-  --accent-color: #00D4FF;      /* Neon-Blue Accent */
-  --accent-hover: #00b0d4;
-  --accent-light: rgba(0, 212, 255, 0.04);
-  --accent-border: rgba(0, 212, 255, 0.1);
+  --accent-rgb: 212, 177, 106;  /* Soft Gold RGB */
+  --accent-color: #D4B16A;      /* Soft Gold */
+  --accent-hover: #E1C58B;      /* Hover Gold */
+  --accent-light: rgba(212, 177, 106, 0.05);
+  --accent-border: rgba(212, 177, 106, 0.15);
+
+  --yellow-hover-bg: #201D17;   /* Warm dark sand hover */
+  --yellow-hover-border: #B8894D; /* Soft Bronze border */
+  --yellow-hover-glow: rgba(184, 137, 77, 0.12);
   
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
 
-  --sidebar-border: rgba(255, 255, 255, 0.03);
+  --sidebar-border: rgba(255, 255, 255, 0.04);
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 /* Dynamic Font Scales */
@@ -129,8 +139,8 @@ body::before {
   width: 100vw; 
   height: 100vh;
   background-image: 
-    linear-gradient(to right, rgba(2, 132, 199, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(2, 132, 199, 0.025) 1px, transparent 1px);
+    linear-gradient(to right, rgba(212, 177, 106, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 177, 106, 0.015) 1px, transparent 1px);
   background-size: 20px 20px;
   z-index: -2;
   pointer-events: none;
@@ -138,8 +148,8 @@ body::before {
 
 [data-theme="dark"] body::before {
   background-image: 
-    linear-gradient(to right, rgba(56, 189, 248, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(56, 189, 248, 0.025) 1px, transparent 1px);
+    linear-gradient(to right, rgba(212, 177, 106, 0.012) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 177, 106, 0.012) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
@@ -164,24 +174,25 @@ input, select, textarea {
 .card {
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 0.6rem;
+  border-radius: 18px;
   box-shadow: var(--shadow-sm);
   padding: var(--card-padding);
-  transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.2s ease, 
+              box-shadow 0.2s ease,
+              transform 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .card:hover {
-  border-color: rgba(148, 163, 184, 0.12);
+  border-color: var(--accent-border);
   box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 [data-theme="dark"] .card:hover {
-  border-color: rgba(0, 212, 255, 0.15);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  border-color: var(--yellow-hover-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   transform: translateY(-2px);
 }
 
@@ -205,7 +216,7 @@ input, select, textarea {
 }
 
 [data-theme="dark"] .btn-primary {
-  color: #080c14;
+  color: #080808;
   font-weight: 600;
 }
 
@@ -289,12 +300,12 @@ input, select, textarea {
 
 /* Fix dropdown option visibility across all pages */
 select option {
-  background-color: #111622 !important;
-  color: #f1f5f9 !important;
+  background-color: #111111 !important;
+  color: #F5F2EB !important;
 }
 
 [data-theme="light"] select option {
   background-color: #ffffff !important;
-  color: #0f172a !important;
+  color: #1C1917 !important;
 }
 

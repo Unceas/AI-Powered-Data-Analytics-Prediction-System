@@ -98,8 +98,8 @@
 
 .status-pill.active-cyan {
   color: var(--text-primary);
-  border-color: rgba(6, 182, 212, 0.2);
-  background: rgba(6, 182, 212, 0.03);
+  border-color: var(--accent-border);
+  background: var(--accent-light);
 }
 
 .icon-glow {

@@ -142,7 +142,7 @@ export function Analytics({ activeDataset, onAnalyzed, onGenerateReport }: Analy
 
   const renderCategoricalChart = (feat: string, info: any) => {
     const chartData = Object.entries(info.top_values).map(([name, value]) => ({ name, value }));
-    const COLORS = ['#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63'];
+    const COLORS = ['#D4B16A', '#B8894D', '#A27B38', '#8C6228', '#C9C4B8'];
 
     return (
       <div key={feat} className="stat-chart-container card">
@@ -255,7 +255,7 @@ export function Analytics({ activeDataset, onAnalyzed, onGenerateReport }: Analy
           </div>
 
           {data && (
-            <div className="dataset-intelligence-summary-box card" style={{ marginTop: '1.5rem', marginBottom: '1.5rem', padding: '1.75rem', background: 'rgba(6, 182, 212, 0.02)', borderRadius: '0.75rem', borderLeft: '4px solid var(--accent-color)', borderTop: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', width: '100%' }}>
+            <div className="dataset-intelligence-summary-box card" style={{ marginTop: '1.5rem', marginBottom: '1.5rem', padding: '1.75rem', background: 'var(--accent-light)', borderRadius: '0.75rem', borderLeft: '4px solid var(--accent-color)', borderTop: '1px solid var(--border-color)', borderRight: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', width: '100%' }}>
                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', color: 'var(--accent-color)', fontSize: '1.1rem', fontWeight: 800, letterSpacing: '0.05em' }}>
                   <Sparkles size={20} /> DATASET INTELLIGENCE SUMMARY
                </h4>

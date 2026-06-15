@@ -193,7 +193,7 @@
 
 .pipeline-step-item.active .step-dot {
   border-color: var(--accent-color);
-  background: rgba(6, 182, 212, 0.05);
+  background: var(--accent-light);
 }
 
 .step-pulse {

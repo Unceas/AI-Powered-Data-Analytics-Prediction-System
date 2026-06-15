@@ -57,12 +57,12 @@
 }
 
 .picker-dataset-item:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(6, 182, 212, 0.2);
+  background: var(--yellow-hover-bg);
+  border-color: var(--yellow-hover-border);
 }
 
 .picker-dataset-item.selected {
-  background: rgba(6, 182, 212, 0.04);
+  background: var(--accent-light);
   border-color: var(--accent-color);
   color: var(--accent-color);
 }
@@ -168,8 +168,8 @@
   font-weight: 800;
   letter-spacing: 0.05em;
   color: var(--accent-color);
-  background: rgba(6, 182, 212, 0.05);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-border);
   padding: 0.2rem 0.5rem;
   border-radius: 99px;
 }
@@ -212,9 +212,9 @@
 
 .message-bubble-row.assistant .msg-avatar {
   color: var(--accent-color);
-  border-color: rgba(6, 182, 212, 0.25);
-  background: rgba(6, 182, 212, 0.05);
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.15);
+  border-color: var(--accent-border);
+  background: var(--accent-light);
+  box-shadow: 0 0 8px var(--accent-light);
 }
 
 .message-content-wrapper {
@@ -252,8 +252,8 @@
 }
 
 .message-bubble-row.user .message-text {
-  background: rgba(6, 182, 212, 0.05);
-  border-color: rgba(6, 182, 212, 0.15);
+  background: var(--accent-light);
+  border-color: var(--accent-border);
 }
 
 .linked-reasoning-anchor {
@@ -309,9 +309,9 @@
 }
 
 .suggestion-pill-btn:hover {
-  border-color: rgba(6, 182, 212, 0.2);
+  border-color: var(--yellow-hover-border);
   color: var(--accent-color);
-  background: rgba(6, 182, 212, 0.02);
+  background: var(--yellow-hover-bg);
 }
 
 /* Chat Input Row */
@@ -351,7 +351,7 @@
 
 .send-button:hover:not(:disabled) {
   background: var(--accent-hover);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 10px var(--accent-border);
 }
 
 .send-button:disabled {

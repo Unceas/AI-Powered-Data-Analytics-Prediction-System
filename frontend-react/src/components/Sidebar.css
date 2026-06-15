@@ -128,9 +128,9 @@
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.03);
+  background: var(--yellow-hover-bg);
+  color: var(--accent-color);
+  border-color: var(--yellow-hover-border);
 }
 
 .nav-btn.active {
@@ -220,7 +220,8 @@
 }
 
 .theme-toggle:hover {
-  border-color: var(--accent-color);
+  background: var(--yellow-hover-bg);
+  border-color: var(--yellow-hover-border);
   color: var(--accent-color);
 }
 

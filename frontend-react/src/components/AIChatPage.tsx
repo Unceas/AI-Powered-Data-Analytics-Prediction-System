@@ -141,7 +141,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
         {/* Left Side: Context Selector */}
         <div className="chat-sidebar card">
           <div className="sidebar-title">
-            <Brain size={16} className="text-cyan" />
+            <Brain size={16} className="text-accent" />
             <h3>ACTIVE CONTEXT</h3>
           </div>
 
@@ -179,7 +179,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
         <div className="chat-workspace-panel card">
           <div className="chat-header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="header-status">
-              <Bot size={16} className="text-cyan active-glow" />
+              <Bot size={16} className="text-accent active-glow" />
               <span>Intelligence Studio</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -191,9 +191,9 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
                     padding: '0.4rem 0.8rem',
                     fontSize: '0.75rem',
                     borderRadius: '0.35rem',
-                    background: 'rgba(6, 182, 212, 0.15)',
+                    background: 'var(--accent-light)',
                     color: 'var(--accent-color)',
-                    border: '1px solid rgba(6, 182, 212, 0.25)',
+                    border: '1px solid var(--accent-border)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -226,7 +226,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
                   {msg.linkedElement && (
                     <div className="linked-reasoning-anchor">
                       <span>Reasoning path anchored to: </span>
-                      <strong className="text-cyan">
+                      <strong className="text-accent">
                         {msg.linkedElement.type === 'anomaly' ? '→ anomaly_outlier.vector' : '→ model_feature_weights.matrix'}
                       </strong>
                     </div>
