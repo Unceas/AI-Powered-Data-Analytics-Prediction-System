@@ -104,8 +104,8 @@ AI-synthesized findings suggest immediate optimization of target retention strat
                 const val = matrix[row][col];
                 const absVal = Math.abs(val);
                 const bgColor = val > 0 
-                  ? `rgba(212, 177, 106, ${absVal * 0.3})` 
-                  : `rgba(184, 137, 77, ${absVal * 0.3})`;
+                  ? `rgba(212, 175, 55, ${absVal * 0.3})` 
+                  : `rgba(181, 147, 40, ${absVal * 0.3})`;
                 return (
                   <td key={col} style={{ backgroundColor: bgColor, fontWeight: absVal > 0.5 ? 'bold' : 'normal' }}>
                     {val.toFixed(2)}
@@ -302,7 +302,7 @@ AI-synthesized findings suggest immediate optimization of target retention strat
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
                   <XAxis type="number" stroke="#475569" fontSize={10} />
                   <YAxis dataKey="name" type="category" stroke="#475569" fontSize={10} width={100} />
-                  <Bar dataKey="weight" fill="#D4B16A" radius={[0, 4, 4, 0]} barSize={14} isAnimationActive={false} />
+                  <Bar dataKey="weight" fill="#D4AF37" radius={[0, 4, 4, 0]} barSize={14} isAnimationActive={false} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -318,14 +318,14 @@ AI-synthesized findings suggest immediate optimization of target retention strat
                 <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="reportColorConfidence" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#D4B16A" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#D4B16A" stopOpacity={0.0}/>
+                      <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#D4AF37" stopOpacity={0.0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="index" stroke="#475569" fontSize={10} />
                   <YAxis stroke="#475569" fontSize={10} />
-                  <Area type="monotone" dataKey="confidence" stroke="#D4B16A" strokeWidth={2} fill="url(#reportColorConfidence)" isAnimationActive={false} />
+                  <Area type="monotone" dataKey="confidence" stroke="#D4AF37" strokeWidth={2} fill="url(#reportColorConfidence)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

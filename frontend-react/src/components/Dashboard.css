@@ -1626,7 +1626,7 @@
 
 /* Featured Intelligence Panel Styles */
 .dataset-intelligence-featured-panel {
-  background: radial-gradient(circle at top left, rgba(212, 177, 106, 0.06), transparent 75%), 
+  background: radial-gradient(circle at top left, rgba(212, 175, 55, 0.06), transparent 75%), 
               linear-gradient(135deg, var(--accent-light) 0%, rgba(255, 255, 255, 0) 100%);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
@@ -1925,7 +1925,7 @@
 
 /* AI Dataset Intelligence Summary workspace */
 .dataset-intelligence-summary-workspace {
-  background: radial-gradient(circle at bottom right, rgba(212, 177, 106, 0.05), transparent 70%), var(--card-bg);
+  background: radial-gradient(circle at bottom right, rgba(212, 175, 55, 0.05), transparent 70%), var(--card-bg);
   border-radius: 18px !important;
   padding: 1.5rem !important;
   display: flex;
@@ -2393,7 +2393,7 @@
 
 /* Deep Analytics & Attribution section */
 .dashboard-analytics-section {
-  background: radial-gradient(circle at top right, rgba(212, 177, 106, 0.05), transparent 70%), var(--card-bg);
+  background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.05), transparent 70%), var(--card-bg);
   border-radius: 18px !important;
   padding: 1.5rem !important;
   display: flex;

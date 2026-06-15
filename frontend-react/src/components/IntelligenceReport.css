@@ -85,7 +85,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: #0f172a;
-  border-left: 3px solid #D4B16A;
+  border-left: 3px solid #D4AF37;
   padding-left: 10px;
   margin-bottom: 4px;
 }
@@ -144,7 +144,7 @@
 .report-cover-main .decor-line {
   width: 60px;
   height: 6px;
-  background-color: #D4B16A;
+  background-color: #D4AF37;
   margin-bottom: 16px;
 }
 
@@ -211,7 +211,7 @@
 /* PAGE 2: EXECUTIVE SUMMARY & STRUCTURE STYLING */
 .executive-summary-block {
   background: #f8fafc;
-  border-left: 4px solid #D4B16A;
+  border-left: 4px solid #D4AF37;
   padding: 20px;
   border-radius: 4px;
 }

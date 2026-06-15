@@ -142,7 +142,7 @@ export function Analytics({ activeDataset, onAnalyzed, onGenerateReport }: Analy
 
   const renderCategoricalChart = (feat: string, info: any) => {
     const chartData = Object.entries(info.top_values).map(([name, value]) => ({ name, value }));
-    const COLORS = ['#D4B16A', '#B8894D', '#A27B38', '#8C6228', '#C9C4B8'];
+    const COLORS = ['#D4AF37', '#B8894D', '#A27B38', '#8C6228', '#C9C4B8'];
 
     return (
       <div key={feat} className="stat-chart-container card">

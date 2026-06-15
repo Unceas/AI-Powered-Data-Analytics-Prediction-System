@@ -12,15 +12,15 @@
   --text-muted: #A8A29E;        /* Sandy Stone muted captions */
   --border-color: rgba(28, 25, 23, 0.08); /* Warm border overlay */
   
-  --accent-rgb: 184, 137, 77;   /* Soft Gold / Bronze RGB */
-  --accent-color: #A27B38;      /* Muted Gold for readability */
-  --accent-hover: #8C6228;      /* Soft Bronze hover */
-  --accent-light: rgba(184, 137, 77, 0.05);
-  --accent-border: rgba(184, 137, 77, 0.15);
+  --accent-rgb: 212, 175, 55;   /* Metallic Gold RGB */
+  --accent-color: #D4AF37;      /* Metallic Gold */
+  --accent-hover: #B59328;      /* Muted Gold hover */
+  --accent-light: rgba(212, 175, 55, 0.05);
+  --accent-border: rgba(212, 175, 55, 0.15);
 
   --yellow-hover-bg: #FAF6E8;   /* Warm Ivory hover highlight */
-  --yellow-hover-border: #E1C58B; /* Soft Gold hover border */
-  --yellow-hover-glow: rgba(212, 177, 106, 0.15);
+  --yellow-hover-border: #D4AF37; /* Metallic Gold hover border */
+  --yellow-hover-glow: rgba(212, 175, 55, 0.15);
   
   --success: #10b981;
   --danger: #ef4444;
@@ -64,15 +64,15 @@
   --text-muted: #8E8A80;        /* Sandy Stone */
   --border-color: rgba(255, 255, 255, 0.05); /* Faint gray borders */
   
-  --accent-rgb: 212, 177, 106;  /* Soft Gold RGB */
-  --accent-color: #D4B16A;      /* Soft Gold */
-  --accent-hover: #E1C58B;      /* Hover Gold */
-  --accent-light: rgba(212, 177, 106, 0.05);
-  --accent-border: rgba(212, 177, 106, 0.15);
+  --accent-rgb: 212, 175, 55;  /* Gold Accent RGB */
+  --accent-color: #D4AF37;      /* Gold Accent */
+  --accent-hover: #E5C354;      /* Hover Gold */
+  --accent-light: rgba(212, 175, 55, 0.05);
+  --accent-border: rgba(212, 175, 55, 0.15);
 
   --yellow-hover-bg: #201D17;   /* Warm dark sand hover */
-  --yellow-hover-border: #B8894D; /* Soft Bronze border */
-  --yellow-hover-glow: rgba(184, 137, 77, 0.12);
+  --yellow-hover-border: #D4AF37; /* Metallic Gold border */
+  --yellow-hover-glow: rgba(212, 175, 55, 0.12);
   
   --success: #10b981;
   --danger: #ef4444;
@@ -139,8 +139,8 @@ body::before {
   width: 100vw; 
   height: 100vh;
   background-image: 
-    linear-gradient(to right, rgba(212, 177, 106, 0.015) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(212, 177, 106, 0.015) 1px, transparent 1px);
+    linear-gradient(to right, rgba(212, 175, 55, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 175, 55, 0.015) 1px, transparent 1px);
   background-size: 20px 20px;
   z-index: -2;
   pointer-events: none;
@@ -148,8 +148,8 @@ body::before {
 
 [data-theme="dark"] body::before {
   background-image: 
-    linear-gradient(to right, rgba(212, 177, 106, 0.012) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(212, 177, 106, 0.012) 1px, transparent 1px);
+    linear-gradient(to right, rgba(212, 175, 55, 0.012) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 175, 55, 0.012) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
