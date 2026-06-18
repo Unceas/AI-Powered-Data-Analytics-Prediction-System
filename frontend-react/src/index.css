@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap');
 
 :root {
   /* Premium Light Theme - Warm Sand & Editorial Ivory */
@@ -28,7 +28,7 @@
   
   --sidebar-border: rgba(28, 25, 23, 0.06);
   
-  --font-family: 'Inter', sans-serif;
+  --font-family: 'Manrope', sans-serif;
   --font-display: 'Space Grotesk', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 
@@ -153,10 +153,103 @@ body::before {
   background-size: 20px 20px;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+h1, h2 {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+}
+
+h3, h4, h5, h6 {
+  font-family: var(--font-family);
   color: var(--text-primary);
   letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: 2.25rem; /* ~36px */
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.75rem; /* ~28px */
+  font-weight: 700;
+}
+
+/* Level 3 — Section Titles */
+.panel-header-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 1rem !important;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-title-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  min-width: 0;
+}
+
+.panel-header-row h3,
+.panel-title {
+  font-family: var(--font-family) !important;
+  font-size: 1.05rem !important; /* Balanced size to fit cards */
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--text-primary) !important;
+  margin: 0 !important;
+}
+
+.panel-badge {
+  font-family: var(--font-mono) !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 4px !important;
+  background: var(--accent-light) !important;
+  border: 1px solid var(--accent-color) !important;
+  color: var(--accent-color) !important;
+  white-space: nowrap !important;
+}
+
+/* Level 5 — Card Titles */
+.card h3, .card h4, .action-card-header h3 {
+  font-family: var(--font-family) !important;
+  font-size: 1.0625rem !important; /* ~17px */
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+}
+
+
+/* Table Styles & Numerical Scannability */
+table {
+  font-family: var(--font-family);
+}
+
+th {
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.875rem; /* 14px */
+  letter-spacing: 0.02em;
+}
+
+td {
+  font-family: var(--font-family);
+  font-weight: 400;
+  font-size: 0.8125rem; /* 13px */
+}
+
+/* Numeric columns and key metadata tags style using IBM Plex Mono */
+td.num, td.numeric, td.mono, td.heat-cell, .metric-val, .metric-v, .session-time {
+  font-family: var(--font-mono) !important;
+  font-size: 0.8125rem !important;
+  letter-spacing: -0.015em;
 }
 
 button {
@@ -208,7 +301,7 @@ input, select, textarea {
   padding: 0.5rem 1.1rem;
   border-radius: 0.375rem;
   font-weight: 600;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base); /* 14px */
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
@@ -242,7 +335,7 @@ input, select, textarea {
   padding: 0.5rem 1.1rem;
   border-radius: 0.375rem;
   font-weight: 500;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base); /* 14px */
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;

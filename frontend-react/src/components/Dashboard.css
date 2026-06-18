@@ -403,8 +403,9 @@
 }
 
 .active-dataset-name {
-  font-size: var(--fs-lg);
-  font-weight: 800;
+  font-family: var(--font-family); /* Manrope */
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
 }
@@ -1429,34 +1430,32 @@
 
 .landing-logo-title {
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 4.5rem;
   font-weight: 800;
-  letter-spacing: 0.3em;
-  color: var(--accent-color);
-  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
   text-transform: uppercase;
   opacity: 1;
-  text-shadow: 0 0 20px rgba(var(--accent-rgb), 0.1);
 }
-
-
 
 .landing-headline {
   font-family: var(--font-display); /* Space Grotesk */
-  font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 1.1;
-  margin: 0 0 0.5rem 0;
-  letter-spacing: -0.03em;
-  background: linear-gradient(135deg, var(--text-primary) 40%, var(--accent-color) 100%);
-  -webkit-background-clip: text;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.01em;
+  color: var(--accent-color);
+  opacity: 0.9;
 }
 
 .landing-subtext {
-  font-size: 1.15rem;
+  font-family: var(--font-family); /* Manrope */
+  font-size: 1.05rem;
   color: var(--text-secondary);
   max-width: 600px;
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0;
   font-weight: 400;
   opacity: 0.85;
@@ -1715,7 +1714,7 @@
 .hero-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .hero-stat-box {
@@ -1723,32 +1722,47 @@
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--active-card-bg);
   border: 1px solid var(--border-color);
   border-radius: 6px;
+  min-width: 0; /* Prevents overflow in grid layout */
 }
 
 .hero-stat-box .stat-label {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-family: var(--font-family); /* Manrope */
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
   color: var(--text-secondary);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 .stat-value-primary {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: var(--font-family); /* Manrope */
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--text-primary);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
 }
 
-.stat-value-sub {
-  font-size: 1.05rem;
+.stat-value-numeric {
+  font-family: var(--font-mono); /* IBM Plex Mono */
+  font-size: 1.65rem;
+  font-weight: 600;
   color: var(--text-primary);
-  font-family: var(--font-mono);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.stat-value-text {
+  font-family: var(--font-family); /* Manrope */
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+  word-break: break-word;
 }
 
 .executive-operations-report-panel {
@@ -2536,9 +2550,9 @@
 
 .snapshot-card {
   position: relative;
-  background: var(--bg-card, rgba(30, 41, 59, 0.45));
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-  border-radius: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -2622,29 +2636,36 @@
 }
 
 .snapshot-card .card-value {
-  font-family: var(--font-family-title, "Space Grotesk", sans-serif);
-  font-size: 1.8rem;
+  font-family: var(--font-family); /* Manrope */
+  font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary, #f8fafc);
+  color: var(--text-primary);
   line-height: 1;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
 }
 
 .snapshot-card .card-value-denom {
-  font-size: 0.8rem;
-  color: var(--text-muted, #64748b);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .snapshot-card .card-status-text {
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-family: var(--font-family);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   margin-top: 0.25rem;
 }
 
 .snapshot-card .card-footer-action {
-  font-size: 0.65rem;
-  color: var(--text-muted, #64748b);
-  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+  font-family: var(--font-family);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
   padding-top: 0.4rem;
   margin-top: 0.25rem;
 }

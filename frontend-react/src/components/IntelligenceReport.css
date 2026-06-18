@@ -13,7 +13,7 @@
 
   background-color: #ffffff;
   color: #0f172a;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-family), system-ui, -apple-system, sans-serif;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -82,7 +82,8 @@
 }
 
 .section-heading {
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
   font-weight: 700;
   color: #0f172a;
   border-left: 3px solid #D4AF37;
@@ -119,16 +120,18 @@
 }
 
 .report-header-brand .brand-title {
-  font-weight: 900;
-  font-size: 1.1rem;
-  letter-spacing: 0.12em;
+  font-family: var(--font-display); /* Space Grotesk */
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
   color: #0f172a;
 }
 
 .report-header-brand .brand-slogan {
+  font-family: var(--font-family); /* Manrope */
   font-size: 0.7rem;
-  color: #A27B38;
-  font-weight: 700;
+  color: #D4AF37;
+  font-weight: 600;
   text-transform: uppercase;
   margin-top: -2px;
 }
@@ -149,23 +152,27 @@
 }
 
 .report-cover-main .report-pre-title {
+  font-family: var(--font-display); /* Space Grotesk */
   font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.2em;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   color: #64748b;
   text-transform: uppercase;
 }
 
 .report-cover-main .report-cover-title {
-  font-size: 2.75rem;
-  font-weight: 900;
+  font-family: var(--font-display); /* Space Grotesk */
+  font-size: 3rem;
+  font-weight: 800;
   color: #0f172a;
   line-height: 1.1;
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .report-cover-main .report-cover-subtitle {
-  font-size: 1rem;
+  font-family: var(--font-family); /* Manrope */
+  font-size: 1.05rem;
   color: #475569;
   line-height: 1.5;
   margin-top: 8px;
@@ -204,7 +211,7 @@
 }
 
 .report-cover-footer .text-mono {
-  font-family: monospace;
+  font-family: var(--font-mono); /* IBM Plex Mono */
   font-size: 0.75rem;
 }
 

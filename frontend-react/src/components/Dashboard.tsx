@@ -465,31 +465,31 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Rows</span>
-              <span className="stat-value-sub">
-                <strong>{activeDataset.stats?.rows ? activeDataset.stats.rows.toLocaleString() : '0'}</strong>
+              <span className="stat-value-numeric">
+                {activeDataset.stats?.rows ? activeDataset.stats.rows.toLocaleString() : '0'}
               </span>
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Columns</span>
-              <span className="stat-value-sub">
-                <strong>{activeDataset.stats?.columns || '0'}</strong>
+              <span className="stat-value-numeric">
+                {activeDataset.stats?.columns || '0'}
               </span>
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Missing Values</span>
-              <span className="stat-value-sub text-warning">
+              <span className="stat-value-numeric text-warning">
                 {activeDataset.stats?.nulls !== undefined ? activeDataset.stats.nulls.toLocaleString() : '0'}
               </span>
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Selected Model</span>
-              <span className="stat-value-sub text-accent">
+              <span className="stat-value-text text-accent">
                 {activeDataset.mlResult?.model_type || (activeDataset.status.isModelTrained ? 'RandomForestClassifier' : 'Standby Base')}
               </span>
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Model Accuracy</span>
-              <span className="stat-value-sub text-success">
+              <span className="stat-value-numeric text-success">
                 {activeDataset.mlResult?.metrics?.accuracy !== undefined 
                   ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%`
                   : activeDataset.mlResult?.metrics?.r2_score !== undefined
@@ -499,19 +499,19 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Insights Generated</span>
-              <span className="stat-value-sub text-accent">
-                <strong>{activeDataset.insights?.length || 14}</strong>
+              <span className="stat-value-numeric text-accent">
+                {activeDataset.insights?.length || 14}
               </span>
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Anomalies Detected</span>
-              <span className="stat-value-sub text-danger">
-                <strong>{activeDataset.anomalyResult?.anomalies_detected || '13'}</strong>
+              <span className="stat-value-numeric text-danger">
+                {activeDataset.anomalyResult?.anomalies_detected || '13'}
               </span>
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Report Status</span>
-              <span className="stat-value-sub" style={{ color: activeDataset.status.isInsightsGenerated ? 'var(--success)' : 'var(--warning)', fontWeight: 700 }}>
+              <span className="stat-value-text" style={{ color: activeDataset.status.isInsightsGenerated ? 'var(--success)' : 'var(--warning)' }}>
                 {activeDataset.status.isInsightsGenerated ? 'Report Ready' : 'Synthesizing...'}
               </span>
             </div>
