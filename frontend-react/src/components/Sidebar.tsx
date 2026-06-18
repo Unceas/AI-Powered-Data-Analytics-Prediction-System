@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { BrandIcon } from './BrandIcon';
 import { 
   Moon, 
   Sun, 
@@ -34,8 +35,8 @@ export function Sidebar({ status, currentView, onNavigate, activeDataset }: Side
   return (
     <aside className={`sidebar ${isExpanded ? 'expanded' : 'collapsed'}`}>
       <div className="sidebar-header">
-        <div className="logo-container">
-          <img src="/favicon.png" alt="InsightGrid Logo" className="logo-img" />
+        <div className="logo-container" onClick={() => onNavigate('dashboard')} style={{ cursor: 'pointer' }}>
+          <BrandIcon size={28} className="logo-img" />
           {isExpanded && (
             <div className="logo-text-wrapper">
               <span className="logo-text">INSIGHTGRID</span>

@@ -22,6 +22,11 @@
   --yellow-hover-border: #D4AF37; /* Metallic Gold hover border */
   --yellow-hover-glow: rgba(212, 175, 55, 0.15);
   
+  --brand-icon-bg: #cbd5e1;
+  --brand-icon-signal-muted: #b5942b;
+  --brand-icon-signal-bright: #D4AF37;
+  --brand-icon-insight: #1c1917;
+
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
@@ -74,6 +79,11 @@
   --yellow-hover-border: #D4AF37; /* Metallic Gold border */
   --yellow-hover-glow: rgba(212, 175, 55, 0.12);
   
+  --brand-icon-bg: #2a2b30;
+  --brand-icon-signal-muted: #8a7224;
+  --brand-icon-signal-bright: #D4AF37;
+  --brand-icon-insight: #F5F2EB;
+
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
@@ -400,5 +410,10 @@ select option {
 [data-theme="light"] select option {
   background-color: #ffffff !important;
   color: #1C1917 !important;
+}
+
+/* Brand Icon Theme Transition styling */
+.brand-icon-svg rect {
+  transition: fill 0.3s ease-in-out;
 }
 

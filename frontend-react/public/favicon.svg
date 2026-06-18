@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    .node {
+      rx: 3px;
+      transition: fill 0.3s ease;
+    }
+    /* Default (Light Mode) colors */
+    .bg-node { fill: #cbd5e1; }
+    .signal-muted { fill: #b5942b; }
+    .signal-bright { fill: #D4AF37; }
+    .insight-node { fill: #1c1917; }
+
+    @media (prefers-color-scheme: dark) {
+      .bg-node { fill: #2a2b30; }
+      .signal-muted { fill: #8a7224; }
+      .signal-bright { fill: #D4AF37; }
+      .insight-node { fill: #fffcf2; }
+    }
+  </style>
+  <!-- Row 1 -->
+  <rect class="node bg-node" x="8" y="8" width="12" height="12" />
+  <rect class="node bg-node" x="26" y="8" width="12" height="12" />
+  <rect class="node signal-muted" x="44" y="8" width="12" height="12" />
+  <rect class="node bg-node" x="62" y="8" width="12" height="12" />
+  <rect class="node bg-node" x="80" y="8" width="12" height="12" />
+
+  <!-- Row 2 -->
+  <rect class="node bg-node" x="8" y="26" width="12" height="12" />
+  <rect class="node bg-node" x="26" y="26" width="12" height="12" />
+  <rect class="node signal-bright" x="44" y="26" width="12" height="12" />
+  <rect class="node bg-node" x="62" y="26" width="12" height="12" />
+  <rect class="node bg-node" x="80" y="26" width="12" height="12" />
+
+  <!-- Row 3 -->
+  <rect class="node bg-node" x="8" y="44" width="12" height="12" />
+  <rect class="node bg-node" x="26" y="44" width="12" height="12" />
+  <rect class="node insight-node" x="44" y="44" width="12" height="12" />
+  <rect class="node bg-node" x="62" y="44" width="12" height="12" />
+  <rect class="node bg-node" x="80" y="44" width="12" height="12" />
+
+  <!-- Row 4 -->
+  <rect class="node bg-node" x="8" y="62" width="12" height="12" />
+  <rect class="node bg-node" x="26" y="62" width="12" height="12" />
+  <rect class="node signal-bright" x="44" y="62" width="12" height="12" />
+  <rect class="node bg-node" x="62" y="62" width="12" height="12" />
+  <rect class="node bg-node" x="80" y="62" width="12" height="12" />
+
+  <!-- Row 5 -->
+  <rect class="node bg-node" x="8" y="80" width="12" height="12" />
+  <rect class="node bg-node" x="26" y="80" width="12" height="12" />
+  <rect class="node signal-muted" x="44" y="80" width="12" height="12" />
+  <rect class="node bg-node" x="62" y="80" width="12" height="12" />
+  <rect class="node bg-node" x="80" y="80" width="12" height="12" />
+</svg>

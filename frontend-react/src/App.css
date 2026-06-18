@@ -260,3 +260,19 @@
   from { transform: scale(0.9); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+.loader-brand-icon {
+  animation: brandPulse 2s infinite ease-in-out;
+}
+
+@keyframes brandPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+

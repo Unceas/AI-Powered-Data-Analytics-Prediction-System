@@ -9,6 +9,7 @@ import {
   Bar
 } from 'recharts';
 import './IntelligenceReport.css';
+import { BrandIcon } from './BrandIcon';
 
 interface IntelligenceReportProps {
   activeDataset: any;
@@ -163,7 +164,7 @@ AI-synthesized findings suggest immediate optimization of target retention strat
       {/* PAGE 1: COVER PAGE */}
       <div className="report-page report-cover-page">
         <div className="report-header-brand">
-          <span className="brand-logo">🛡️</span>
+          <BrandIcon size={28} className="brand-logo" />
           <div className="brand-text-group">
             <span className="brand-title">INSIGHTGRID</span>
             <span className="brand-slogan">Talk to Data</span>

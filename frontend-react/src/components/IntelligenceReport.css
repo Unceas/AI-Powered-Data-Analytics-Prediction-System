@@ -10,6 +10,11 @@
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;
+  
+  --brand-icon-bg: #cbd5e1;
+  --brand-icon-signal-muted: #b5942b;
+  --brand-icon-signal-bright: #D4AF37;
+  --brand-icon-insight: #0f172a;
 
   background-color: #ffffff;
   color: #0f172a;
@@ -48,6 +53,12 @@
   letter-spacing: 0.1em;
   color: #0f172a;
   font-size: 0.75rem;
+}
+
+.report-page-header .logo-wrapper-sm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .report-page-header .title-sm {

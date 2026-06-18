@@ -286,6 +286,7 @@ export function Settings() {
             </div>
           )}
         </div>
+
       </div>
 
       <div className="settings-save-bar">
