@@ -349,19 +349,19 @@
   background: transparent;
   pointer-events: none;
   opacity: 0;
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 1.1s ease, transform 1.2s cubic-bezier(0.25, 1, 0.28, 1);
 }
 
 .narrative-spec-card.right-side {
   left: 36px;
   top: -45px;
-  transform: translateX(18px) scale(0.95);
+  transform: translateX(60px) scale(0.93);
 }
 
 .narrative-spec-card.left-side {
   right: 36px;
   top: -45px;
-  transform: translateX(-18px) scale(0.95);
+  transform: translateX(-60px) scale(0.93);
 }
 
 .narrative-spec-card.active {
