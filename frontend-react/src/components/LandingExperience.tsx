@@ -287,11 +287,11 @@ export function LandingExperience({
   // Symmetrical camera offsets matching side-floating text card layouts
   const cameraTransforms = [
     { scale: 1.0, x: 500, y: 450 }, // 01 ROOT
-    { scale: 1.05, x: 570, y: 460 }, // 02 PURPOSE (Card on the right -> camera shifts left by centering right of tree)
-    { scale: 1.15, x: 430, y: 420 }, // 03 FLOW (Card on the left -> camera shifts right by centering left of tree)
-    { scale: 1.05, x: 570, y: 380 }, // 04 BACKTRACK (Card on the right -> camera shifts left)
-    { scale: 1.0, x: 440, y: 350 }, // 05 POSSIBILITIES (Card on the left -> camera shifts right)
-    { scale: 0.95, x: 440, y: 450 }  // 06 EXPLORE
+    { scale: 1.05, x: 580, y: 460 }, // 02 PURPOSE (Card on the right -> camera shifts left)
+    { scale: 1.15, x: 400, y: 420 }, // 03 FLOW (Card on the left -> camera shifts right)
+    { scale: 1.05, x: 580, y: 380 }, // 04 BACKTRACK (Card on the right -> camera shifts left)
+    { scale: 0.9, x: 330, y: 350 }, // 05 POSSIBILITIES (Card on the left -> camera shifts right)
+    { scale: 0.95, x: 420, y: 450 }  // 06 EXPLORE
   ];
 
   const currentCamera = cameraTransforms[activeSlide] || cameraTransforms[0];
