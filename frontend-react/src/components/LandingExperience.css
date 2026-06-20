@@ -648,6 +648,86 @@
   box-shadow: 0 0 5px #d4af37;
 }
 
+/* Possibilities Layout slide cards styling */
+.placement-possibilities {
+  position: fixed;
+  bottom: 8.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 840px);
+  z-index: 10;
+  text-align: center;
+}
+
+.presets-horizontal-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+  margin-top: 1.4rem;
+}
+
+.preset-mini-card {
+  background: rgba(8, 12, 16, 0.45);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.preset-mini-card:hover {
+  background: rgba(255, 159, 67, 0.04);
+  border-color: rgba(255, 159, 67, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 159, 67, 0.1);
+}
+
+.preset-mini-card h5 {
+  font-family: 'Outfit', sans-serif;
+  color: #ffffff;
+  font-size: 0.85rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.preset-mini-card p {
+  font-family: 'Inter', sans-serif;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.preset-card-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  color: #ff9f43;
+  border: 1px solid rgba(255, 159, 67, 0.25);
+  border-radius: 4px;
+  padding: 0.05rem 0.25rem;
+  text-transform: uppercase;
+}
+
+.preset-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+/* Final Workspace screen panel positioning */
+.placement-workspace-final {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 420px);
+  z-index: 10;
+  text-align: center;
+}
+
 /* Mobile Media Queries */
 @media (max-width: 768px) {
   .slide-top-left-indicator {

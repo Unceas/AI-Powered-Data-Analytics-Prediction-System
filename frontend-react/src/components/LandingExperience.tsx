@@ -29,126 +29,148 @@ interface TreeLink {
   branch: 'left' | 'right' | 'center' | 'decorative';
 }
 
-// Narrative step configuration representing node-by-node story points
+// 6-Section Relatable & Relentless Developer Story Script
 const NARRATIVE_STEPS = [
+  // Section 1 — The Problem
   {
     id: 0,
     nodeId: 't-0',
-    title: 'INSIGHTGRID',
-    text: 'Your data already contains answers. InsightGrid helps you find them.',
+    title: 'The Problem',
+    text: 'Most datasets tell a story. But finding that story isn\'t easy.',
     placement: 'center-root',
-    watermark: ''
+    watermark: 'PROBLEM'
   },
   {
     id: 1,
     nodeId: 't-1',
-    title: 'Why We Built It',
-    text: 'Modern analytics workflows are fragmented. We unify data analysis, machine learning models, and explainable intelligence into one workspace.',
+    title: 'Where It Started',
+    text: 'Rows. Columns. Charts. Still no answers.',
     placement: 'left',
-    watermark: 'WHY'
+    watermark: 'PROBLEM'
   },
   {
     id: 2,
     nodeId: 't-2',
-    title: 'The Narrative Shift',
-    text: 'Most analytics tools stop at static charts and raw metrics.',
+    title: 'The Question I Asked',
+    text: 'I got tired of looking at datasets and only seeing numbers. I wanted a system that could explain what was happening.',
     placement: 'left',
-    watermark: 'WHY'
+    watermark: 'PROBLEM'
   },
+  // Section 2 — The Idea
   {
     id: 3,
     nodeId: 't-3',
-    title: 'Explainable Reasoning',
-    text: 'InsightGrid focuses on deep, traceable understanding of variables and target behaviors.',
+    title: 'The Idea',
+    text: 'What if data could explain itself?',
     placement: 'left',
-    watermark: 'WHY'
+    watermark: 'THE IDEA'
   },
   {
     id: 4,
-    nodeId: 'p-0',
-    title: 'Upload → Analyze → Understand',
-    text: 'Traverse the five-stage automated pipeline.',
+    nodeId: 't-4',
+    title: 'A New Approach',
+    text: 'Not another dashboard. Not another chart. A system that helps uncover meaning.',
     placement: 'left',
-    watermark: 'PIPELINE'
+    watermark: 'THE IDEA'
   },
   {
     id: 5,
-    nodeId: 'p-1',
-    title: 'Dataset Ingestion',
-    text: 'Upload custom spreadsheet or launch live samples instantly.',
+    nodeId: 'p-0',
+    title: 'InsightGrid',
+    text: 'Built to explore data differently. That became InsightGrid.',
     placement: 'left',
-    watermark: 'PIPELINE'
+    watermark: 'THE IDEA'
   },
+  // Section 3 — The Process
   {
     id: 6,
-    nodeId: 'p-2',
-    title: 'Preprocessing',
-    text: 'Automated mean imputation, feature encoding, and standard scaling.',
+    nodeId: 'p-1',
+    title: 'Upload Data',
+    text: 'Start the process by pointing the engine to your data file.',
     placement: 'left',
-    watermark: 'PIPELINE'
+    watermark: 'THE PROCESS'
   },
   {
     id: 7,
-    nodeId: 'p-3',
-    title: 'Diagnostic Profiling',
-    text: 'Analyze statistical distributions, skewness, and correlation matrices.',
+    nodeId: 'p-2',
+    title: 'Find Patterns',
+    text: 'Impute missing values, scale variables, and run correlation profiles.',
     placement: 'left',
-    watermark: 'PIPELINE'
+    watermark: 'THE PROCESS'
   },
   {
     id: 8,
-    nodeId: 'p-4',
-    title: 'Predictive Classifier',
-    text: 'Train Random Forest models to calculate feature importances and predictions.',
+    nodeId: 'p-3',
+    title: 'Train Models',
+    text: 'Fit predictive estimators to calculate relative column influence.',
     placement: 'left',
-    watermark: 'PIPELINE'
+    watermark: 'THE PROCESS'
   },
   {
     id: 9,
-    nodeId: 'p-5',
-    title: 'Explainable Intelligence',
-    text: 'Synthesize natural language explanations grounded in ML weights and anomalies.',
+    nodeId: 'p-4',
+    title: 'Generate Insights',
+    text: 'Extract anomaly score deviations and trace parameter weight mappings.',
     placement: 'left',
-    watermark: 'PIPELINE'
+    watermark: 'THE PROCESS'
   },
   {
     id: 10,
-    nodeId: 'c-0',
-    title: 'Questions You Can Ask',
-    text: 'Interact directly with the Insight Engine using plain English.',
-    placement: 'right',
-    watermark: 'ANSWERS'
+    nodeId: 'p-5',
+    title: 'Create Reports',
+    text: 'Deliver structured explanations explaining what is happening under the hood.',
+    placement: 'left',
+    watermark: 'THE PROCESS'
   },
+  // Section 4 — The Intelligence
   {
     id: 11,
-    nodeId: 'c-1',
-    title: 'Outlier Analysis',
-    text: '\"Are there anomalous outlier spikes in my telemetry?\"',
+    nodeId: 'c-0',
+    title: 'What It Can Do',
+    text: 'Ask questions about your dataset directly using plain English.',
     placement: 'right',
-    watermark: 'ANSWERS'
+    watermark: 'INTELLIGENCE'
   },
   {
     id: 12,
-    nodeId: 'c-2',
-    title: 'Churn Prediction',
-    text: '\"What primary drivers contribute to customer subscription churn?\"',
+    nodeId: 'c-1',
+    title: 'Identify Behavior',
+    text: 'Detect unusual anomalies and outlier spikes inside your telemetry streams.',
     placement: 'right',
-    watermark: 'ANSWERS'
+    watermark: 'INTELLIGENCE'
   },
   {
     id: 13,
-    nodeId: 'c-3',
-    title: 'Revenue Trends',
-    text: '\"How will store sales and profit margins trend next quarter?\"',
+    nodeId: 'c-2',
+    title: 'Generate Predictions',
+    text: 'Forecast upcoming margin cycles, classes, and subscription churn drivers.',
     placement: 'right',
-    watermark: 'ANSWERS'
+    watermark: 'INTELLIGENCE'
   },
   {
     id: 14,
+    nodeId: 'c-3',
+    title: 'Explain Outcomes',
+    text: 'Understand why specific results happen through plain-English reasoning paths.',
+    placement: 'right',
+    watermark: 'INTELLIGENCE'
+  },
+  // Section 5 — The Possibilities
+  {
+    id: 15,
     nodeId: 't-5',
-    title: 'Start Exploring',
-    text: 'You have seen the system. Now try it yourself.',
-    placement: 'workspace',
+    title: 'The Possibilities',
+    text: 'Select one of these branch examples to see what is possible:',
+    placement: 'possibilities',
+    watermark: 'POSSIBILITIES'
+  },
+  // Section 6 — The End
+  {
+    id: 16,
+    nodeId: 't-5',
+    title: 'Data. Patterns. Insights. Decisions.',
+    text: 'Now it\'s your turn.',
+    placement: 'workspace-final',
     watermark: 'WORKSPACE'
   }
 ];
@@ -326,12 +348,11 @@ function generateInteractiveNarrativeTree() {
     const seed = rootCount;
     const rad = (angleDeg * Math.PI) / 180;
     
-    // Crackling fiber horizontal coordinates offset
     const nX = (getDeterministicNoise(seed * 13) - 0.5) * 4;
     const nY = (getDeterministicNoise(seed * 19) - 0.5) * 2;
 
     const ex = sx + Math.cos(rad) * len;
-    const ey = sy + Math.sin(rad) * len + (depth * 1.5); // Pull downwards slightly
+    const ey = sy + Math.sin(rad) * len + (depth * 1.5);
 
     rootLinks.push({
       id: `root-l-${rootCount++}`,
@@ -339,7 +360,6 @@ function generateInteractiveNarrativeTree() {
     });
 
     const splitLen = len * 0.82;
-    // Small split angle offsets (8 to 16 deg) for horizontal stream look
     const angleOffset1 = 8 + getDeterministicNoise(seed * 7) * 8;
     const angleOffset2 = 8 + getDeterministicNoise(seed * 11) * 8;
 
@@ -379,7 +399,6 @@ function generateInteractiveNarrativeTree() {
       d: `M ${x} ${y} Q ${x + (ex - x)*0.5} ${y + (ey - y)*0.5 - 2}, ${ex} ${ey}`
     });
 
-    // Elegant long branches with smaller split angles (13 degrees) for integrated look
     addDecorativeCanopy(ex, ey, angleDeg - 13, len * 0.76, depth + 1);
     addDecorativeCanopy(ex, ey, angleDeg + 13, len * 0.76, depth + 1);
   }
@@ -405,7 +424,6 @@ export function LandingExperience({
 }: LandingExperienceProps) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [showPresets, setShowPresets] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { nodes, links, decNodes, decLinks, rootLinks } = generateInteractiveNarrativeTree();
@@ -421,7 +439,7 @@ export function LandingExperience({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-        setActiveSlide(prev => Math.min(prev + 1, 14));
+        setActiveSlide(prev => Math.min(prev + 1, 16));
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         setActiveSlide(prev => Math.max(prev - 1, 0));
       }
@@ -438,7 +456,7 @@ export function LandingExperience({
       if (now - lastTime < 700) return;
 
       if (e.deltaY > 15) {
-        setActiveSlide(prev => Math.min(prev + 1, 14));
+        setActiveSlide(prev => Math.min(prev + 1, 16));
         lastTime = now;
       } else if (e.deltaY < -15) {
         setActiveSlide(prev => Math.max(prev - 1, 0));
@@ -461,7 +479,7 @@ export function LandingExperience({
 
     if (Math.abs(diff) > 50) {
       if (diff > 0) {
-        setActiveSlide(prev => Math.min(prev + 1, 14));
+        setActiveSlide(prev => Math.min(prev + 1, 16));
       } else {
         setActiveSlide(prev => Math.max(prev - 1, 0));
       }
@@ -471,10 +489,8 @@ export function LandingExperience({
 
   // Traversal path illumination calculations
   const isLinkActive = (link: TreeLink) => {
-    if (activeSlide === 14) return true;
+    if (activeSlide >= 15) return true;
     if (link.branch === 'decorative') return false;
-    
-    if (link.id.startsWith('root-line-')) return true;
 
     const currentStepNodeId = NARRATIVE_STEPS[activeSlide]?.nodeId;
 
@@ -507,7 +523,7 @@ export function LandingExperience({
   };
 
   const isNodeActive = (node: TreeNode) => {
-    if (activeSlide === 14) return true;
+    if (activeSlide >= 15) return true;
     
     const currentStepNodeId = NARRATIVE_STEPS[activeSlide]?.nodeId;
     if (node.id === currentStepNodeId) return true;
@@ -531,23 +547,25 @@ export function LandingExperience({
     return false;
   };
 
-  // Traversal Camera positions mapped to the splayed tree coordinates
+  // Traversal Camera positions mapped to the 17 narrative steps
   const cameraTransforms = [
-    { scale: 0.95, x: 500, y: 480 },  // 0: Root (entire tree visible)
-    { scale: 1.5, x: 500, y: 590 },  // 1: Why We Built It
-    { scale: 1.6, x: 500, y: 500 },  // 2: The Narrative Shift
-    { scale: 1.6, x: 500, y: 410 },  // 3: Explainable Reasoning
-    { scale: 1.6, x: 410, y: 590 },  // 4: Upload -> Analyze -> Understand
-    { scale: 1.7, x: 320, y: 520 },  // 5: Dataset Ingestion
-    { scale: 1.8, x: 240, y: 460 },  // 6: Preprocessing
-    { scale: 1.8, x: 170, y: 410 },  // 7: Diagnostic Profiling
-    { scale: 1.8, x: 110, y: 370 },  // 8: Predictive Classifier
-    { scale: 1.8, x: 60, y: 340 },   // 9: Explainable AI
-    { scale: 1.6, x: 590, y: 590 },  // 10: Questions You Can Ask
-    { scale: 1.7, x: 680, y: 520 },  // 11: Outlier Analysis
-    { scale: 1.8, x: 760, y: 460 },  // 12: Churn Prediction
-    { scale: 1.8, x: 830, y: 410 },  // 13: Revenue Trends
-    { scale: 0.92, x: 500, y: 430 }  // 14: Start Exploring / Workspace
+    { scale: 1.1, x: 500, y: 680 },   // 0: Root (t-0)
+    { scale: 1.5, x: 500, y: 590 },   // 1: t-1
+    { scale: 1.6, x: 500, y: 500 },   // 2: t-2
+    { scale: 1.6, x: 500, y: 410 },   // 3: t-3
+    { scale: 1.7, x: 500, y: 320 },   // 4: t-4
+    { scale: 1.6, x: 410, y: 590 },   // 5: p-0
+    { scale: 1.7, x: 320, y: 520 },   // 6: p-1
+    { scale: 1.8, x: 240, y: 460 },   // 7: p-2
+    { scale: 1.8, x: 170, y: 410 },   // 8: p-3
+    { scale: 1.8, x: 110, y: 370 },   // 9: p-4
+    { scale: 1.8, x: 60, y: 340 },    // 10: p-5
+    { scale: 1.6, x: 590, y: 590 },   // 11: c-0
+    { scale: 1.7, x: 680, y: 520 },   // 12: c-1
+    { scale: 1.8, x: 760, y: 460 },   // 13: c-2
+    { scale: 1.8, x: 830, y: 410 },   // 14: c-3
+    { scale: 1.0, x: 500, y: 450 },   // 15: Possibilities overview
+    { scale: 0.9, x: 500, y: 440 }    // 16: Final Workspace pull back
   ];
 
   const currentCamera = cameraTransforms[activeSlide] || cameraTransforms[0];
@@ -557,19 +575,17 @@ export function LandingExperience({
     transition: 'transform 1.4s cubic-bezier(0.2, 0.8, 0.2, 1)'
   };
 
-  const presets = [
-    { filename: 'customer_churn.csv', name: 'Customer Churn', desc: 'Identify churn triggers.', tag: 'Classification' },
-    { filename: 'retail_sales.csv', name: 'Store Revenue', desc: 'Forecast store sales.', tag: 'Regression' },
-    { filename: 'healthcare_risk.csv', name: 'Patient Risk', desc: 'Identify risk parameters.', tag: 'Classification' },
-    { filename: 'employee_attrition.csv', name: 'Employee Retention', desc: 'Model attrition metrics.', tag: 'Classification' },
-    { filename: 'student_performance.csv', name: 'Student Success', desc: 'Predict grade brackets.', tag: 'Classification' },
-    { filename: 'sports_performance.csv', name: 'Athlete Injury', desc: 'Forecast fatigue limits.', tag: 'Classification' }
+  const possibilitiesList = [
+    { filename: 'healthcare_risk.csv', name: 'Healthcare Risk', desc: 'Identify critical clinical parameters and outlier risk profiles.', tag: 'Healthcare' },
+    { filename: 'customer_churn.csv', name: 'Customer Churn', desc: 'Find predictive indicators contributing to customer churn.', tag: 'Churn' },
+    { filename: 'retail_sales.csv', name: 'Business Forecasting', desc: 'Model store revenues and trend variables across quarters.', tag: 'Forecasting' },
+    { filename: 'sports_performance.csv', name: 'Sports Analytics', desc: 'Model physical fatigue indexes and injury likelihood weights.', tag: 'Sports' }
   ];
 
   const currentStep = NARRATIVE_STEPS[activeSlide] || NARRATIVE_STEPS[0];
 
-  const progressDashesCount = 5;
-  const currentCategoryIdx = activeSlide < 4 ? 0 : activeSlide < 10 ? 1 : activeSlide < 14 ? 2 : 3;
+  const progressDashesCount = 6;
+  const currentCategoryIdx = activeSlide <= 2 ? 0 : activeSlide <= 5 ? 1 : activeSlide <= 10 ? 2 : activeSlide <= 14 ? 3 : activeSlide === 15 ? 4 : 5;
 
   return (
     <div 
@@ -590,7 +606,7 @@ export function LandingExperience({
           {Array.from({ length: progressDashesCount }).map((_, idx) => (
             <span 
               key={idx} 
-              className={idx <= currentCategoryIdx || (activeSlide === 14) ? 'active' : ''} 
+              className={idx <= currentCategoryIdx || (activeSlide >= 15) ? 'active' : ''} 
             />
           ))}
         </div>
@@ -615,9 +631,33 @@ export function LandingExperience({
               <div className="scroll-arrow-down">↓</div>
             </div>
           </div>
-        ) : currentStep.id === 14 ? (
+        ) : currentStep.id === 15 ? (
+          <div className="emergent-possibilities-content exact-panels-spec">
+            <h2 className="spec-card-title">{currentStep.title}</h2>
+            <p className="spec-card-description">{currentStep.text}</p>
+            
+            <div className="presets-horizontal-row">
+              {possibilitiesList.map(p => (
+                <div 
+                  key={p.filename} 
+                  className="preset-mini-card"
+                  onClick={() => {
+                    onLoadSampleDataset(p.filename, p.name);
+                    onOpenWorkspace();
+                  }}
+                >
+                  <div className="preset-card-header">
+                    <h5>{p.name}</h5>
+                    <span className="preset-card-tag">{p.tag}</span>
+                  </div>
+                  <p>{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : currentStep.id === 16 ? (
           <div className="emergent-workspace-content exact-panels-spec">
-            <span className="workspace-ready-prefix">You're Ready</span>
+            <span className="workspace-ready-prefix">Built to explore data differently</span>
             <h2 className="spec-card-title">{currentStep.title}</h2>
             <p className="spec-card-description">{currentStep.text}</p>
             
@@ -630,7 +670,7 @@ export function LandingExperience({
                 style={{ display: 'none' }} 
               />
               
-              <button className="btn-primary" onClick={() => setShowPresets(true)}>
+              <button className="btn-primary" onClick={onOpenWorkspace}>
                 Enter Workspace <ArrowRight size={16} />
               </button>
               
@@ -683,7 +723,7 @@ export function LandingExperience({
                 <path 
                   key={l.id} 
                   d={l.d} 
-                  className={`tree-path-fg ${active ? 'active' : ''} ${activeSlide === 14 ? 'complete-glow' : ''}`}
+                  className={`tree-path-fg ${active ? 'active' : ''} ${activeSlide >= 15 ? 'complete-glow' : ''}`}
                 />
               );
             })}
@@ -711,44 +751,13 @@ export function LandingExperience({
                   y={n.y}
                   shape={n.shape}
                   active={active}
-                  isComplete={activeSlide === 14}
+                  isComplete={activeSlide >= 15}
                 />
               );
             })}
           </g>
         </svg>
       </div>
-
-      {/* Preset Datasets Modal Drawer Overlay */}
-      {showPresets && (
-        <div className="presets-drawer-backdrop" onClick={() => setShowPresets(false)}>
-          <div className="presets-drawer-content" onClick={e => e.stopPropagation()}>
-            <div className="presets-drawer-header">
-              <h3>Select Sample Dataset</h3>
-              <button className="btn-close-drawer" onClick={() => setShowPresets(false)}>×</button>
-            </div>
-            
-            <div className="presets-drawer-grid">
-              {presets.map(p => (
-                <div 
-                  key={p.filename} 
-                  className="preset-pill-card"
-                  onClick={() => {
-                    onLoadSampleDataset(p.filename, p.name);
-                    onOpenWorkspace();
-                  }}
-                >
-                  <div className="preset-card-header">
-                    <h5>{p.name}</h5>
-                    <span className="preset-card-tag">{p.tag}</span>
-                  </div>
-                  <p>{p.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Slide Navigation controls */}
       <div className="slide-controls-footer">
@@ -771,8 +780,8 @@ export function LandingExperience({
         </div>
         <button 
           className="btn-slide-nav" 
-          disabled={activeSlide === 14}
-          onClick={() => setActiveSlide(prev => Math.min(prev + 1, 14))}
+          disabled={activeSlide === 16}
+          onClick={() => setActiveSlide(prev => Math.min(prev + 1, 16))}
         >
           NEXT <ChevronRight size={20} />
         </button>
