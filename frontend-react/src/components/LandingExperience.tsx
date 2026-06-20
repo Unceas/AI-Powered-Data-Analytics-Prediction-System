@@ -1,19 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { BrandIcon } from './BrandIcon';
 import { 
   ArrowRight, 
   Database, 
-  TrendingUp, 
   Brain, 
-  MessageSquare, 
-  FileText, 
-  Check, 
   UploadCloud, 
   Activity, 
   Play,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Award
 } from 'lucide-react';
 import './LandingExperience.css';
 
@@ -30,7 +26,7 @@ interface TreeNode {
   level: number;
   parentId?: string;
   branchIndex: number;
-  step?: 'upload' | 'analyze' | 'predict' | 'report';
+  step?: number;
 }
 
 interface TreeLink {
@@ -41,84 +37,114 @@ interface TreeLink {
   branchIndex: number;
 }
 
-// Generate deterministic tree structures with branch index and step attributes
+// Generate organic branching tree structured around the 6 narrative points
 function generateTreeData() {
   const nodes: TreeNode[] = [];
   const links: TreeLink[] = [];
-  let nodeIdCounter = 0;
 
-  const rootId = 'root';
-  nodes.push({ id: rootId, x: 500, y: 785, level: 0, branchIndex: -1 });
+  // 6 Narrative Steps (Trunk joints)
+  const narrative = [
+    { id: 'n-root', x: 500, y: 700, level: 0, branchIndex: -1, step: 0 },
+    { id: 'n-why', x: 380, y: 560, level: 1, branchIndex: 0, step: 1 },
+    { id: 'n-ingest', x: 520, y: 440, level: 2, branchIndex: 2, step: 2 },
+    { id: 'n-analyze', x: 380, y: 320, level: 3, branchIndex: 0, step: 3 },
+    { id: 'n-predict', x: 620, y: 220, level: 4, branchIndex: 4, step: 4 },
+    { id: 'n-workspace', x: 500, y: 100, level: 5, branchIndex: -1, step: 5 },
+  ];
 
-  const hubId = 'logo-hub';
-  nodes.push({ id: hubId, x: 500, y: 520, level: 1, parentId: rootId, branchIndex: -1 });
+  nodes.push(...narrative);
 
+  // Main Trunk Connections
   links.push({
-    id: 'link-root-hub',
-    from: rootId,
-    to: hubId,
-    d: 'M 500 785 C 500 700, 500 600, 500 520',
+    id: 'l-trunk-0',
+    from: 'n-root',
+    to: 'n-why',
+    d: 'M 500 700 C 500 630, 380 630, 380 560',
+    branchIndex: 0
+  });
+  links.push({
+    id: 'l-trunk-1',
+    from: 'n-why',
+    to: 'n-ingest',
+    d: 'M 380 560 C 380 500, 520 500, 520 440',
+    branchIndex: 2
+  });
+  links.push({
+    id: 'l-trunk-2',
+    from: 'n-ingest',
+    to: 'n-analyze',
+    d: 'M 520 440 C 520 380, 380 380, 380 320',
+    branchIndex: 0
+  });
+  links.push({
+    id: 'l-trunk-3',
+    from: 'n-analyze',
+    to: 'n-predict',
+    d: 'M 380 320 C 380 270, 620 270, 620 220',
+    branchIndex: 4
+  });
+  links.push({
+    id: 'l-trunk-4',
+    from: 'n-predict',
+    to: 'n-workspace',
+    d: 'M 620 220 C 620 160, 500 160, 500 100',
     branchIndex: -1
   });
 
-  function addBranch(
-    startX: number,
-    startY: number,
-    angleDeg: number,
-    length: number,
-    depth: number,
-    parentId: string,
-    branchIndex: number,
-    stepPath?: 'upload' | 'analyze' | 'predict' | 'report'
-  ) {
-    const id = `node-${nodeIdCounter++}`;
-    const angleRad = (angleDeg * Math.PI) / 180;
-    const endX = startX + Math.cos(angleRad) * length;
-    const endY = startY + Math.sin(angleRad) * length;
+  // Root anchor base
+  nodes.push({ id: 'base-root', x: 500, y: 770, level: 0, branchIndex: -1 });
+  links.push({
+    id: 'l-base-root',
+    from: 'base-root',
+    to: 'n-root',
+    d: 'M 500 770 L 500 700',
+    branchIndex: -1
+  });
 
-    nodes.push({
-      id,
-      x: endX,
-      y: endY,
-      level: depth,
-      parentId,
-      branchIndex,
-      step: stepPath
-    });
+  // Helper for adding decorative offshoots
+  const addOffshoot = (fromId: string, toId: string, toX: number, toY: number, d: string, branchIndex: number) => {
+    nodes.push({ id: toId, x: toX, y: toY, level: 6, branchIndex });
+    links.push({ id: `l-${fromId}-${toId}`, from: fromId, to: toId, d, branchIndex });
+  };
 
-    const ctrlX1 = startX + Math.cos(angleRad) * (length * 0.45);
-    const ctrlY1 = startY + Math.sin(angleRad) * (length * 0.1);
-    const ctrlX2 = endX - Math.cos(angleRad) * (length * 0.1);
-    const ctrlY2 = endY - Math.sin(angleRad) * (length * 0.45);
+  // Why node offshoots (Left side)
+  addOffshoot('n-why', 'why-l1', 260, 580, 'M 380 560 C 340 570, 300 580, 260 580', 0);
+  addOffshoot('why-l1', 'why-l2', 200, 560, 'M 260 580 C 240 570, 220 560, 200 560', 0);
+  addOffshoot('why-l1', 'why-l3', 210, 620, 'M 260 580 C 240 595, 230 610, 210 620', 0);
+  // Why node offshoots (Right side)
+  addOffshoot('n-why', 'why-r1', 440, 600, 'M 380 560 C 400 580, 420 590, 440 600', 1);
 
-    links.push({
-      id: `link-${parentId}-${id}`,
-      from: parentId,
-      to: id,
-      d: `M ${startX} ${startY} C ${ctrlX1} ${ctrlY1}, ${ctrlX2} ${ctrlY2}, ${endX} ${endY}`,
-      branchIndex
-    });
+  // Ingest node offshoots (Right side)
+  addOffshoot('n-ingest', 'ing-r1', 640, 450, 'M 520 440 C 560 445, 600 450, 640 450', 2);
+  addOffshoot('ing-r1', 'ing-r2', 700, 430, 'M 640 450 C 660 440, 680 435, 700 430', 2);
+  addOffshoot('ing-r1', 'ing-r3', 690, 490, 'M 640 450 C 660 465, 675 480, 690 490', 2);
+  // Ingest node offshoots (Left side)
+  addOffshoot('n-ingest', 'ing-l1', 440, 480, 'M 520 440 C 500 460, 470 470, 440 480', 3);
 
-    if (depth < 5) {
-      const spread = depth === 2 ? 22 : depth === 3 ? 16 : 10;
-      const nextLength = length * 0.74;
+  // Analyze node offshoots (Left side)
+  addOffshoot('n-analyze', 'ana-l1', 250, 310, 'M 380 320 C 330 315, 290 310, 250 310', 0);
+  addOffshoot('ana-l1', 'ana-l2', 190, 290, 'M 250 310 C 230 300, 210 295, 190 290', 0);
+  addOffshoot('ana-l1', 'ana-l3', 180, 340, 'M 250 310 C 220 320, 200 330, 180 340', 0);
+  // Analyze node offshoots (Right side)
+  addOffshoot('n-analyze', 'ana-r1', 440, 280, 'M 380 320 C 400 300, 420 290, 440 280', 3);
 
-      let leftStepPath: 'upload' | 'analyze' | 'predict' | 'report' | undefined = undefined;
-      if (stepPath === 'upload') leftStepPath = 'analyze';
-      else if (stepPath === 'analyze') leftStepPath = 'predict';
-      else if (stepPath === 'predict') leftStepPath = 'report';
+  // Predict node offshoots (Right side)
+  addOffshoot('n-predict', 'pre-r1', 740, 200, 'M 620 220 C 660 210, 700 200, 740 200', 4);
+  addOffshoot('pre-r1', 'pre-r2', 800, 180, 'M 740 200 C 760 190, 780 185, 800 180', 4);
+  addOffshoot('pre-r1', 'pre-r3', 790, 240, 'M 740 200 C 760 215, 775 230, 790 240', 4);
+  // Predict node offshoots (Left side)
+  addOffshoot('n-predict', 'pre-l1', 560, 250, 'M 620 220 C 600 230, 580 240, 560 250', 3);
 
-      addBranch(endX, endY, angleDeg - spread, nextLength, depth + 1, id, branchIndex, leftStepPath);
-      addBranch(endX, endY, angleDeg + spread, nextLength, depth + 1, id, branchIndex, undefined);
-    }
-  }
+  // Canopy offshoots from Workspace top node
+  addOffshoot('n-workspace', 'can-l1', 400, 75, 'M 500 100 C 460 90, 430 80, 400 75', 5);
+  addOffshoot('can-l1', 'can-l2', 340, 65, 'M 400 75 C 380 70, 360 65, 340 65', 5);
+  addOffshoot('can-l1', 'can-l3', 380, 40, 'M 400 75 C 390 60, 385 50, 380 40', 5);
 
-  // 5 main branches
-  addBranch(500, 520, -135, 110, 2, hubId, 0, undefined);
-  addBranch(500, 520, -112, 122, 2, hubId, 1, undefined);
-  addBranch(500, 520, -90, 125, 2, hubId, 2, 'upload');
-  addBranch(500, 520, -68, 122, 2, hubId, 3, undefined);
-  addBranch(500, 520, -45, 110, 2, hubId, 4, undefined);
+  addOffshoot('n-workspace', 'can-r1', 600, 75, 'M 500 100 C 540 90, 570 80, 600 75', 5);
+  addOffshoot('can-r1', 'can-r2', 660, 65, 'M 600 75 C 620 70, 640 65, 660 65', 5);
+  addOffshoot('can-r1', 'can-r3', 620, 40, 'M 600 75 C 610 60, 615 50, 620 40', 5);
+
+  addOffshoot('n-workspace', 'can-c1', 500, 35, 'M 500 100 C 500 75, 500 55, 500 35', 5);
 
   return { nodes, links };
 }
@@ -128,7 +154,6 @@ export function LandingExperience({
   onLoadSampleDataset, 
   onFileUpload 
 }: LandingExperienceProps) {
-  const slides = ['ROOT', 'WHY', 'FLOW', 'CAPABILITIES', 'EXAMPLES', 'WORKSPACE'];
   const [activeSlide, setActiveSlide] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   
@@ -147,7 +172,7 @@ export function LandingExperience({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-        setActiveSlide(prev => Math.min(prev + 1, slides.length - 1));
+        setActiveSlide(prev => Math.min(prev + 1, 5));
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         setActiveSlide(prev => Math.max(prev - 1, 0));
       }
@@ -161,10 +186,10 @@ export function LandingExperience({
     let lastTime = Date.now();
     const handleWheel = (e: WheelEvent) => {
       const now = Date.now();
-      if (now - lastTime < 700) return;
+      if (now - lastTime < 800) return;
 
       if (e.deltaY > 15) {
-        setActiveSlide(prev => Math.min(prev + 1, slides.length - 1));
+        setActiveSlide(prev => Math.min(prev + 1, 5));
         lastTime = now;
       } else if (e.deltaY < -15) {
         setActiveSlide(prev => Math.max(prev - 1, 0));
@@ -187,7 +212,7 @@ export function LandingExperience({
 
     if (Math.abs(diff) > 50) {
       if (diff > 0) {
-        setActiveSlide(prev => Math.min(prev + 1, slides.length - 1));
+        setActiveSlide(prev => Math.min(prev + 1, 5));
       } else {
         setActiveSlide(prev => Math.max(prev - 1, 0));
       }
@@ -195,383 +220,279 @@ export function LandingExperience({
     }
   };
 
-  // Highlight rules
+  // Check if link is active/illuminated based on current slide stage
   const isLinkActive = (link: TreeLink) => {
-    if (activeSlide === 5) return true; // Slide 06: ALL glow
-    if (activeSlide === 0) return link.branchIndex === -1; 
-    if (activeSlide === 1) return link.branchIndex === 0; // Slide 02
-    if (activeSlide === 2) return link.branchIndex === 2; // Slide 03
-    if (activeSlide === 3) return link.branchIndex === 1 || link.branchIndex === 3; // Slide 04
-    if (activeSlide === 4) return link.branchIndex === 4; // Slide 05
+    if (activeSlide === 5) return true; // Final slide: ALL links glow
+    
+    // Highlight links along the winding narrative path up to current step
+    if (link.id === 'l-base-root' || link.id === 'l-trunk-0') return true;
+    if (activeSlide >= 2 && link.id === 'l-trunk-1') return true;
+    if (activeSlide >= 3 && link.id === 'l-trunk-2') return true;
+    if (activeSlide >= 4 && link.id === 'l-trunk-3') return true;
     return false;
   };
 
   const isNodeActive = (node: TreeNode) => {
-    if (activeSlide === 5) return true; // Slide 06: ALL glow
-    if (activeSlide === 0) return node.id === 'root' || node.id === 'logo-hub';
-    if (activeSlide === 1) return node.branchIndex === 0 || node.id === 'logo-hub' || node.id === 'root';
-    if (activeSlide === 2) return node.branchIndex === 2 || node.id === 'logo-hub' || node.id === 'root';
-    if (activeSlide === 3) return node.branchIndex === 1 || node.branchIndex === 3 || node.id === 'logo-hub' || node.id === 'root';
-    if (activeSlide === 4) return node.branchIndex === 4 || node.id === 'logo-hub' || node.id === 'root';
+    if (activeSlide === 5) return true; // Final slide: ALL nodes glow
+    
+    // Highlight main path nodes up to active step
+    if (node.id === 'base-root' || node.id === 'n-root') return true;
+    if (activeSlide >= 1 && node.id === 'n-why') return true;
+    if (activeSlide >= 2 && node.id === 'n-ingest') return true;
+    if (activeSlide >= 3 && node.id === 'n-analyze') return true;
+    if (activeSlide >= 4 && node.id === 'n-predict') return true;
     return false;
   };
 
-  // Tree Camera zoom/pan mappings
+  // Dynamic Camera coordinates to focus and offset active nodes on screen
   const cameraTransforms = [
-    { scale: 0.82, x: 500, y: 500 }, // Slide 1 (Root)
-    { scale: 1.35, x: 350, y: 440 }, // Slide 2 (Purpose)
-    { scale: 1.55, x: 500, y: 430 }, // Slide 3 (Flow)
-    { scale: 1.25, x: 500, y: 480 }, // Slide 4 (Backtrack)
-    { scale: 1.35, x: 650, y: 440 }, // Slide 5 (Possibilities)
-    { scale: 0.82, x: 500, y: 500 }  // Slide 6 (Workspace)
+    { scale: 0.95, x: 550, y: 700 }, // ROOT
+    { scale: 1.35, x: 440, y: 560 }, // WHY
+    { scale: 1.45, x: 430, y: 440 }, // INGEST
+    { scale: 1.50, x: 440, y: 320 }, // ANALYZE
+    { scale: 1.55, x: 540, y: 220 }, // PREDICT
+    { scale: 0.95, x: 500, y: 230 }  // WORKSPACE
   ];
 
   const currentCamera = cameraTransforms[activeSlide] || cameraTransforms[0];
   const treeTransformStyle = {
-    transform: `translate(500px, 400px) scale(${currentCamera.scale}) translate(-${currentCamera.x}px, -${currentCamera.y}px)`,
-    transition: 'transform 1.25s cubic-bezier(0.25, 1, 0.28, 1)'
+    transform: `translate(50vw, 50vh) scale(${currentCamera.scale}) translate(-${currentCamera.x}px, -${currentCamera.y}px)`,
+    transition: 'transform 1.3s cubic-bezier(0.25, 1, 0.28, 1)'
   };
 
   const presets = [
-    { filename: 'customer_churn.csv', name: 'Customer Churn', desc: 'Identify churn signals.', tag: 'Classification • Retention' },
-    { filename: 'retail_sales.csv', name: 'Store Revenue', desc: 'Predict retail revenue.', tag: 'Regression • Sales' },
-    { filename: 'healthcare_risk.csv', name: 'Patient Risk', desc: 'Model health risk factors.', tag: 'Classification • Clinical' },
-    { filename: 'employee_attrition.csv', name: 'Employee Retention', desc: 'Model attrition metrics.', tag: 'Classification • HR' },
-    { filename: 'student_performance.csv', name: 'Student Success', desc: 'Model score variations.', tag: 'Classification • Education' },
-    { filename: 'sports_performance.csv', name: 'Athlete Injury', desc: 'Analyze injury risks.', tag: 'Classification • Sports' }
+    { filename: 'customer_churn.csv', name: 'Customer Churn', desc: 'Model subscriber churn.', tag: 'Classification' },
+    { filename: 'retail_sales.csv', name: 'Store Revenue', desc: 'Forecast store sales.', tag: 'Regression' },
+    { filename: 'healthcare_risk.csv', name: 'Patient Risk', desc: 'Model risk conditions.', tag: 'Classification' },
+    { filename: 'employee_attrition.csv', name: 'Employee Retention', desc: 'Analyze HR attrition.', tag: 'Classification' },
+    { filename: 'student_performance.csv', name: 'Student Success', desc: 'Predict grade levels.', tag: 'Classification' },
+    { filename: 'sports_performance.csv', name: 'Athlete Injury', desc: 'Model fatigue limits.', tag: 'Classification' }
   ];
 
   return (
     <div 
-      className="landing-viewport slide-experience"
+      className="landing-viewport slide-experience full-narrative"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
     >
-      {/* Premium Navbar */}
-      <header className="landing-header">
+      {/* Clean Minimalist Logo in Top Left */}
+      <header className="minimal-landing-header">
         <div className="landing-logo" onClick={() => setActiveSlide(0)}>
           <div className="logo-icon-glow">
-            <BrandIcon size={18} />
+            <BrandIcon size={16} />
           </div>
           <span className="logo-text">INSIGHTGRID</span>
         </div>
-        <nav className="landing-nav-pills">
-          {slides.map((s, idx) => (
-            <button 
-              key={s} 
-              className={`nav-pill ${activeSlide === idx ? 'active' : ''}`}
-              onClick={() => setActiveSlide(idx)}
-            >
-              <span className="pill-number">0{idx + 1}</span>
-              <span className="pill-label">{s}</span>
-            </button>
-          ))}
-        </nav>
-        <div className="header-actions">
-          <button className="btn-secondary btn-sm" onClick={onOpenWorkspace}>
-            Open Workspace
-          </button>
-        </div>
+        <button className="btn-secondary btn-sm" onClick={onOpenWorkspace}>
+          Open Workspace
+        </button>
       </header>
 
-      {/* Main Console Split Layout */}
-      <div className={`console-layout slide-mode-${activeSlide}`}>
+      {/* Main Full-Screen Visual Environment */}
+      <div className="immersive-tree-environment">
         
-        {/* Left Side: Dynamic Text / Options Column */}
-        <div className="console-content-column">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSlide}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.45, ease: 'easeInOut' }}
-              className="content-animation-wrapper"
-            >
-              {activeSlide === 0 && (
-                <div className="slide-content root-slide">
-                  <div className="slide-meta">01 / ROOT</div>
-                  <h1 className="display-title">INSIGHTGRID</h1>
-                  <h2 className="display-tagline">Talk to Data</h2>
-                  <p className="description-text">
-                    An AI-assisted analytics and infrastructure orchestration console. We ingest raw datasets, map execution pathways, and deliver explainable predictions instantly.
-                  </p>
-                  <div className="actions-row">
-                    <button className="btn-primary btn-lg" onClick={() => setActiveSlide(1)}>
-                      Explore Journey <ArrowRight size={16} />
-                    </button>
-                    <button className="btn-secondary btn-lg" onClick={onOpenWorkspace}>
-                      Open Workspace <Play size={14} fill="currentColor" />
-                    </button>
-                  </div>
-                </div>
-              )}
+        {/* SVG Path Layer */}
+        <svg className="narrative-tree-svg" viewBox="0 0 1000 800">
+          <defs>
+            <filter id="gold-glow-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          
+          <g style={treeTransformStyle}>
+            {/* Connecting Links */}
+            {links.map(l => {
+              const active = isLinkActive(l);
+              return (
+                <path 
+                  key={l.id} 
+                  d={l.d} 
+                  className={`tree-path-fg ${active ? 'active' : ''} ${activeSlide === 5 ? 'complete-glow' : ''}`}
+                />
+              );
+            })}
 
-              {activeSlide === 1 && (
-                <div className="slide-content purpose-slide">
-                  <div className="slide-meta">02 / WHY</div>
-                  <h2 className="slide-title">Why InsightGrid Exists</h2>
-                  <h3 className="slide-subtitle">Modern analytics workflows are fragmented.</h3>
-                  <p className="description-text">
-                    Traditional analytical processes force you to shuffle between disconnected platforms—spreadsheets for layout, Jupyter scripts for predictive modeling, and chat interfaces for summarization. 
-                  </p>
-                  <div className="unified-box card">
-                    <h4>The Unified Interface Solution</h4>
-                    <p>InsightGrid collapses data ingestion, statistical distributions, predictive classification, anomaly thresholds, and LLM reasoning into a single automated pipeline.</p>
-                  </div>
-                  <button className="btn-primary" onClick={() => setActiveSlide(2)}>
-                    Continue Journey <ArrowRight size={16} />
-                  </button>
-                </div>
-              )}
-
-              {activeSlide === 2 && (
-                <div className="slide-content flow-slide">
-                  <div className="slide-meta">03 / FLOW</div>
-                  <h2 className="slide-title">How It Works</h2>
-                  <h3 className="slide-subtitle">Structured inference pipeline.</h3>
-                  <div className="flow-timeline">
-                    <div className="flow-step-item">
-                      <div className="flow-icon-box"><Database size={16} /></div>
-                      <div className="flow-text-box">
-                        <h4>1. Dataset Ingestion</h4>
-                        <p>Spreadsheet streams parse layout structures and headers automatically.</p>
-                      </div>
-                    </div>
-                    <div className="flow-step-item">
-                      <div className="flow-icon-box"><Activity size={16} /></div>
-                      <div className="flow-text-box">
-                        <h4>2. Preprocessing & Clean</h4>
-                        <p>Imputes null values and scales numerical dimensions in milliseconds.</p>
-                      </div>
-                    </div>
-                    <div className="flow-step-item">
-                      <div className="flow-icon-box"><Brain size={16} /></div>
-                      <div className="flow-text-box">
-                        <h4>3. Prediction Studio</h4>
-                        <p>Trains classification and isolation forests to tag anomalies.</p>
-                      </div>
-                    </div>
-                    <div className="flow-step-item">
-                      <div className="flow-icon-box"><FileText size={16} /></div>
-                      <div className="flow-text-box">
-                        <h4>4. AI Report Generation</h4>
-                        <p>Synthesizes model statistics into printable PDF dossiers.</p>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="btn-primary" onClick={() => setActiveSlide(3)}>
-                    Continue Journey <ArrowRight size={16} />
-                  </button>
-                </div>
-              )}
-
-              {activeSlide === 3 && (
-                <div className="slide-content backtrack-slide">
-                  <div className="slide-meta">04 / CAPABILITIES</div>
-                  <h2 className="slide-title">Navigate with Clarity</h2>
-                  <h3 className="slide-subtitle">Bi-directional trace pipelines.</h3>
-                  <p className="description-text">
-                    Move forward with confidence. Backtrack and explore new possibilities. Every generated finding maintains a mathematical linkage back to original variables and data sources, preventing statistical hallucination.
-                  </p>
-                  <ul className="clarity-bullets">
-                    <li><Check size={16} className="text-gold" /> Transparent Pearson coefficient rankings.</li>
-                    <li><Check size={16} className="text-gold" /> Model accuracy indicators grounded in cross-validation.</li>
-                    <li><Check size={16} className="text-gold" /> Transparent imputation audit logs.</li>
-                  </ul>
-                  <button className="btn-primary" onClick={() => setActiveSlide(4)}>
-                    Continue Journey <ArrowRight size={16} />
-                  </button>
-                </div>
-              )}
-
-              {activeSlide === 4 && (
-                <div className="slide-content possibilities-slide">
-                  <div className="slide-meta">05 / EXAMPLES</div>
-                  <h2 className="slide-title">Powerful Capabilities</h2>
-                  <h3 className="slide-subtitle">Fully automated statistical engines.</h3>
-                  <div className="capabilities-mini-grid">
-                    <div className="mini-cap-card card">
-                      <TrendingUp size={20} className="text-gold" />
-                      <h4>Analytics</h4>
-                      <p>Compute distributions and skewness profiles.</p>
-                    </div>
-                    <div className="mini-cap-card card">
-                      <Brain size={20} className="text-gold" />
-                      <h4>Predictions</h4>
-                      <p>Train decision tree classifiers on custom targets.</p>
-                    </div>
-                    <div className="mini-cap-card card">
-                      <MessageSquare size={20} className="text-gold" />
-                      <h4>AI Insights</h4>
-                      <p>Natural language breakdowns of statistics.</p>
-                    </div>
-                    <div className="mini-cap-card card">
-                      <FileText size={20} className="text-gold" />
-                      <h4>PDF Reports</h4>
-                      <p>Download executive ready vector briefs.</p>
-                    </div>
-                  </div>
-                  <button className="btn-primary" onClick={() => setActiveSlide(5)}>
-                    Continue Journey <ArrowRight size={16} />
-                  </button>
-                </div>
-              )}
-
-              {activeSlide === 5 && (
-                <div className="slide-content workspace-slide">
-                  <div className="slide-meta">06 / WORKSPACE</div>
-                  <h2 className="slide-title">Ready to Explore?</h2>
-                  <h3 className="slide-subtitle font-mono">Your data. Your questions. Our intelligence.</h3>
-                  
-                  <div className="workspace-upload-zone card">
-                    <input 
-                      type="file" 
-                      accept=".csv,.xls,.xlsx" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange} 
-                      style={{ display: 'none' }} 
-                    />
-                    <UploadCloud size={28} className="text-gold animate-bounce" />
-                    <h4>Ingest Spreadsheets</h4>
-                    <p>CSV or Excel files (maximum 50 MB)</p>
-                    <button className="btn-primary btn-sm" onClick={() => fileInputRef.current?.click()}>
-                      Upload File
-                    </button>
-                  </div>
-
-                  <div className="presets-section">
-                    <h4>Launch Preset Gallery</h4>
-                    <div className="presets-mini-grid">
-                      {presets.map(p => (
-                        <div 
-                          key={p.filename} 
-                          className="preset-pill-card"
-                          onClick={() => {
-                            onLoadSampleDataset(p.filename, p.name);
-                            onOpenWorkspace();
-                          }}
-                        >
-                          <div className="preset-card-header">
-                            <h5>{p.name}</h5>
-                            <span className="preset-card-tag">{p.tag.split(' • ')[0]}</span>
-                          </div>
-                          <p>{p.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="direct-nav-row">
-                    <button className="btn-secondary btn-full-width" onClick={onOpenWorkspace}>
-                      Enter Raw Workspace <Play size={12} fill="currentColor" style={{ marginLeft: '4px' }} />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Right Side: Immersive SVG Graph Tree Backdrop */}
-        <div className="console-visual-column">
-          <div className="interactive-tree-wrapper">
-            <svg 
-              className="narrative-tree-svg" 
-              viewBox="0 0 1000 800"
-            >
-              <defs>
-                <filter id="gold-glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="6" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
+            {/* Standard Background Nodes (Square chips) */}
+            {nodes.map(n => {
+              const active = isNodeActive(n);
+              const isNarrativeNode = n.id.startsWith('n-');
               
-              {/* Dynamic Camera group */}
-              <g style={treeTransformStyle}>
-                
-                {/* Curved paths */}
-                {links.map(l => {
-                  const active = isLinkActive(l);
-                  return (
-                    <path 
-                      key={l.id} 
-                      d={l.d} 
-                      className={`tree-path-fg ${active ? 'active' : ''} ${activeSlide === 5 ? 'complete-glow' : ''}`}
-                    />
-                  );
-                })}
+              if (isNarrativeNode) return null; // Narrative nodes are handled in HTML layer for rich animations
 
-                {/* Nodes list */}
-                {nodes.map(n => {
-                  const active = isNodeActive(n);
-                  const isCurrent = (
-                    (n.id === 'root' && activeSlide === 0) ||
-                    (n.id === 'logo-hub' && activeSlide === 0) ||
-                    (n.step === 'upload' && activeSlide === 2) ||
-                    (n.step === 'analyze' && activeSlide === 2) ||
-                    (n.step === 'predict' && activeSlide === 2) ||
-                    (n.step === 'report' && activeSlide === 2)
-                  );
+              const size = n.id === 'base-root' ? 12 : 5;
+              return (
+                <rect 
+                  key={n.id}
+                  x={n.x - size / 2}
+                  y={n.y - size / 2}
+                  width={size}
+                  height={size}
+                  rx={n.id === 'base-root' ? 3 : 1}
+                  className={`tree-chip-node ${active ? 'active' : ''}`}
+                />
+              );
+            })}
+          </g>
+        </svg>
 
-                  // Central Logo Hub
-                  if (n.id === 'logo-hub') {
-                    return (
-                      <g key={n.id} className={`logo-hub-group ${active ? 'active' : ''}`}>
-                        <rect 
-                          x={n.x - 20} 
-                          y={n.y - 20} 
-                          width="40" 
-                          height="40" 
-                          rx="8" 
-                          className="logo-hub-box"
-                        />
-                        <g transform={`translate(${n.x - 10}, ${n.y - 10})`}>
-                          <BrandIcon size={20} />
-                        </g>
-                      </g>
-                    );
-                  }
-
-                  // Flow steps nodes overlay (Slide 03)
-                  if (activeSlide === 2 && n.step) {
-                    return (
-                      <g key={n.id} className="flow-step-node-group">
-                        <circle cx={n.x} cy={n.y} r="22" className="flow-node-glow-ring" />
-                        <circle cx={n.x} cy={n.y} r="16" className="flow-node-bg" />
-                        <g transform={`translate(${n.x - 8}, ${n.y - 8})`} className="flow-node-icon">
-                          {n.step === 'upload' && <Database size={16} />}
-                          {n.step === 'analyze' && <Activity size={16} />}
-                          {n.step === 'predict' && <Brain size={16} />}
-                          {n.step === 'report' && <FileText size={16} />}
-                        </g>
-                        <text x={n.x} y={n.y + 32} className="flow-node-label" textAnchor="middle">
-                          {n.step.toUpperCase()}
-                        </text>
-                      </g>
-                    );
-                  }
-
-                  // Standard Leaf Nodes (rendered as square chips)
-                  const size = n.id === 'root' ? 12 : 6;
-                  return (
-                    <rect 
-                      key={n.id}
-                      x={n.x - size / 2}
-                      y={n.y - size / 2}
-                      width={size}
-                      height={size}
-                      rx={n.id === 'root' ? 3 : 1}
-                      className={`tree-chip-node ${active ? 'active' : ''} ${isCurrent ? 'current' : ''}`}
-                    />
-                  );
-                })}
-              </g>
-            </svg>
+        {/* Floating HTML Layer - transforms identically with the SVG group */}
+        <div className="html-nodes-layer" style={treeTransformStyle}>
+          
+          {/* Node 1: ROOT */}
+          <div className="floating-narrative-group" style={{ left: 500, top: 700 }}>
+            <div className={`narrative-node-circle step-0 ${activeSlide === 0 ? 'active' : ''}`}>
+              <BrandIcon size={20} />
+            </div>
+            <div className={`narrative-text-card float-right ${activeSlide === 0 ? 'active' : ''}`}>
+              <h1 className="card-display-title">INSIGHTGRID</h1>
+              <h2 className="card-display-subtitle">Understand. Decide. Act.</h2>
+              <p className="card-description">
+                An intelligence orchestration console. We ingest raw spreadsheets, execute predictive models, and deliver explainable actions in real-time.
+              </p>
+              <div className="card-actions">
+                <button className="btn-primary" onClick={() => setActiveSlide(1)}>
+                  Explore Journey <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
           </div>
+
+          {/* Node 2: WHY */}
+          <div className="floating-narrative-group" style={{ left: 380, top: 560 }}>
+            <div className={`narrative-node-circle step-1 ${activeSlide === 1 ? 'active' : ''}`}>
+              <Award size={20} />
+            </div>
+            <div className={`narrative-text-card float-right ${activeSlide === 1 ? 'active' : ''}`}>
+              <h2 className="card-title">Why InsightGrid Exists</h2>
+              <h3 className="card-subtitle">Unifying fragmented pipelines.</h3>
+              <p className="card-description">
+                Analytics is currently fragmented across disconnected systems—Excel for formulas, Python notebooks for ML modeling, and slides for briefs. We unify them into a single automated execution canvas.
+              </p>
+              <div className="card-actions">
+                <button className="btn-primary" onClick={() => setActiveSlide(2)}>
+                  Continue <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Node 3: INGEST */}
+          <div className="floating-narrative-group" style={{ left: 520, top: 440 }}>
+            <div className={`narrative-node-circle step-2 ${activeSlide === 2 ? 'active' : ''}`}>
+              <Database size={20} />
+            </div>
+            <div className={`narrative-text-card float-left ${activeSlide === 2 ? 'active' : ''}`}>
+              <h2 className="card-title">Dataset Ingestion</h2>
+              <h3 className="card-subtitle">Structured parsing.</h3>
+              <p className="card-description">
+                Upload raw spreadsheets without preprocessing. Our pipeline automatically identifies structures, labels target columns, and handles initial cleanup instantly.
+              </p>
+              <div className="card-actions">
+                <button className="btn-primary" onClick={() => setActiveSlide(3)}>
+                  Continue <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Node 4: ANALYZE */}
+          <div className="floating-narrative-group" style={{ left: 380, top: 320 }}>
+            <div className={`narrative-node-circle step-3 ${activeSlide === 3 ? 'active' : ''}`}>
+              <Activity size={20} />
+            </div>
+            <div className={`narrative-text-card float-right ${activeSlide === 3 ? 'active' : ''}`}>
+              <h2 className="card-title">Explainable Profiling</h2>
+              <h3 className="card-subtitle">Immediate statistical diagnostics.</h3>
+              <p className="card-description">
+                Examine correlation indexes, skewness coefficients, outlier densities, and class imbalances. We compute a signature Dataset Health Score to audit your inputs.
+              </p>
+              <div className="card-actions">
+                <button className="btn-primary" onClick={() => setActiveSlide(4)}>
+                  Continue <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Node 5: PREDICT */}
+          <div className="floating-narrative-group" style={{ left: 620, top: 220 }}>
+            <div className={`narrative-node-circle step-4 ${activeSlide === 4 ? 'active' : ''}`}>
+              <Brain size={20} />
+            </div>
+            <div className={`narrative-text-card float-left ${activeSlide === 4 ? 'active' : ''}`}>
+              <h2 className="card-title">Prediction Studio</h2>
+              <h3 className="card-subtitle">High-fidelity classification classifiers.</h3>
+              <p className="card-description">
+                Train classification models and isolation forests dynamically. Insights map findings back to exact variables to explain every classification recommendation.
+              </p>
+              <div className="card-actions">
+                <button className="btn-primary" onClick={() => setActiveSlide(5)}>
+                  Continue <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Node 6: WORKSPACE */}
+          <div className="floating-narrative-group" style={{ left: 500, top: 100 }}>
+            <div className={`narrative-node-circle step-5 ${activeSlide === 5 ? 'active' : ''}`}>
+              <Play size={20} fill="currentColor" />
+            </div>
+            <div className={`narrative-text-card workspace-final-card float-center ${activeSlide === 5 ? 'active' : ''}`}>
+              <h2 className="card-title">Ready to Explore?</h2>
+              <h3 className="card-subtitle font-mono">Select a sample or upload a spreadsheet.</h3>
+              
+              {/* File Upload Zone */}
+              <div className="workspace-upload-zone card">
+                <input 
+                  type="file" 
+                  accept=".csv,.xls,.xlsx" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  style={{ display: 'none' }} 
+                />
+                <UploadCloud size={24} className="text-gold" />
+                <span>Ingest spreadsheet (CSV/XLSX)</span>
+                <button className="btn-primary btn-sm" onClick={() => fileInputRef.current?.click()}>
+                  Upload Dataset
+                </button>
+              </div>
+
+              {/* Sample presets */}
+              <div className="presets-section">
+                <div className="presets-mini-grid">
+                  {presets.map(p => (
+                    <div 
+                      key={p.filename} 
+                      className="preset-pill-card"
+                      onClick={() => {
+                        onLoadSampleDataset(p.filename, p.name);
+                        onOpenWorkspace();
+                      }}
+                    >
+                      <div className="preset-card-header">
+                        <h5>{p.name}</h5>
+                        <span className="preset-card-tag">{p.tag}</span>
+                      </div>
+                      <p>{p.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="direct-nav-row">
+                <button className="btn-secondary btn-full-width" onClick={onOpenWorkspace}>
+                  Enter Raw Workspace <Play size={10} fill="currentColor" style={{ marginLeft: '4px' }} />
+                </button>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -586,12 +507,19 @@ export function LandingExperience({
           <ChevronLeft size={20} /> BACK
         </button>
         <div className="slide-position-indicator">
-          <span>0{activeSlide + 1}</span> / <span>06</span>
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <button 
+              key={idx} 
+              className={`indicator-dot-btn ${activeSlide === idx ? 'active' : ''}`}
+              onClick={() => setActiveSlide(idx)}
+              title={`Slide ${idx + 1}`}
+            />
+          ))}
         </div>
         <button 
           className="btn-slide-nav" 
-          disabled={activeSlide === slides.length - 1}
-          onClick={() => setActiveSlide(prev => Math.min(prev + 1, slides.length - 1))}
+          disabled={activeSlide === 5}
+          onClick={() => setActiveSlide(prev => Math.min(prev + 1, 5))}
         >
           NEXT <ChevronRight size={20} />
         </button>
