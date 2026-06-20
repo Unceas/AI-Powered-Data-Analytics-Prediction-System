@@ -99,15 +99,15 @@
   padding: 0 1rem;
 }
 
-.section-title {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 0.75rem;
-  padding: 0 0.5rem;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
+.sidebar .section-title {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 0.75rem !important;
+  padding: 0 0.5rem !important;
+  letter-spacing: 0.1em !important;
+  white-space: nowrap !important;
 }
 
 .nav-btn {
@@ -115,7 +115,7 @@
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 0.7rem 0.75rem;
+  padding: 0.7rem 1.85rem 0.7rem 0.75rem;
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-secondary);

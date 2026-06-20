@@ -427,7 +427,7 @@ AI-synthesized findings suggest immediate optimization of target retention strat
           </div>
 
           <div className="report-closing-statement">
-            <p>InsightGrid Observability Platform. Transforming telemetry and datasets into predictive execution models and automated business reviews.</p>
+            <p>InsightGrid Guided Intelligence Platform. Transforming raw datasets into predictive models and automated business reviews.</p>
           </div>
         </div>
 

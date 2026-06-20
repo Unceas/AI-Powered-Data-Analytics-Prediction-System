@@ -12,7 +12,8 @@ import {
   TrendingUp,
   Brain,
   MessageSquareCode,
-  LayoutDashboard
+  LayoutDashboard,
+  Compass
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -27,9 +28,10 @@ interface SidebarProps {
   currentView: string;
   onNavigate: (view: string) => void;
   activeDataset?: any;
+  onExitWorkspace: () => void;
 }
 
-export function Sidebar({ status, currentView, onNavigate, activeDataset }: SidebarProps) {
+export function Sidebar({ status, currentView, onNavigate, activeDataset, onExitWorkspace }: SidebarProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const { theme, toggleTheme } = useTheme();
   return (
@@ -58,21 +60,30 @@ export function Sidebar({ status, currentView, onNavigate, activeDataset }: Side
           {isExpanded && <h3 className="section-title">Operations</h3>}
           
           <button 
+            className="nav-btn" 
+            onClick={onExitWorkspace}
+            title="Product Tour & Info"
+          >
+            <Compass size={18} />
+            {isExpanded && <span>Product Overview</span>}
+          </button>
+
+          <button 
             className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`} 
             onClick={() => onNavigate('dashboard')}
-            title="System Dashboard"
+            title="Dashboard"
           >
             <LayoutDashboard size={18} />
-            {isExpanded && <span>System Dashboard</span>}
+            {isExpanded && <span>Dashboard</span>}
           </button>
 
           <button 
             className={`nav-btn ${currentView === 'diagnostics' ? 'active' : ''}`} 
             onClick={() => onNavigate('diagnostics')}
-            title="Pipeline Diagnostics"
+            title="Analysis Progress"
           >
             <Activity size={18} />
-            {isExpanded && <span>Pipeline Diagnostics</span>}
+            {isExpanded && <span>Analysis Progress</span>}
             {isExpanded && activeDataset && activeDataset.engineState !== 'COMPLETE' && activeDataset.engineState !== 'IDLE' && activeDataset.engineState !== 'ERROR' && (
               <span className="active-dot-indicator processing-dot"></span>
             )}
@@ -84,30 +95,30 @@ export function Sidebar({ status, currentView, onNavigate, activeDataset }: Side
           <button 
             className={`nav-btn ${currentView === 'data-manager' ? 'active' : ''}`} 
             onClick={() => onNavigate('data-manager')}
-            title="Data Management"
+            title="Data Manager"
           >
             <Database size={18} />
-            {isExpanded && <span>Data Management</span>}
+            {isExpanded && <span>Data Manager</span>}
             {isExpanded && status.isProcessed && <span className="active-dot-indicator"></span>}
           </button>
 
           <button 
             className={`nav-btn ${currentView === 'analytics' ? 'active' : ''}`} 
             onClick={() => onNavigate('analytics')}
-            title="Deep Analytics"
+            title="Data Explorer"
           >
             <TrendingUp size={18} />
-            {isExpanded && <span>Deep Analytics</span>}
+            {isExpanded && <span>Data Explorer</span>}
             {isExpanded && status.isAnalyzed && <span className="active-dot-indicator"></span>}
           </button>
 
           <button 
             className={`nav-btn ${currentView === 'ml-workbench' ? 'active' : ''}`} 
             onClick={() => onNavigate('ml-workbench')}
-            title="Auto-ML Workbench"
+            title="Prediction Studio"
           >
             <Brain size={18} />
-            {isExpanded && <span>Auto-ML Workbench</span>}
+            {isExpanded && <span>Prediction Studio</span>}
             {isExpanded && status.isModelTrained && <span className="active-dot-indicator"></span>}
           </button>
 
@@ -124,10 +135,10 @@ export function Sidebar({ status, currentView, onNavigate, activeDataset }: Side
           <button 
             className={`nav-btn ${currentView === 'settings' ? 'active' : ''}`} 
             onClick={() => onNavigate('settings')}
-            title="System Config"
+            title="Settings"
           >
             <SettingsIcon size={18} />
-            {isExpanded && <span>System Config</span>}
+            {isExpanded && <span>Settings</span>}
           </button>
         </div>
       </nav>

@@ -57,10 +57,10 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
 
   // Fallback default logs if dataset has none
   const defaultLogs = [
-    { timestamp: '[12:00:00]', message: '[SYSTEM] Observability pipeline initialized. Listening on port 8000.' },
-    { timestamp: '[12:00:01]', message: '[SYSTEM] ML Runtime standard context loaded (RandomForestClassifier, IsolationForest).' },
-    { timestamp: '[12:00:02]', message: '[SYSTEM] AI Synthesis interface connection online.' },
-    { timestamp: '[12:00:03]', message: '[SYSTEM] Standby state. Awaiting dataset load commands.' }
+    { timestamp: '[12:00:00]', message: '[SYSTEM] Analysis session initialized. Listening on port 8000.' },
+    { timestamp: '[12:00:01]', message: '[SYSTEM] Prediction models ready (Classification & Anomaly Detection).' },
+    { timestamp: '[12:00:02]', message: '[SYSTEM] AI Synthesis ready.' },
+    { timestamp: '[12:00:03]', message: '[SYSTEM] Ready. Awaiting dataset upload.' }
   ];
 
   const logs = activeDataset?.logs || defaultLogs;
@@ -102,8 +102,8 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
       <div className="diagnostics-header-block card">
         <div className="diagnostics-header">
           <div className="view-header">
-            <h2>Pipeline Diagnostics & Telemetry</h2>
-            <p>Real-time system telemetry, service container status, and progressive execution logs.</p>
+            <h2>Analysis Progress</h2>
+            <p>Track calculations, dataset summaries, and execution events in real time.</p>
           </div>
 
           {/* Dataset Quick Switcher */}
@@ -140,7 +140,7 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
           <div className="diagnostics-main-card card">
             <div className="panel-header-row">
               <Activity size={16} className="text-accent" />
-              <h3>ORCHESTRATION PIPELINE STEPS</h3>
+              <h3>Analysis Workflow</h3>
               <span className={`engine-state-badge ${engineState.toLowerCase()}`}>
                 {engineState}
               </span>
@@ -170,7 +170,7 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
             <div className="telemetry-card card">
               <div className="card-header">
                 <Cpu size={14} className="text-secondary" />
-                <h4>CPU CORE COMPUTE</h4>
+                <h4>COMPUTE POWER</h4>
               </div>
               <div className="telemetry-body">
                 <div className="value-row">
@@ -186,7 +186,7 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
             <div className="telemetry-card card">
               <div className="card-header">
                 <HardDrive size={14} className="text-secondary" />
-                <h4>MEMORY ALLOCATION</h4>
+                <h4>MEMORY USED</h4>
               </div>
               <div className="telemetry-body">
                 <div className="value-row">
@@ -202,7 +202,7 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
             <div className="telemetry-card card">
               <div className="card-header">
                 <Activity size={14} className="text-secondary" />
-                <h4>I/O OPERATIONS</h4>
+                <h4>DISK SPEED</h4>
               </div>
               <div className="telemetry-body">
                 <div className="value-row">
@@ -218,7 +218,7 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
             <div className="telemetry-card card">
               <div className="card-header">
                 <Wifi size={14} className="text-secondary" />
-                <h4>ROUTER LATENCY</h4>
+                <h4>NETWORK LATENCY</h4>
               </div>
               <div className="telemetry-body">
                 <div className="value-row">
@@ -234,19 +234,19 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
 
         </div>
 
-        {/* Right Column: Execution Trace Console */}
+        {/* Right Column: Activity Feed */}
         <div className="diagnostics-right-panel">
           <div className="execution-trace-card card">
             <div className="trace-header">
               <div className="header-title">
                 <Terminal size={16} className="text-accent" />
-                <h3>Execution Trace Console</h3>
+                <h3>Activity Feed</h3>
               </div>
               <div className="trace-search">
                 <Search size={14} className="search-icon" />
                 <input 
                   type="text" 
-                  placeholder="Search trace parameters..." 
+                  placeholder="Search activity log..." 
                   value={logFilter}
                   onChange={(e) => setLogFilter(e.target.value)}
                 />

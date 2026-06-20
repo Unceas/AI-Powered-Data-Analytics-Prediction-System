@@ -144,7 +144,29 @@ def main():
                 store_id, date_str, promo, footfall, inventory, mkt_spend, sales
             ])
             
-    print("All 5 sample datasets successfully generated inside public/datasets/.")
+    # 6. Sports Performance Analysis
+    sports_path = os.path.join(output_dir, "sports_performance.csv")
+    with open(sports_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "player_id", "training_hours", "heart_rate_max", "sleep_quality", "fatigue_score", "vo2_max", "injury_risk"
+        ])
+        for i in range(1, 251):
+            player_id = f"P{30000 + i}"
+            training_hours = round(random.uniform(5.0, 30.0), 1)
+            heart_rate_max = random.randint(150, 210)
+            sleep_quality = random.randint(1, 10)
+            fatigue_score = random.randint(1, 10)
+            vo2_max = round(random.uniform(35.0, 75.0), 1)
+            
+            # Formulate Injury Risk probability (0 or 1)
+            score = (fatigue_score / 10.0) * 1.5 + (11 - sleep_quality) * 0.4 + (training_hours / 30.0) * 1.0 + (heart_rate_max / 210.0) * 0.5 - (vo2_max / 75.0) * 0.8
+            injury_risk = 1 if score > 1.7 else 0
+            writer.writerow([
+                player_id, training_hours, heart_rate_max, sleep_quality, fatigue_score, vo2_max, injury_risk
+            ])
+            
+    print("All 6 sample datasets successfully generated inside public/datasets/.")
 
 if __name__ == "__main__":
     main()

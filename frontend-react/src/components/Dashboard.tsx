@@ -27,6 +27,7 @@ import {
   Line,
   ReferenceLine
 } from 'recharts';
+import { BrandIcon } from './BrandIcon';
 import './Dashboard.css';
 
 interface DashboardProps {
@@ -284,7 +285,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
         linkedMetric: 'Accuracy',
         confidence: `${(activeDataset.mlResult?.metrics?.accuracy * 100 || 91.2).toFixed(1)}% score`,
         severity: 'INFO',
-        source: 'Auto-ML Workbench',
+        source: 'Prediction Studio',
         action: () => {
           setActiveChartTab('confidence');
           setHighlightedFeature(null);
@@ -306,7 +307,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           <div className="landing-logo-title">INSIGHTGRID</div>
           <h1 className="landing-headline">Talk to Data</h1>
           <p className="landing-subtext">
-            AI-Assisted Analytics & Observability Platform
+            Guided Data Analytics & Prediction Platform
           </p>
         </header>
 
@@ -338,22 +339,22 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
             <div className="action-card card" onClick={() => onNavigate('analytics')}>
               <div className="action-card-header">
                 <TrendingUp size={20} className="text-accent" />
-                <h3>Deep Analytics</h3>
+                <h3>Data Explorer</h3>
               </div>
               <p className="action-desc">Explore data correlations, outliers, and distributions.</p>
               <button className="btn-action">
-                Run Analytics <ArrowRight size={12} style={{ marginLeft: '4px' }} />
+                Explore Data <ArrowRight size={12} style={{ marginLeft: '4px' }} />
               </button>
             </div>
 
             <div className="action-card card" onClick={() => onNavigate('ml-workbench')}>
               <div className="action-card-header">
                 <Brain size={20} className="text-accent" />
-                <h3>AutoML Workbench</h3>
+                <h3>Prediction Studio</h3>
               </div>
               <p className="action-desc">Train, evaluate, and compare predictive models.</p>
               <button className="btn-action">
-                Open AutoML <ArrowRight size={12} style={{ marginLeft: '4px' }} />
+                Open Studio <ArrowRight size={12} style={{ marginLeft: '4px' }} />
               </button>
             </div>
 
@@ -773,11 +774,11 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           </div>
         </div>
 
-        {/* Right Panel: Live Console */}
+        {/* Right Panel: Live Activity Log */}
         <div className="dashboard-console-card card">
           <div className="panel-header-row">
             <Terminal size={15} className="text-secondary" />
-            <h3>Live Console Traces</h3>
+            <h3>Live Activity Log</h3>
             <span className="console-stream-status">STREAMING</span>
           </div>
           <div className="dashboard-console-logs">
@@ -790,7 +791,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
               ))
             ) : (
               <div className="console-log-line">
-                <span className="console-timestamp">[00:00:00]</span> <span className="console-message">System initialized. Awaiting pipeline logs...</span>
+                <span className="console-timestamp">[00:00:00]</span> <span className="console-message">System initialized. Awaiting activity...</span>
               </div>
             )}
           </div>
@@ -811,7 +812,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
         
         {!activeDataset.status.isInsightsGenerated ? (
           <div className="insights-loading-state">
-            <div className="spinner"></div>
+            <BrandIcon size={40} className="logo-loading-pulse" />
             <p>Awaiting pipeline completion. Insight synthesis layer initializing...</p>
           </div>
         ) : (

@@ -1,0 +1,702 @@
+/* Redesigned Narrative Console Styles */
+
+.landing-viewport.slide-experience {
+  width: 100vw;
+  height: 100vh;
+  background-color: #080b11;
+  color: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Premium Navigation Header */
+.landing-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(8, 11, 17, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2.5rem;
+  z-index: 100;
+}
+
+.landing-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.06em;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.landing-logo:hover {
+  opacity: 0.9;
+}
+
+.logo-icon-glow {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-nav-pills {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.nav-pill {
+  background: none;
+  border: 1px solid transparent;
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.nav-pill:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nav-pill.active {
+  background: rgba(212, 175, 55, 0.08);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+}
+
+.pill-number {
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.pill-label {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+/* Base Buttons */
+.btn-primary {
+  background: #d4af37;
+  border: 1px solid #d4af37;
+  color: #080b11;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  padding: 0.6rem 1.4rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.25);
+}
+
+.btn-primary:hover {
+  background: #f2b824;
+  border-color: #f2b824;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-primary.btn-lg {
+  padding: 0.8rem 1.8rem;
+  font-size: 0.95rem;
+  border-radius: 8px;
+}
+
+.btn-primary.btn-sm {
+  padding: 0.4rem 1.1rem;
+  font-size: 0.8rem;
+  border-radius: 5px;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  padding: 0.6rem 1.4rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.25s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary.btn-lg {
+  padding: 0.8rem 1.8rem;
+  font-size: 0.95rem;
+  border-radius: 8px;
+}
+
+.btn-secondary.btn-sm {
+  padding: 0.4rem 1.1rem;
+  font-size: 0.8rem;
+  border-radius: 5px;
+}
+
+.btn-secondary.btn-full-width {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Console Layout Split */
+.console-layout {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  padding-top: 64px;
+  box-sizing: border-box;
+}
+
+.console-content-column {
+  width: 44%;
+  height: calc(100vh - 64px);
+  padding: 4.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(90deg, #080b11 82%, rgba(8, 11, 17, 0.95) 90%, transparent 100%);
+  overflow-y: auto;
+}
+
+.content-animation-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 520px;
+}
+
+.console-visual-column {
+  width: 56%;
+  height: calc(100vh - 64px);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #05070a;
+}
+
+/* Content details formatting */
+.slide-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: #d4af37;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.75rem;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.display-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 4.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg, #fff 40%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.display-tagline {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 1.5rem 0;
+}
+
+.slide-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.01em;
+}
+
+.slide-subtitle {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #d4af37;
+  margin: 0 0 1.5rem 0;
+}
+
+.description-text {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 0 2rem 0;
+}
+
+.actions-row {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Unique Slide Styling Items */
+.unified-box.card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.unified-box h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+}
+
+.unified-box p {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.55);
+  margin: 0;
+}
+
+/* Step list flow */
+.flow-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.flow-step-item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.flow-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #d4af37;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flow-text-box h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.15rem 0;
+}
+
+.flow-text-box p {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+/* Clarity bullets */
+.clarity-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clarity-bullets li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.75);
+}
+
+.text-gold {
+  color: #d4af37;
+}
+
+/* Mini capability grids */
+.capabilities-mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+}
+
+.mini-cap-card.card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1.1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mini-cap-card h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.mini-cap-card p {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+}
+
+/* Workspace upload and presets styles */
+.workspace-upload-zone {
+  border: 1px dashed rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.02);
+  border-radius: 8px;
+  padding: 1.4rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.workspace-upload-zone:hover {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.04);
+}
+
+.workspace-upload-zone h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0.2rem 0 0 0;
+}
+
+.workspace-upload-zone p {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.4);
+  margin: 0 0 0.4rem 0;
+}
+
+.presets-section h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  margin: 0 0 0.75rem 0;
+}
+
+.presets-mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  max-height: 210px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.presets-mini-grid::-webkit-scrollbar {
+  width: 4px;
+}
+.presets-mini-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.preset-pill-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.65rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.preset-pill-card:hover {
+  background: rgba(212, 175, 55, 0.06);
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.1);
+}
+
+.preset-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.15rem;
+}
+
+.preset-card-header h5 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.preset-card-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.52rem;
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.preset-pill-card p {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+}
+
+.direct-nav-row {
+  margin-top: 0.5rem;
+}
+
+/* SVG Interactive Tree Styles */
+.interactive-tree-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.narrative-tree-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  user-select: none;
+}
+
+/* Bezier Path Styles */
+.tree-path-fg {
+  stroke: rgba(255, 255, 255, 0.03);
+  stroke-width: 1.5;
+  fill: none;
+  transition: stroke 0.8s ease, stroke-width 0.8s ease, filter 0.8s ease, opacity 0.8s ease;
+}
+
+.tree-path-fg.active {
+  stroke: #d4af37;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.5));
+}
+
+.tree-path-fg.complete-glow {
+  stroke: #d4af37;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.75));
+  animation: pulseGoldPath 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseGoldPath {
+  0%, 100% { opacity: 0.8; stroke-width: 2.2; }
+  50% { opacity: 1.0; stroke-width: 2.8; filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.95)); }
+}
+
+/* Chip Nodes (Tiny Square Nodes) */
+.tree-chip-node {
+  fill: #080b11;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1.0;
+  transition: all 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.tree-chip-node.active {
+  fill: #d4af37;
+  stroke: #d4af37;
+  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8));
+}
+
+.tree-chip-node.current {
+  fill: #fff;
+  stroke: #d4af37;
+  stroke-width: 1.8;
+  transform: scale(1.4);
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 1));
+}
+
+/* Central Logo Hub */
+.logo-hub-box {
+  fill: #080b11;
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 1.5;
+  transition: all 0.8s ease;
+}
+
+.logo-hub-group.active .logo-hub-box {
+  stroke: #d4af37;
+  fill: rgba(212, 175, 55, 0.08);
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.55));
+}
+
+/* Flow step overlays */
+.flow-step-node-group {
+  cursor: pointer;
+}
+
+.flow-node-bg {
+  fill: #080b11;
+  stroke: #d4af37;
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.65));
+}
+
+.flow-node-glow-ring {
+  fill: none;
+  stroke: rgba(212, 175, 55, 0.4);
+  stroke-width: 1;
+  animation: ringExpansion 2.2s infinite ease-out;
+  transform-origin: center;
+}
+
+@keyframes ringExpansion {
+  0% { r: 16; opacity: 0.8; }
+  100% { r: 36; opacity: 0; }
+}
+
+.flow-node-icon {
+  color: #d4af37;
+}
+
+.flow-node-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  fill: #d4af37;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+/* Slide Controls Footer navigation */
+.slide-controls-footer {
+  position: fixed;
+  bottom: 2rem;
+  left: 4.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 50;
+}
+
+.btn-slide-nav {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 0.55rem 1.1rem;
+  border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.btn-slide-nav:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: #d4af37;
+  color: #d4af37;
+}
+
+.btn-slide-nav:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.slide-position-indicator {
+  color: rgba(255, 255, 255, 0.3);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.slide-position-indicator span:first-child {
+  color: #d4af37;
+  font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+  .console-layout {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .console-content-column {
+    width: 100%;
+    height: auto;
+    padding: 2.5rem;
+    background: #080b11;
+  }
+  .console-visual-column {
+    width: 100%;
+    height: 450px;
+    background-color: #05070a;
+  }
+  .slide-controls-footer {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    margin: 2rem 0;
+    justify-content: center;
+  }
+}

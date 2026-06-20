@@ -12,6 +12,8 @@ import api from './utils/api';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { IntelligenceReport } from './components/IntelligenceReport';
+import { LandingExperience } from './components/LandingExperience';
+import { BrandIcon } from './components/BrandIcon';
 import './App.css';
 
 import type { Dataset } from './types';
@@ -29,6 +31,19 @@ function App() {
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [viewMode, setViewMode] = useState<'product' | 'workspace'>(() => {
+    return (localStorage.getItem('insightgrid-viewmode') as 'product' | 'workspace') || 'product';
+  });
+
+  const handleOpenWorkspace = () => {
+    setViewMode('workspace');
+    localStorage.setItem('insightgrid-viewmode', 'workspace');
+  };
+
+  const handleExitWorkspace = () => {
+    setViewMode('product');
+    localStorage.setItem('insightgrid-viewmode', 'product');
+  };
 
   // Initialize custom user preferences on mount
   useState(() => {
@@ -115,24 +130,24 @@ function App() {
   const runFullPipeline = async (id: string, file: File, autoProcess: boolean) => {
     try {
       if (!autoProcess) {
-        updateState(id, 'IDLE', 'Ingestion stream opened. Standing by.');
+        updateState(id, 'IDLE', 'Dataset loaded. Ready for analysis.');
         return;
       }
 
       // Stage 2: VALIDATING
-      updateState(id, 'VALIDATING', 'Stage 2 active: Initializing schema validation parser...');
+      updateState(id, 'VALIDATING', 'Analyzing columns and verifying data structure...');
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Scanning column headers for raw database types...');
+      addLog(id, 'Reading column names and data types...');
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Verifying structural integrity and formatting constraints...');
+      addLog(id, 'Checking dataset formatting...');
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Schema validation complete. Zero formatting errors found. (duration: 350ms)');
+      addLog(id, 'Data structure checked. Ready to process. (duration: 350ms)');
       await new Promise(r => setTimeout(r, 300));
 
       // Stage 3: PROCESSING
-      updateState(id, 'PROCESSING', 'Stage 3 active: Preprocessing pipeline initialized.');
+      updateState(id, 'PROCESSING', 'Preprocessing data and cleaning values...');
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Running imputation for missing values (mean strategy)...');
+      addLog(id, 'Filling in missing data points...');
       
       const processFormData = new FormData();
       processFormData.append('file', file);
@@ -146,31 +161,31 @@ function App() {
       const processRes = await api.post('/process-csv', processFormData);
       
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Scaling continuous features using StandardScaler...');
+      addLog(id, 'Scaling numeric values...');
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Encoding categorical nominal dimensions (OneHot)...');
+      addLog(id, 'Preparing categories for modeling...');
       await new Promise(r => setTimeout(r, 300));
       
-      updateState(id, 'PROCESSING', 'Preprocessing complete. Imputation & feature scaling optimized. (duration: 820ms)', { isProcessed: true }, { processedData: processRes.data });
+      updateState(id, 'PROCESSING', 'Data cleaning complete. (duration: 820ms)', { isProcessed: true }, { processedData: processRes.data });
       await new Promise(r => setTimeout(r, 450));
 
       // Stage 4: ANALYZING
-      updateState(id, 'ANALYZING', 'Stage 4 active: Computing exploratory statistics...');
+      updateState(id, 'ANALYZING', 'Calculating correlations and averages...');
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Evaluating Pearson correlation coefficient matrix...');
+      addLog(id, 'Finding relationships between variables...');
       
       const analyzeFormData = new FormData();
       analyzeFormData.append('file', file);
       const analyzeRes = await api.post('/analyze-csv', analyzeFormData);
       
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Generating continuous probability density bands...');
+      addLog(id, 'Analyzing value distributions...');
       await new Promise(r => setTimeout(r, 300));
       
       updateState(
         id, 
         'ANALYZING', 
-        'Exploratory data analysis report successfully compiled. (duration: 410ms)', 
+        'Descriptive analysis complete. (duration: 410ms)', 
         { isAnalyzed: true }, 
         { 
           analyticsData: analyzeRes.data,
@@ -181,7 +196,7 @@ function App() {
       await new Promise(r => setTimeout(r, 450));
 
       // Stage 5: RUNNING INFERENCE
-      updateState(id, 'RUNNING INFERENCE', 'Stage 5 active: ML Runtime convergence active.');
+      updateState(id, 'RUNNING INFERENCE', 'Building predictive models...');
       await new Promise(r => setTimeout(r, 450));
       
       const columns = processRes.data.columns || [];
@@ -195,27 +210,27 @@ function App() {
       else if (columns.includes('target')) targetCol = 'target';
       else targetCol = columns[0] || 'target';
 
-      addLog(id, `Fitting baseline Random Forest model with target: ${targetCol}...`);
+      addLog(id, `Training decision models on target: ${targetCol}...`);
       const predictFormData = new FormData();
       predictFormData.append('file', file);
       predictFormData.append('target_column', targetCol);
       const predictRes = await api.post('/predict-csv', predictFormData);
       
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Initializing Isolation Forest outlier detector...');
+      addLog(id, 'Scanning dataset for anomalies...');
       const anomalyFormData = new FormData();
       anomalyFormData.append('file', file);
       anomalyFormData.append('contamination', '0.05');
       const anomalyRes = await api.post('/detect-anomalies', anomalyFormData);
       
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, `Model convergence complete. Out-of-bag Score: ${(predictRes.data.metrics?.oob_score || 0.908).toFixed(3)}`);
+      addLog(id, `Models trained successfully. Out-of-bag Score: ${(predictRes.data.metrics?.oob_score || 0.908).toFixed(3)}`);
       await new Promise(r => setTimeout(r, 300));
 
       updateState(
         id, 
         'RUNNING INFERENCE', 
-        `Inference complete. Isolation Forest tagged ${anomalyRes.data.anomalies_detected} outliers. (duration: 780ms)`, 
+        `Model building finished. Tagged ${anomalyRes.data.anomalies_detected} outliers. (duration: 780ms)`, 
         { isModelTrained: true }, 
         { 
           mlResult: predictRes.data, 
@@ -227,11 +242,11 @@ function App() {
       await new Promise(r => setTimeout(r, 450));
 
       // Stage 6: SYNTHESIZING INSIGHTS
-      updateState(id, 'SYNTHESIZING INSIGHTS', 'Stage 6 active: AI Synthesis Layer connected.');
+      updateState(id, 'SYNTHESIZING INSIGHTS', 'Generating AI insights...');
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Packaging statistical metrics and outlier vectors...');
+      addLog(id, 'Preparing summary data...');
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Streaming prompt payload to Groq inference cluster...');
+      addLog(id, 'Analyzing results with AI...');
       
       const insightsRes = await api.post('/generate-insights', {
         analysis_data: {
@@ -244,14 +259,14 @@ function App() {
       });
 
       await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'AI synthesis complete. Decrypting intelligence report...');
+      addLog(id, 'AI analysis complete. Creating report...');
       await new Promise(r => setTimeout(r, 300));
 
       // Complete
       updateState(
         id, 
         'COMPLETE', 
-        'Pipeline orchestration complete. Console telemetry fully active.', 
+        'Analytics pipeline complete.', 
         { isInsightsGenerated: true },
         { 
           analyticsData: {
@@ -264,7 +279,7 @@ function App() {
 
     } catch (err: any) {
       console.error(err);
-      updateState(id, 'ERROR', `Orchestration halted: ${err.message || 'Server error'}`);
+      updateState(id, 'ERROR', `Analysis stopped: ${err.message || 'Server error'}`);
     }
   };
 
@@ -474,6 +489,16 @@ function App() {
     isInsightsGenerated: false 
   };
 
+  if (viewMode === 'product') {
+    return (
+      <LandingExperience 
+        onOpenWorkspace={handleOpenWorkspace}
+        onLoadSampleDataset={handleLoadSampleDataset}
+        onFileUpload={handleFileUpload}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       <Sidebar 
@@ -481,10 +506,11 @@ function App() {
         currentView={currentView}
         onNavigate={setCurrentView}
         activeDataset={activeDataset}
+        onExitWorkspace={handleExitWorkspace}
       />
       
       <main className="main-content">
-        <Hero activeDataset={activeDataset} />
+        <Hero activeDataset={activeDataset} isGeneratingReport={isGeneratingReport} />
         
         {currentView === 'dashboard' && (
           <Dashboard 
@@ -556,7 +582,7 @@ function App() {
       {isGeneratingReport && (
         <div className="pdf-generation-overlay">
           <div className="pdf-generation-spinner-box">
-            <div className="spinner"></div>
+            <BrandIcon size={44} className="logo-loading-pulse" />
             <h4>Generating Intelligence Report</h4>
             <p>Compiling statistics, rendering vector charts, and synthesizing recommendations...</p>
           </div>
