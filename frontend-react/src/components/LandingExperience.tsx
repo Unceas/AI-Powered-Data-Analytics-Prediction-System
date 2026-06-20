@@ -1,14 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { 
   ArrowRight, 
-  Database, 
-  Brain, 
   UploadCloud, 
-  Activity, 
   ChevronLeft, 
   ChevronRight, 
-  Award, 
-  FileText, 
   Settings
 } from 'lucide-react';
 import './LandingExperience.css';
@@ -23,9 +18,7 @@ interface TreeNode {
   id: string;
   x: number;
   y: number;
-  type: 'hub' | 'square' | 'decorative';
-  level?: number;
-  side?: 'left' | 'right';
+  shape: 'square' | 'diamond' | 'circle' | 'double-square' | 'star';
 }
 
 interface TreeLink {
@@ -34,11 +27,9 @@ interface TreeLink {
   to: string;
   d: string;
   branch: 'left' | 'right' | 'center' | 'decorative';
-  level?: number;
-  side?: 'left' | 'right';
 }
 
-// 3x3 Dot Grid Component matching Panel Brand Node
+// 3x3 Dot Grid Component
 const GridDotsIcon = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
     <rect x="4" y="4" width="3.2" height="3.2" rx="0.5" />
@@ -53,134 +44,322 @@ const GridDotsIcon = ({ size = 16, className = '' }: { size?: number; className?
   </svg>
 );
 
-// Custom InsightGrid Node component containing 3x3 dot grid
-interface NodeProps {
+// Narrative step configuration representing node-by-node story points
+const NARRATIVE_STEPS = [
+  {
+    id: 0,
+    nodeId: 't-0',
+    title: 'INSIGHTGRID',
+    text: 'Your data already contains answers. InsightGrid helps you find them.',
+    placement: 'center-root',
+    watermark: ''
+  },
+  {
+    id: 1,
+    nodeId: 't-1',
+    title: 'Why We Built It',
+    text: 'Modern analytics workflows are fragmented. We unify data analysis, machine learning models, and explainable intelligence into one workspace.',
+    placement: 'right',
+    watermark: 'WHY'
+  },
+  {
+    id: 2,
+    nodeId: 't-2',
+    title: 'The Narrative Shift',
+    text: 'Most analytics tools stop at static charts and raw metrics.',
+    placement: 'right',
+    watermark: 'WHY'
+  },
+  {
+    id: 3,
+    nodeId: 't-3',
+    title: 'Explainable Reasoning',
+    text: 'InsightGrid focuses on deep, traceable understanding of variables and target behaviors.',
+    placement: 'right',
+    watermark: 'WHY'
+  },
+  {
+    id: 4,
+    nodeId: 'p-0',
+    title: 'Upload → Analyze → Understand',
+    text: 'Traverse the five-stage automated pipeline.',
+    placement: 'right',
+    watermark: 'PIPELINE'
+  },
+  {
+    id: 5,
+    nodeId: 'p-1',
+    title: 'Dataset Ingestion',
+    text: 'Upload custom spreadsheet or launch live samples instantly.',
+    placement: 'right',
+    watermark: 'PIPELINE'
+  },
+  {
+    id: 6,
+    nodeId: 'p-2',
+    title: 'Preprocessing',
+    text: 'Automated mean imputation, feature encoding, and standard scaling.',
+    placement: 'right',
+    watermark: 'PIPELINE'
+  },
+  {
+    id: 7,
+    nodeId: 'p-3',
+    title: 'Diagnostic Profiling',
+    text: 'Analyze statistical distributions, skewness, and correlation matrices.',
+    placement: 'right',
+    watermark: 'PIPELINE'
+  },
+  {
+    id: 8,
+    nodeId: 'p-4',
+    title: 'Predictive Classifier',
+    text: 'Train Random Forest models to calculate feature importances and predictions.',
+    placement: 'right',
+    watermark: 'PIPELINE'
+  },
+  {
+    id: 9,
+    nodeId: 'p-5',
+    title: 'Explainable Intelligence',
+    text: 'Synthesize natural language explanations grounded in ML weights and anomalies.',
+    placement: 'right',
+    watermark: 'PIPELINE'
+  },
+  {
+    id: 10,
+    nodeId: 'c-0',
+    title: 'Questions You Can Ask',
+    text: 'Interact directly with the Insight Engine using plain English.',
+    placement: 'left',
+    watermark: 'ANSWERS'
+  },
+  {
+    id: 11,
+    nodeId: 'c-1',
+    title: 'Outlier Analysis',
+    text: '\"Are there anomalous outlier spikes in my telemetry?\"',
+    placement: 'left',
+    watermark: 'ANSWERS'
+  },
+  {
+    id: 12,
+    nodeId: 'c-2',
+    title: 'Churn Prediction',
+    text: '\"What primary drivers contribute to customer subscription churn?\"',
+    placement: 'left',
+    watermark: 'ANSWERS'
+  },
+  {
+    id: 13,
+    nodeId: 'c-3',
+    title: 'Revenue Trends',
+    text: '\"How will store sales and profit margins trend next quarter?\"',
+    placement: 'left',
+    watermark: 'ANSWERS'
+  },
+  {
+    id: 14,
+    nodeId: 't-5',
+    title: 'Start Exploring',
+    text: 'You have seen the system. Now try it yourself.',
+    placement: 'workspace',
+    watermark: 'WORKSPACE'
+  }
+];
+
+// Narrative Node Component drawing distinct shape symbols
+interface NarrativeNodeProps {
   x: number;
   y: number;
+  shape: 'square' | 'diamond' | 'circle' | 'double-square' | 'star';
   active: boolean;
   isComplete: boolean;
 }
 
-const InsightGridSquareNode = ({ x, y, active, isComplete }: NodeProps) => {
-  const size = 12;
+const NarrativeNodeComponent = ({ x, y, shape, active, isComplete }: NarrativeNodeProps) => {
+  const size = 11;
   const half = size / 2;
-  
-  return (
-    <g 
-      transform={`translate(${x}, ${y})`} 
-      className={`tree-node-group ${active ? 'active' : ''} ${isComplete ? 'complete-glow' : ''}`}
-    >
-      {/* Outer rounded square box */}
+  let element = null;
+
+  if (shape === 'square') { // Root
+    element = (
       <rect 
         x={-half} 
         y={-half} 
         width={size} 
         height={size} 
-        rx={2.2} 
-        className="node-box"
+        rx={1.5} 
+        className="node-shape shape-square" 
       />
-      {/* 3x3 dot grid inside the box */}
-      <circle cx={-3} cy={-3} r={0.65} className="node-dot" />
-      <circle cx={0} cy={-3} r={0.65} className="node-dot" />
-      <circle cx={3} cy={-3} r={0.65} className="node-dot" />
-      
-      <circle cx={-3} cy={0} r={0.65} className="node-dot" />
-      <circle cx={0} cy={0} r={0.65} className="node-dot" />
-      <circle cx={3} cy={0} r={0.65} className="node-dot" />
-      
-      <circle cx={-3} cy={3} r={0.65} className="node-dot" />
-      <circle cx={0} cy={3} r={0.65} className="node-dot" />
-      <circle cx={3} cy={3} r={0.65} className="node-dot" />
+    );
+  } else if (shape === 'diamond') { // Capability
+    element = (
+      <polygon 
+        points={`0,${-half - 2} ${half + 2},0 0,${half + 2} ${-half - 2},0`} 
+        className="node-shape shape-diamond" 
+      />
+    );
+  } else if (shape === 'circle') { // Explanation
+    element = (
+      <circle 
+        cx={0} 
+        cy={0} 
+        r={half} 
+        className="node-shape shape-circle" 
+      />
+    );
+  } else if (shape === 'double-square') { // Workspace
+    element = (
+      <g className="node-shape shape-double-square">
+        <rect x={-half - 2} y={-half - 2} width={size + 4} height={size + 4} rx={2.2} className="outer-box" />
+        <rect x={-half + 0.8} y={-half + 0.8} width={size - 1.6} height={size - 1.6} rx={1.2} className="inner-box" />
+      </g>
+    );
+  } else if (shape === 'star') { // Insight
+    element = (
+      <path 
+        d="M 0,-7 L 2.2,-2.2 L 7,0 L 2.2,2.2 L 0,7 L -2.2,2.2 L -7,0 L -2.2,-2.2 Z" 
+        className="node-shape shape-star" 
+      />
+    );
+  }
+
+  return (
+    <g 
+      transform={`translate(${x}, ${y})`} 
+      className={`narrative-node-group ${active ? 'active' : ''} ${isComplete ? 'complete-glow' : ''}`}
+    >
+      {element}
     </g>
   );
 };
 
-// Symmetrical dense canopy generator
-function generateSplayedTree() {
+// Generates structural Main and Background nodes
+function generateInteractiveNarrativeTree() {
   const nodes: TreeNode[] = [];
   const links: TreeLink[] = [];
 
-  const trunkY = [650, 570, 490, 410, 330, 250];
-  
-  // Create vertical trunk nodes
-  trunkY.forEach((y, idx) => {
-    nodes.push({ id: `t-${idx}`, x: 500, y, type: 'hub' });
-    if (idx > 0) {
-      links.push({
-        id: `l-trunk-${idx}`,
-        from: `t-${idx - 1}`,
-        to: `t-${idx}`,
-        d: `M 500 ${trunkY[idx - 1]} L 500 ${y}`,
-        branch: 'center'
-      });
-    }
-  });
+  // Narrative Trunk nodes
+  const trunk = [
+    { id: 't-0', x: 500, y: 680, shape: 'square' as const },
+    { id: 't-1', x: 500, y: 590, shape: 'circle' as const },
+    { id: 't-2', x: 500, y: 500, shape: 'circle' as const },
+    { id: 't-3', x: 500, y: 410, shape: 'circle' as const },
+    { id: 't-4', x: 500, y: 300, shape: 'circle' as const },
+    { id: 't-5', x: 500, y: 200, shape: 'double-square' as const }
+  ];
 
-  // Base root lines fanning out downwards from the bottom hub node at (500, 650)
-  for (let i = -6; i <= 6; i++) {
-    const endX = 500 + i * 22;
-    const endY = 780 + Math.abs(i) * 3;
+  // Pipeline branch (left) fanning out from t-3
+  const pipeline = [
+    { id: 'p-0', x: 420, y: 360, shape: 'diamond' as const },
+    { id: 'p-1', x: 340, y: 330, shape: 'diamond' as const },
+    { id: 'p-2', x: 270, y: 310, shape: 'diamond' as const },
+    { id: 'p-3', x: 200, y: 300, shape: 'diamond' as const },
+    { id: 'p-4', x: 130, y: 300, shape: 'diamond' as const },
+    { id: 'p-5', x: 70, y: 310, shape: 'star' as const }
+  ];
+
+  // Capabilities branch (right) fanning out from t-3
+  const capabilities = [
+    { id: 'c-0', x: 580, y: 360, shape: 'star' as const },
+    { id: 'c-1', x: 660, y: 330, shape: 'star' as const },
+    { id: 'c-2', x: 730, y: 310, shape: 'star' as const },
+    { id: 'c-3', x: 800, y: 300, shape: 'star' as const }
+  ];
+
+  nodes.push(...trunk, ...pipeline, ...capabilities);
+
+  // Link Trunk
+  for (let i = 0; i < trunk.length - 1; i++) {
     links.push({
-      id: `root-line-${i}`,
-      from: 't-0',
-      to: `root-end-${i}`,
-      d: `M 500 650 C 500 690, ${500 + i * 12} 730, ${endX} ${endY}`,
+      id: `l-trunk-${i}`,
+      from: trunk[i].id,
+      to: trunk[i+1].id,
+      d: `M ${trunk[i].x} ${trunk[i].y} L ${trunk[i+1].x} ${trunk[i+1].y}`,
       branch: 'center'
     });
   }
 
-  let nodeCount = 0;
-  let linkCount = 0;
-
-  // Recursive branching grow function
-  function grow(
-    startX: number,
-    startY: number,
-    angleDeg: number,
-    length: number,
-    depth: number,
-    side: 'left' | 'right',
-    level: number
-  ) {
-    if (depth > 3) return;
-
-    const angleRad = (angleDeg * Math.PI) / 180;
-    const endX = startX + Math.cos(angleRad) * length;
-    const endY = startY + Math.sin(angleRad) * length;
-
-    const nodeId = `b-${side}-${level}-${depth}-${nodeCount++}`;
-    nodes.push({ id: nodeId, x: endX, y: endY, type: 'square', level, side });
-
-    const cpX = startX + Math.cos(angleRad) * (length * 0.45);
-    const cpY = startY + Math.sin(angleRad) * (length * 0.45);
-    const controlPointY = cpY - (depth === 1 ? 12 : 4);
-
-    const linkId = `l-grow-${side}-${level}-${depth}-${linkCount++}`;
+  // Link Left Branch
+  links.push({
+    id: 'l-pipe-start',
+    from: 't-3',
+    to: 'p-0',
+    d: 'M 500 410 Q 450 395, 420 360',
+    branch: 'left'
+  });
+  for (let i = 0; i < pipeline.length - 1; i++) {
     links.push({
-      id: linkId,
-      from: `start-${startX}-${startY}`,
-      to: nodeId,
-      d: `M ${startX} ${startY} Q ${cpX} ${controlPointY}, ${endX} ${endY}`,
-      branch: side,
-      level,
-      side
+      id: `l-pipe-${i}`,
+      from: pipeline[i].id,
+      to: pipeline[i+1].id,
+      d: `M ${pipeline[i].x} ${pipeline[i].y} Q ${pipeline[i].x - 30} ${pipeline[i].y - 5}, ${pipeline[i+1].x} ${pipeline[i+1].y}`,
+      branch: 'left'
     });
-
-    const nextLength = length * 0.74;
-    const spread = 20;
-
-    grow(endX, endY, angleDeg - spread, nextLength, depth + 1, side, level);
-    grow(endX, endY, angleDeg + spread, nextLength, depth + 1, side, level);
   }
 
-  // Grow symmetrical branch systems from each trunk node level
-  trunkY.forEach((y, idx) => {
-    const angleOffset = 32 + idx * 3; // splay outwards
-    // Left side
-    grow(500, y, 270 - angleOffset, 90 - idx * 5, 1, 'left', idx);
-    // Right side
-    grow(500, y, 270 + angleOffset, 90 - idx * 5, 1, 'right', idx);
+  // Link Right Branch
+  links.push({
+    id: 'l-cap-start',
+    from: 't-3',
+    to: 'c-0',
+    d: 'M 500 410 Q 550 395, 580 360',
+    branch: 'right'
   });
+  for (let i = 0; i < capabilities.length - 1; i++) {
+    links.push({
+      id: `l-cap-${i}`,
+      from: capabilities[i].id,
+      to: capabilities[i+1].id,
+      d: `M ${capabilities[i].x} ${capabilities[i].y} Q ${capabilities[i].x + 30} ${capabilities[i].y - 5}, ${capabilities[i+1].x} ${capabilities[i+1].y}`,
+      branch: 'right'
+    });
+  }
+
+  // Golden root base fanning downwards
+  for (let i = -7; i <= 7; i++) {
+    const endX = 500 + i * 22;
+    const endY = 800 + Math.abs(i) * 3;
+    links.push({
+      id: `root-line-${i}`,
+      from: 't-0',
+      to: `root-end-${i}`,
+      d: `M 500 680 C 500 715, ${500 + i * 10} 750, ${endX} ${endY}`,
+      branch: 'center'
+    });
+  }
+
+  // Symmetrical faint decorative canopy branches fanning out
+  let decCount = 0;
+  function addDecorativeCanopy(x: number, y: number, angleDeg: number, len: number, depth: number) {
+    if (depth > 3) return;
+    const rad = (angleDeg * Math.PI) / 180;
+    const ex = x + Math.cos(rad) * len;
+    const ey = y + Math.sin(rad) * len;
+
+    const nid = `dec-${decCount++}`;
+    nodes.push({ id: nid, x: ex, y: ey, shape: 'circle' as const });
+
+    links.push({
+      id: `l-dec-${decCount++}`,
+      from: `dec-parent-${x}-${y}`,
+      to: nid,
+      d: `M ${x} ${y} Q ${x + (ex - x)*0.5} ${y + (ey - y)*0.5 - 5}, ${ex} ${ey}`,
+      branch: 'decorative'
+    });
+
+    addDecorativeCanopy(ex, ey, angleDeg - 25, len * 0.72, depth + 1);
+    addDecorativeCanopy(ex, ey, angleDeg + 25, len * 0.72, depth + 1);
+  }
+
+  pipeline.forEach((p, idx) => {
+    addDecorativeCanopy(p.x, p.y, 250 - idx * 10, 45, 1);
+  });
+  capabilities.forEach((c, idx) => {
+    addDecorativeCanopy(c.x, c.y, 290 + idx * 10, 45, 1);
+  });
+  addDecorativeCanopy(500, 200, 270, 50, 1);
 
   return { nodes, links };
 }
@@ -195,8 +374,7 @@ export function LandingExperience({
   const [showPresets, setShowPresets] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { nodes, links } = generateSplayedTree();
-  const trunkY = [650, 570, 490, 410, 330, 250];
+  const { nodes, links } = generateInteractiveNarrativeTree();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -205,11 +383,11 @@ export function LandingExperience({
     }
   };
 
-  // Keyboard navigation
+  // Keyboard navigation step-by-step
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-        setActiveSlide(prev => Math.min(prev + 1, 5));
+        setActiveSlide(prev => Math.min(prev + 1, 14));
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         setActiveSlide(prev => Math.max(prev - 1, 0));
       }
@@ -223,10 +401,10 @@ export function LandingExperience({
     let lastTime = Date.now();
     const handleWheel = (e: WheelEvent) => {
       const now = Date.now();
-      if (now - lastTime < 800) return;
+      if (now - lastTime < 700) return;
 
       if (e.deltaY > 15) {
-        setActiveSlide(prev => Math.min(prev + 1, 5));
+        setActiveSlide(prev => Math.min(prev + 1, 14));
         lastTime = now;
       } else if (e.deltaY < -15) {
         setActiveSlide(prev => Math.max(prev - 1, 0));
@@ -249,7 +427,7 @@ export function LandingExperience({
 
     if (Math.abs(diff) > 50) {
       if (diff > 0) {
-        setActiveSlide(prev => Math.min(prev + 1, 5));
+        setActiveSlide(prev => Math.min(prev + 1, 14));
       } else {
         setActiveSlide(prev => Math.max(prev - 1, 0));
       }
@@ -257,57 +435,96 @@ export function LandingExperience({
     }
   };
 
+  // Traversal path illumination calculations
   const isLinkActive = (link: TreeLink) => {
-    if (activeSlide === 5) return true; // Slide 06: FULL tree glow
+    if (activeSlide === 14) return true; // Full tree illuminated at workspace
+    if (link.branch === 'decorative') return false;
     
-    // Highlight trunk paths and roots on all slides
-    if (link.branch === 'center') return true;
+    // Root lines always highlight active
+    if (link.id.startsWith('root-line-')) return true;
 
-    // Highlight specific active branches depending on slide
-    if (activeSlide === 1 && link.side === 'right' && link.level === 1) return true;
-    if (activeSlide === 2 && link.side === 'left' && link.level === 2) return true;
-    if (activeSlide === 3 && link.side === 'right' && link.level === 3) return true;
-    if (activeSlide === 4 && link.side === 'left' && link.level === 4) return true;
-    
+    const currentStepNodeId = NARRATIVE_STEPS[activeSlide]?.nodeId;
+
+    if (link.id.startsWith('l-trunk-')) {
+      const idx = parseInt(link.id.split('-')[2]);
+      if (currentStepNodeId?.startsWith('t-')) {
+        const targetIdx = parseInt(currentStepNodeId.split('-')[1]);
+        return idx < targetIdx;
+      }
+      if (currentStepNodeId?.startsWith('p-') || currentStepNodeId?.startsWith('c-')) {
+        return idx < 3; // trunk links up to t-3
+      }
+    }
+
+    if (link.id === 'l-pipe-start' && currentStepNodeId?.startsWith('p-')) return true;
+    if (link.id.startsWith('l-pipe-') && currentStepNodeId?.startsWith('p-')) {
+      const idx = parseInt(link.id.split('-')[2]);
+      const targetIdx = parseInt(currentStepNodeId.split('-')[1]);
+      return idx < targetIdx;
+    }
+
+    if (link.id === 'l-cap-start' && currentStepNodeId?.startsWith('c-')) return true;
+    if (link.id.startsWith('l-cap-') && currentStepNodeId?.startsWith('c-')) {
+      const idx = parseInt(link.id.split('-')[2]);
+      const targetIdx = parseInt(currentStepNodeId.split('-')[1]);
+      return idx < targetIdx;
+    }
+
     return false;
   };
 
   const isNodeActive = (node: TreeNode) => {
-    if (activeSlide === 5) return true;
-    if (node.type === 'hub') return true;
+    if (activeSlide === 14) return true;
+    
+    const currentStepNodeId = NARRATIVE_STEPS[activeSlide]?.nodeId;
+    if (node.id === currentStepNodeId) return true;
 
-    // Highlight active branch nodes depending on slide
-    if (activeSlide === 1 && node.side === 'right' && node.level === 1) return true;
-    if (activeSlide === 2 && node.side === 'left' && node.level === 2) return true;
-    if (activeSlide === 3 && node.side === 'right' && node.level === 3) return true;
-    if (activeSlide === 4 && node.side === 'left' && node.level === 4) return true;
+    // Retain previous path node activation
+    if (node.id.startsWith('t-')) {
+      const idx = parseInt(node.id.split('-')[1]);
+      if (currentStepNodeId?.startsWith('t-')) {
+        return idx <= parseInt(currentStepNodeId.split('-')[1]);
+      }
+      return idx <= 3;
+    }
+    if (node.id.startsWith('p-') && currentStepNodeId?.startsWith('p-')) {
+      const idx = parseInt(node.id.split('-')[1]);
+      return idx <= parseInt(currentStepNodeId.split('-')[1]);
+    }
+    if (node.id.startsWith('c-') && currentStepNodeId?.startsWith('c-')) {
+      const idx = parseInt(node.id.split('-')[1]);
+      return idx <= parseInt(currentStepNodeId.split('-')[1]);
+    }
+
     return false;
   };
 
-  // Symmetrical camera offsets matching side-floating text card layouts
+  // Traversal Camera positions for all 15 stages
   const cameraTransforms = [
-    { scale: 1.0, x: 500, y: 450 }, // 01 ROOT
-    { scale: 1.05, x: 580, y: 460 }, // 02 PURPOSE (Card on the right -> camera shifts left)
-    { scale: 1.15, x: 400, y: 420 }, // 03 FLOW (Card on the left -> camera shifts right)
-    { scale: 1.05, x: 580, y: 380 }, // 04 BACKTRACK (Card on the right -> camera shifts left)
-    { scale: 0.9, x: 330, y: 350 }, // 05 POSSIBILITIES (Card on the left -> camera shifts right)
-    { scale: 0.95, x: 420, y: 450 }  // 06 EXPLORE
+    { scale: 0.95, x: 500, y: 480 },  // 0: Root (entire tree visible)
+    { scale: 1.5, x: 500, y: 590 },  // 1: Why We Built It
+    { scale: 1.6, x: 500, y: 500 },  // 2: Most tools stop at charts
+    { scale: 1.6, x: 500, y: 410 },  // 3: InsightGrid focuses on understanding
+    { scale: 1.6, x: 420, y: 360 },  // 4: Upload -> Analyze -> Understand
+    { scale: 1.7, x: 340, y: 330 },  // 5: Dataset Ingestion
+    { scale: 1.8, x: 270, y: 310 },  // 6: Preprocessing
+    { scale: 1.8, x: 200, y: 300 },  // 7: Diagnostic Profiling
+    { scale: 1.8, x: 130, y: 300 },  // 8: Predictive Classifier
+    { scale: 1.8, x: 70, y: 310 },   // 9: Explainable AI
+    { scale: 1.6, x: 580, y: 360 },  // 10: Questions You Can Ask
+    { scale: 1.7, x: 660, y: 330 },  // 11: Outlier Analysis
+    { scale: 1.8, x: 730, y: 310 },  // 12: Churn Prediction
+    { scale: 1.8, x: 800, y: 300 },  // 13: Revenue Trends
+    { scale: 0.92, x: 500, y: 430 }  // 14: Start Exploring / Workspace
   ];
 
   const currentCamera = cameraTransforms[activeSlide] || cameraTransforms[0];
+  
+  // Custom narrative experience camera translation
   const treeTransformStyle = {
     transform: `translate(50vw, 50vh) scale(${currentCamera.scale}) translate(-${currentCamera.x}px, -${currentCamera.y}px)`,
-    transition: 'transform 1.3s cubic-bezier(0.25, 1, 0.28, 1)'
+    transition: 'transform 1.4s cubic-bezier(0.2, 0.8, 0.2, 1)'
   };
-
-  const slideLabels = [
-    { num: '01', title: 'ROOT', watermark: '' },
-    { num: '02', title: 'WHY', watermark: 'WHY' },
-    { num: '03', title: 'FLOW', watermark: 'FLOW' },
-    { num: '04', title: 'BACKTRACK', watermark: 'BACKTRACK' },
-    { num: '05', title: 'POSSIBILITIES', watermark: 'POSSIBILITIES' },
-    { num: '06', title: 'WORKSPACE', watermark: 'WORKSPACE' }
-  ];
 
   const presets = [
     { filename: 'customer_churn.csv', name: 'Customer Churn', desc: 'Identify churn triggers.', tag: 'Classification' },
@@ -318,16 +535,12 @@ export function LandingExperience({
     { filename: 'sports_performance.csv', name: 'Athlete Injury', desc: 'Forecast fatigue limits.', tag: 'Classification' }
   ];
 
-  const currentLabel = slideLabels[activeSlide] || slideLabels[0];
+  const currentStep = NARRATIVE_STEPS[activeSlide] || NARRATIVE_STEPS[0];
+  const activeNode = nodes.find(n => n.id === currentStep.nodeId);
 
-  const trunkIcons = [
-    <GridDotsIcon size={16} />,
-    <Brain size={16} />,
-    <GridDotsIcon size={16} />,
-    <Database size={16} />,
-    <Activity size={16} />,
-    <UploadCloud size={16} />
-  ];
+  // Dash bar counts
+  const progressDashesCount = 5;
+  const currentCategoryIdx = activeSlide < 4 ? 0 : activeSlide < 10 ? 1 : activeSlide < 14 ? 2 : 3;
 
   return (
     <div 
@@ -335,20 +548,20 @@ export function LandingExperience({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
     >
-      {/* Giant Faint Background Watermark Text */}
-      {currentLabel.watermark && (
-        <div className="giant-faint-watermark">{currentLabel.watermark}</div>
+      {/* Giant Faint Background Watermark */}
+      {currentStep.watermark && (
+        <div className="giant-faint-watermark">{currentStep.watermark}</div>
       )}
 
-      {/* Top Left Slide Indicator with Dashboard Dash Bar */}
+      {/* Top Left Slide Indicator with Category progress bar */}
       <div className="slide-top-left-indicator">
-        <span className="slide-num-prefix">{currentLabel.num}</span>
-        <span className="slide-title-label">{currentLabel.title}</span>
+        <span className="slide-num-prefix">{String(activeSlide + 1).padStart(2, '0')}</span>
+        <span className="slide-title-label">STAGE</span>
         <div className="slide-dash-bar">
-          {Array.from({ length: 5 }).map((_, idx) => (
+          {Array.from({ length: progressDashesCount }).map((_, idx) => (
             <span 
               key={idx} 
-              className={idx < activeSlide || (activeSlide === 5) ? 'active' : ''} 
+              className={idx <= currentCategoryIdx || (activeSlide === 14) ? 'active' : ''} 
             />
           ))}
         </div>
@@ -375,183 +588,88 @@ export function LandingExperience({
                 <path 
                   key={l.id} 
                   d={l.d} 
-                  className={`tree-path-fg ${active ? 'active' : ''} ${activeSlide === 5 ? 'complete-glow' : ''}`}
+                  className={`tree-path-fg ${active ? 'active' : ''} ${l.branch === 'decorative' ? 'decor' : ''} ${activeSlide === 14 ? 'complete-glow' : ''}`}
                 />
               );
             })}
 
-            {/* Custom Splayed Square Node chips with dot grids */}
+            {/* Custom Narrative Nodes Component */}
             {nodes.map(n => {
+              // Decorative nodes are styled differently or omitted if unnecessary
+              const isDecorative = n.id.startsWith('dec-');
+              if (isDecorative) return null;
+
               const active = isNodeActive(n);
-              if (n.type === 'hub') return null; // Rendered in HTML overlay
-              
               return (
-                <InsightGridSquareNode 
+                <NarrativeNodeComponent 
                   key={n.id}
                   x={n.x}
                   y={n.y}
+                  shape={n.shape}
                   active={active}
-                  isComplete={activeSlide === 5}
+                  isComplete={activeSlide === 14}
                 />
               );
             })}
           </g>
         </svg>
 
-        {/* HTML Overlay Layer */}
+        {/* HTML Narrative Text Overlay Layer */}
         <div className="html-nodes-layer" style={treeTransformStyle}>
-          
-          {/* Vertical Stacked Trunk Icons */}
-          {trunkY.map((y, idx) => {
-            const active = idx === activeSlide || activeSlide === 5;
-            return (
-              <div key={idx} className="floating-narrative-group" style={{ left: 500, top: y }}>
-                <div 
-                  className={`narrative-hub-node-square ${active ? 'active' : ''}`}
-                  onClick={() => setActiveSlide(idx)}
-                >
-                  {trunkIcons[idx]}
+          {activeNode && (
+            <div 
+              className={`narrative-emergent-card placement-${currentStep.placement}`}
+              style={{ 
+                left: activeNode.x, 
+                top: activeNode.y,
+              }}
+            >
+              {currentStep.id === 0 ? (
+                <div className="emergent-root-content">
+                  <h1 className="root-main-title">INSIGHTGRID</h1>
+                  <p className="root-main-tagline">{currentStep.text}</p>
+                  
+                  <div className="root-scroll-indicator">
+                    <span>Scroll to begin journey</span>
+                    <div className="scroll-arrow-down">↓</div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-
-          {/* Panel 01: ROOT Content Card */}
-          <div className="floating-narrative-group" style={{ left: 500, top: 400 }}>
-            <div className={`card-root-layout ${activeSlide === 0 ? 'active' : ''}`}>
-              <h1 className="root-main-title">INSIGHTGRID</h1>
-              <span className="root-main-tagline">Talk to Data</span>
-              
-              <div className="root-action-buttons">
-                <button className="btn-primary" onClick={() => setActiveSlide(1)}>
-                  Explore Journey <ArrowRight size={14} />
-                </button>
-                <button className="btn-secondary" onClick={onOpenWorkspace}>
-                  Open Workspace <Settings size={14} className="ml-1" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel 02: WHY Content Card */}
-          <div className="floating-narrative-group" style={{ left: 500, top: 570 }}>
-            <div className={`narrative-spec-card right-side ${activeSlide === 1 ? 'active' : ''}`}>
-              <h2 className="spec-card-title">Why InsightGrid Exists</h2>
-              <p className="spec-card-description">
-                Modern analytics workflows are fragmented. We unify data analysis, machine learning models, and explainable intelligence into one workspace.
-              </p>
-              <button className="btn-text-link" onClick={() => setActiveSlide(2)}>
-                Continue <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Panel 03: FLOW List Card */}
-          <div className="floating-narrative-group" style={{ left: 500, top: 490 }}>
-            <div className={`narrative-spec-card left-side flow-layout-card ${activeSlide === 2 ? 'active' : ''}`}>
-              <h2 className="spec-card-title">How It Works</h2>
-              
-              <ul className="flow-vertical-steps">
-                <li>
-                  <div className="flow-step-square"><GridDotsIcon size={10} /></div>
-                  <span>Dataset Ingestion</span>
-                </li>
-                <li>
-                  <div className="flow-step-square"><GridDotsIcon size={10} /></div>
-                  <span>Diagnostic Profiling</span>
-                </li>
-                <li>
-                  <div className="flow-step-square"><GridDotsIcon size={10} /></div>
-                  <span>Machine Learning Classifier</span>
-                </li>
-                <li>
-                  <div className="flow-step-square"><GridDotsIcon size={10} /></div>
-                  <span>Explainable Intelligence</span>
-                </li>
-                <li>
-                  <div className="flow-step-square"><GridDotsIcon size={10} /></div>
-                  <span>Decision Support Layer</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Panel 04: BACKTRACK Content Card */}
-          <div className="floating-narrative-group" style={{ left: 500, top: 410 }}>
-            <div className={`narrative-spec-card right-side ${activeSlide === 3 ? 'active' : ''}`}>
-              <h2 className="spec-card-title">Navigate with Clarity</h2>
-              <p className="spec-card-description">
-                Move forward with confidence. Backtrack and explore new possibilities. Switch model variables and see live impact metrics dynamically.
-              </p>
-              <button className="btn-text-link" onClick={() => setActiveSlide(4)}>
-                Continue <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Panel 05: POSSIBILITIES Horizontal Card Row */}
-          <div className="floating-narrative-group" style={{ left: 500, top: 330 }}>
-            <div className={`narrative-spec-card left-side possibilities-layout-card ${activeSlide === 4 ? 'active' : ''}`}>
-              <h2 className="spec-card-title">Powerful Capabilities</h2>
-              
-              <div className="possibilities-horizontal-row">
-                <div className="possibility-small-card">
-                  <Activity size={18} className="text-gold" />
-                  <h4>Analytics</h4>
-                  <p>Uncover patterns and trends.</p>
+              ) : currentStep.id === 14 ? (
+                <div className="emergent-workspace-content exact-panels-spec">
+                  <span className="workspace-ready-prefix">You're Ready</span>
+                  <h2 className="spec-card-title">{currentStep.title}</h2>
+                  <p className="spec-card-description">{currentStep.text}</p>
+                  
+                  <div className="workspace-action-row">
+                    <input 
+                      type="file" 
+                      accept=".csv,.xls,.xlsx" 
+                      ref={fileInputRef} 
+                      onChange={handleFileChange} 
+                      style={{ display: 'none' }} 
+                    />
+                    
+                    <button className="btn-primary" onClick={() => setShowPresets(true)}>
+                      Enter Workspace <ArrowRight size={16} />
+                    </button>
+                    
+                    <button 
+                      className="btn-square-action" 
+                      title="Upload Custom Spreadsheet" 
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <UploadCloud size={18} />
+                    </button>
+                  </div>
                 </div>
-                <div className="possibility-small-card">
-                  <Brain size={18} className="text-gold" />
-                  <h4>Predictions</h4>
-                  <p>Forecast outcomes with confidence.</p>
+              ) : (
+                <div className="emergent-node-content">
+                  <h3 className="emergent-node-title">{currentStep.title}</h3>
+                  <p className="emergent-node-text">{currentStep.text}</p>
                 </div>
-                <div className="possibility-small-card">
-                  <Award size={18} className="text-gold" />
-                  <h4>AI Insights</h4>
-                  <p>AI-assisted insights that explain why.</p>
-                </div>
-                <div className="possibility-small-card">
-                  <FileText size={18} className="text-gold" />
-                  <h4>Professional Reports</h4>
-                  <p>Executive-ready reports in minutes.</p>
-                </div>
-              </div>
+              )}
             </div>
-          </div>
-
-          {/* Panel 06: WORKSPACE Stack Panel */}
-          <div className="floating-narrative-group" style={{ left: 500, top: 250 }}>
-            <div className={`narrative-spec-card left-side workspace-layout-card ${activeSlide === 5 ? 'active' : ''}`}>
-              <span className="workspace-ready-prefix">You're Ready</span>
-              <h2 className="spec-card-title">Explore with InsightGrid</h2>
-              <p className="spec-card-description">
-                Your data. Your questions. Our intelligence.
-              </p>
-
-              <div className="workspace-action-row">
-                <input 
-                  type="file" 
-                  accept=".csv,.xls,.xlsx" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  style={{ display: 'none' }} 
-                />
-                
-                <button className="btn-primary" onClick={() => setShowPresets(true)}>
-                  Enter Workspace <ArrowRight size={16} />
-                </button>
-                
-                <button 
-                  className="btn-square-action" 
-                  title="Upload Custom Spreadsheet" 
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <UploadCloud size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
-
+          )}
         </div>
 
       </div>
@@ -587,7 +705,7 @@ export function LandingExperience({
         </div>
       )}
 
-      {/* Slide Navigation Dots and Buttons */}
+      {/* Slide Navigation controls */}
       <div className="slide-controls-footer">
         <button 
           className="btn-slide-nav" 
@@ -597,19 +715,19 @@ export function LandingExperience({
           <ChevronLeft size={20} /> BACK
         </button>
         <div className="slide-position-indicator">
-          {Array.from({ length: 6 }).map((_, idx) => (
+          {NARRATIVE_STEPS.map((_, idx) => (
             <button 
               key={idx} 
               className={`indicator-dot-btn ${activeSlide === idx ? 'active' : ''}`}
               onClick={() => setActiveSlide(idx)}
-              title={`Slide ${idx + 1}`}
+              title={`Step ${idx + 1}`}
             />
           ))}
         </div>
         <button 
           className="btn-slide-nav" 
-          disabled={activeSlide === 5}
-          onClick={() => setActiveSlide(prev => Math.min(prev + 1, 5))}
+          disabled={activeSlide === 14}
+          onClick={() => setActiveSlide(prev => Math.min(prev + 1, 14))}
         >
           NEXT <ChevronRight size={20} />
         </button>
