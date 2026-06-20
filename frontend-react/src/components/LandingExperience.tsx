@@ -167,7 +167,7 @@ const NarrativeNodeComponent = ({ x, y, shape, active, isComplete }: NarrativeNo
   const half = size / 2;
   let element = null;
 
-  if (shape === 'square') { // Root
+  if (shape === 'square') {
     element = (
       <rect 
         x={-half - 1.5} 
@@ -178,14 +178,14 @@ const NarrativeNodeComponent = ({ x, y, shape, active, isComplete }: NarrativeNo
         className="node-shape shape-square" 
       />
     );
-  } else if (shape === 'diamond') { // Capability
+  } else if (shape === 'diamond') {
     element = (
       <polygon 
         points={`0,${-half - 2.8} ${half + 2.8},0 0,${half + 2.8} ${-half - 2.8},0`} 
         className="node-shape shape-diamond" 
       />
     );
-  } else if (shape === 'circle') { // Explanation
+  } else if (shape === 'circle') {
     element = (
       <circle 
         cx={0} 
@@ -194,14 +194,14 @@ const NarrativeNodeComponent = ({ x, y, shape, active, isComplete }: NarrativeNo
         className="node-shape shape-circle" 
       />
     );
-  } else if (shape === 'double-square') { // Workspace
+  } else if (shape === 'double-square') {
     element = (
       <g className="node-shape shape-double-square">
         <rect x={-half - 2.2} y={-half - 2.2} width={size + 4.4} height={size + 4.4} rx={2.5} className="outer-box" />
         <rect x={-half + 0.8} y={-half + 0.8} width={size - 1.6} height={size - 1.6} rx={1.2} className="inner-box" />
       </g>
     );
-  } else if (shape === 'star') { // Insight
+  } else if (shape === 'star') {
     element = (
       <path 
         d="M 0,-7.8 L 2.4,-2.4 L 7.8,0 L 2.4,2.4 L 0,7.8 L -2.4,2.4 L -7.8,0 L -2.4,-2.4 Z" 
@@ -319,51 +319,49 @@ function generateInteractiveNarrativeTree() {
     });
   }
 
-  // Generate recursive ground root fibers horizontally left/right (Root Reference)
+  // Generate recursive ground root fibers horizontally left/right (Horizontal Flat Spread)
   let rootCount = 0;
   function addOrganicRootBranch(sx: number, sy: number, angleDeg: number, len: number, depth: number) {
-    if (depth > 5) return;
+    if (depth > 4) return;
     const seed = rootCount;
     const rad = (angleDeg * Math.PI) / 180;
     
-    const nX = (getDeterministicNoise(seed * 13) - 0.5) * 5;
-    const nY = (getDeterministicNoise(seed * 19) - 0.5) * 3;
+    // Crackling fiber horizontal coordinates offset
+    const nX = (getDeterministicNoise(seed * 13) - 0.5) * 4;
+    const nY = (getDeterministicNoise(seed * 19) - 0.5) * 2;
 
     const ex = sx + Math.cos(rad) * len;
-    const ey = sy + Math.sin(rad) * len;
+    const ey = sy + Math.sin(rad) * len + (depth * 1.5); // Pull downwards slightly
 
     rootLinks.push({
       id: `root-l-${rootCount++}`,
       d: `M ${sx} ${sy} Q ${sx + (ex - sx)*0.5 + nX} ${sy + (ey - sy)*0.5 + nY}, ${ex} ${ey}`
     });
 
-    const splitLen = len * 0.77;
-    const angleOffset1 = 16 + getDeterministicNoise(seed * 7) * 12;
-    const angleOffset2 = 16 + getDeterministicNoise(seed * 11) * 12;
+    const splitLen = len * 0.82;
+    // Small split angle offsets (8 to 16 deg) for horizontal stream look
+    const angleOffset1 = 8 + getDeterministicNoise(seed * 7) * 8;
+    const angleOffset2 = 8 + getDeterministicNoise(seed * 11) * 8;
 
     addOrganicRootBranch(ex, ey, angleDeg - angleOffset1, splitLen, depth + 1);
     addOrganicRootBranch(ex, ey, angleDeg + angleOffset2, splitLen, depth + 1);
   }
 
   // Left root horizontal system
-  addOrganicRootBranch(500, 680, 175, 34, 1);
-  addOrganicRootBranch(500, 680, 155, 38, 1);
-  addOrganicRootBranch(500, 680, 135, 35, 1);
-  addOrganicRootBranch(500, 680, 115, 30, 1);
+  addOrganicRootBranch(500, 680, 172, 36, 1);
+  addOrganicRootBranch(500, 680, 155, 40, 1);
 
   // Right root horizontal system
-  addOrganicRootBranch(500, 680, 5, 34, 1);
-  addOrganicRootBranch(500, 680, 25, 38, 1);
-  addOrganicRootBranch(500, 680, 45, 35, 1);
-  addOrganicRootBranch(500, 680, 65, 30, 1);
+  addOrganicRootBranch(500, 680, 8, 36, 1);
+  addOrganicRootBranch(500, 680, 25, 40, 1);
 
-  // Straight down root
-  addOrganicRootBranch(500, 680, 90, 25, 1);
+  // Center down root
+  addOrganicRootBranch(500, 680, 90, 24, 1);
 
-  // Dense recursive canopy generator fanning outwards and upwards
+  // Dense recursive canopy generator fanning outwards in long sweeping paths
   let decCount = 0;
   function addDecorativeCanopy(x: number, y: number, angleDeg: number, len: number, depth: number) {
-    if (depth > 5) return;
+    if (depth > 4) return;
     const rad = (angleDeg * Math.PI) / 180;
     const ex = x + Math.cos(rad) * len;
     const ey = y + Math.sin(rad) * len;
@@ -373,7 +371,7 @@ function generateInteractiveNarrativeTree() {
       id: nid,
       x: ex,
       y: ey,
-      size: Math.max(9 - depth * 1.1, 3.5)
+      size: Math.max(8 - depth * 1.2, 4)
     });
 
     decLinks.push({
@@ -381,21 +379,21 @@ function generateInteractiveNarrativeTree() {
       d: `M ${x} ${y} Q ${x + (ex - x)*0.5} ${y + (ey - y)*0.5 - 2}, ${ex} ${ey}`
     });
 
-    addDecorativeCanopy(ex, ey, angleDeg - 24, len * 0.74, depth + 1);
-    addDecorativeCanopy(ex, ey, angleDeg + 24, len * 0.74, depth + 1);
+    // Elegant long branches with smaller split angles (13 degrees) for integrated look
+    addDecorativeCanopy(ex, ey, angleDeg - 13, len * 0.76, depth + 1);
+    addDecorativeCanopy(ex, ey, angleDeg + 13, len * 0.76, depth + 1);
   }
 
-  // Generate dense background canopy from all branches and trunk levels
-  pipeline.forEach((p, idx) => {
-    addDecorativeCanopy(p.x, p.y, 230 - idx * 10, 42, 1);
-  });
-  capabilities.forEach((c, idx) => {
-    addDecorativeCanopy(c.x, c.y, 310 + idx * 10, 42, 1);
-  });
-  trunk.slice(2).forEach((t, idx) => {
-    addDecorativeCanopy(t.x, t.y, 240, 36, 1);
-    addDecorativeCanopy(t.x, t.y, 300, 36, 1);
-  });
+  // Generate continuous canopy branching from natural points along trunk and main branches
+  addDecorativeCanopy(500, 500, 220, 45, 1);
+  addDecorativeCanopy(500, 500, 320, 45, 1);
+  addDecorativeCanopy(500, 320, 230, 40, 1);
+  addDecorativeCanopy(500, 320, 310, 40, 1);
+
+  addDecorativeCanopy(320, 520, 190, 38, 1);
+  addDecorativeCanopy(170, 410, 240, 38, 1);
+  addDecorativeCanopy(680, 520, 350, 38, 1);
+  addDecorativeCanopy(760, 460, 300, 38, 1);
 
   return { nodes, links, decNodes, decLinks, rootLinks };
 }
@@ -660,7 +658,7 @@ export function LandingExperience({
         <svg className="narrative-tree-svg" viewBox="0 0 1000 800">
           <g style={treeTransformStyle}>
             
-            {/* Crackling Organic Ground Roots (Replicating Root Reference) */}
+            {/* Crackling Organic Ground Roots */}
             {rootLinks.map(rl => (
               <path 
                 key={rl.id} 
