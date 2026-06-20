@@ -153,7 +153,7 @@ const NARRATIVE_STEPS = [
   }
 ];
 
-// Narrative Node Component drawing distinct shape symbols (Restore original shapes)
+// Narrative Node Component drawing distinct shape symbols (Diamond, Star, etc.)
 interface NarrativeNodeProps {
   x: number;
   y: number;
@@ -170,18 +170,18 @@ const NarrativeNodeComponent = ({ x, y, shape, active, isComplete }: NarrativeNo
   if (shape === 'square') { // Root
     element = (
       <rect 
-        x={-half - 1} 
-        y={-half - 1} 
-        width={size + 2} 
-        height={size + 2} 
-        rx={2} 
+        x={-half - 1.5} 
+        y={-half - 1.5} 
+        width={size + 3} 
+        height={size + 3} 
+        rx={2.2} 
         className="node-shape shape-square" 
       />
     );
   } else if (shape === 'diamond') { // Capability
     element = (
       <polygon 
-        points={`0,${-half - 2.5} ${half + 2.5},0 0,${half + 2.5} ${-half - 2.5},0`} 
+        points={`0,${-half - 2.8} ${half + 2.8},0 0,${half + 2.8} ${-half - 2.8},0`} 
         className="node-shape shape-diamond" 
       />
     );
@@ -190,21 +190,21 @@ const NarrativeNodeComponent = ({ x, y, shape, active, isComplete }: NarrativeNo
       <circle 
         cx={0} 
         cy={0} 
-        r={half + 0.5} 
+        r={half + 0.8} 
         className="node-shape shape-circle" 
       />
     );
   } else if (shape === 'double-square') { // Workspace
     element = (
       <g className="node-shape shape-double-square">
-        <rect x={-half - 2} y={-half - 2} width={size + 4} height={size + 4} rx={2.2} className="outer-box" />
+        <rect x={-half - 2.2} y={-half - 2.2} width={size + 4.4} height={size + 4.4} rx={2.5} className="outer-box" />
         <rect x={-half + 0.8} y={-half + 0.8} width={size - 1.6} height={size - 1.6} rx={1.2} className="inner-box" />
       </g>
     );
   } else if (shape === 'star') { // Insight
     element = (
       <path 
-        d="M 0,-7.5 L 2.3,-2.3 L 7.5,0 L 2.3,2.3 L 0,7.5 L -2.3,2.3 L -7.5,0 L -2.3,-2.3 Z" 
+        d="M 0,-7.8 L 2.4,-2.4 L 7.8,0 L 2.4,2.4 L 0,7.8 L -2.4,2.4 L -7.8,0 L -2.4,-2.4 Z" 
         className="node-shape shape-star" 
       />
     );
@@ -242,32 +242,32 @@ function generateInteractiveNarrativeTree() {
   const decLinks: { id: string; d: string }[] = [];
   const rootLinks: { id: string; d: string }[] = [];
 
-  // Central Vertical Trunk nodes (Tree structure splits from t-3)
+  // Central Vertical Trunk nodes (Symmetric column)
   const trunk = [
     { id: 't-0', x: 500, y: 680, shape: 'square' as const },
     { id: 't-1', x: 500, y: 590, shape: 'circle' as const },
     { id: 't-2', x: 500, y: 500, shape: 'circle' as const },
     { id: 't-3', x: 500, y: 410, shape: 'circle' as const },
-    { id: 't-4', x: 500, y: 300, shape: 'circle' as const },
+    { id: 't-4', x: 500, y: 320, shape: 'circle' as const },
     { id: 't-5', x: 500, y: 200, shape: 'double-square' as const }
   ];
 
-  // Pipeline branch (left) fanning out from t-3
+  // Pipeline branch (left) branching from root t-0 base
   const pipeline = [
-    { id: 'p-0', x: 420, y: 360, shape: 'diamond' as const },
-    { id: 'p-1', x: 340, y: 330, shape: 'diamond' as const },
-    { id: 'p-2', x: 270, y: 310, shape: 'diamond' as const },
-    { id: 'p-3', x: 200, y: 300, shape: 'diamond' as const },
-    { id: 'p-4', x: 130, y: 300, shape: 'diamond' as const },
-    { id: 'p-5', x: 70, y: 310, shape: 'star' as const }
+    { id: 'p-0', x: 410, y: 590, shape: 'diamond' as const },
+    { id: 'p-1', x: 320, y: 520, shape: 'diamond' as const },
+    { id: 'p-2', x: 240, y: 460, shape: 'diamond' as const },
+    { id: 'p-3', x: 170, y: 410, shape: 'diamond' as const },
+    { id: 'p-4', x: 110, y: 370, shape: 'diamond' as const },
+    { id: 'p-5', x: 60, y: 340, shape: 'star' as const }
   ];
 
-  // Capabilities branch (right) fanning out from t-3
+  // Capabilities branch (right) branching from root t-0 base
   const capabilities = [
-    { id: 'c-0', x: 580, y: 360, shape: 'star' as const },
-    { id: 'c-1', x: 660, y: 330, shape: 'star' as const },
-    { id: 'c-2', x: 730, y: 310, shape: 'star' as const },
-    { id: 'c-3', x: 800, y: 300, shape: 'star' as const }
+    { id: 'c-0', x: 590, y: 590, shape: 'star' as const },
+    { id: 'c-1', x: 680, y: 520, shape: 'star' as const },
+    { id: 'c-2', x: 760, y: 460, shape: 'star' as const },
+    { id: 'c-3', x: 830, y: 410, shape: 'star' as const }
   ];
 
   nodes.push(...trunk, ...pipeline, ...capabilities);
@@ -283,12 +283,12 @@ function generateInteractiveNarrativeTree() {
     });
   }
 
-  // Link Left Branch
+  // Link Left Branch (Starting at base t-0)
   links.push({
     id: 'l-pipe-start',
-    from: 't-3',
+    from: 't-0',
     to: 'p-0',
-    d: 'M 500 410 Q 450 395, 420 360',
+    d: 'M 500 680 Q 450 635, 410 590',
     branch: 'left'
   });
   for (let i = 0; i < pipeline.length - 1; i++) {
@@ -301,12 +301,12 @@ function generateInteractiveNarrativeTree() {
     });
   }
 
-  // Link Right Branch
+  // Link Right Branch (Starting at base t-0)
   links.push({
     id: 'l-cap-start',
-    from: 't-3',
+    from: 't-0',
     to: 'c-0',
-    d: 'M 500 410 Q 550 395, 580 360',
+    d: 'M 500 680 Q 550 635, 590 590',
     branch: 'right'
   });
   for (let i = 0; i < capabilities.length - 1; i++) {
@@ -319,14 +319,13 @@ function generateInteractiveNarrativeTree() {
     });
   }
 
-  // Generate recursive splayed ground roots extending horizontally left/right (Replicating Root Reference)
+  // Generate recursive ground root fibers horizontally left/right (Root Reference)
   let rootCount = 0;
   function addOrganicRootBranch(sx: number, sy: number, angleDeg: number, len: number, depth: number) {
     if (depth > 5) return;
     const seed = rootCount;
     const rad = (angleDeg * Math.PI) / 180;
     
-    // Crackling fiber coordinates offset
     const nX = (getDeterministicNoise(seed * 13) - 0.5) * 5;
     const nY = (getDeterministicNoise(seed * 19) - 0.5) * 3;
 
@@ -339,30 +338,32 @@ function generateInteractiveNarrativeTree() {
     });
 
     const splitLen = len * 0.77;
-    const angleOffset1 = 17 + getDeterministicNoise(seed * 7) * 14;
-    const angleOffset2 = 17 + getDeterministicNoise(seed * 11) * 14;
+    const angleOffset1 = 16 + getDeterministicNoise(seed * 7) * 12;
+    const angleOffset2 = 16 + getDeterministicNoise(seed * 11) * 12;
 
     addOrganicRootBranch(ex, ey, angleDeg - angleOffset1, splitLen, depth + 1);
     addOrganicRootBranch(ex, ey, angleDeg + angleOffset2, splitLen, depth + 1);
   }
 
-  // Left root system
-  addOrganicRootBranch(500, 680, 165, 34, 1);
-  addOrganicRootBranch(500, 680, 140, 40, 1);
+  // Left root horizontal system
+  addOrganicRootBranch(500, 680, 175, 34, 1);
+  addOrganicRootBranch(500, 680, 155, 38, 1);
+  addOrganicRootBranch(500, 680, 135, 35, 1);
   addOrganicRootBranch(500, 680, 115, 30, 1);
 
-  // Right root system
-  addOrganicRootBranch(500, 680, 15, 34, 1);
-  addOrganicRootBranch(500, 680, 40, 40, 1);
+  // Right root horizontal system
+  addOrganicRootBranch(500, 680, 5, 34, 1);
+  addOrganicRootBranch(500, 680, 25, 38, 1);
+  addOrganicRootBranch(500, 680, 45, 35, 1);
   addOrganicRootBranch(500, 680, 65, 30, 1);
 
   // Straight down root
-  addOrganicRootBranch(500, 680, 90, 26, 1);
+  addOrganicRootBranch(500, 680, 90, 25, 1);
 
-  // Recursive canopy sub-branch generator
+  // Dense recursive canopy generator fanning outwards and upwards
   let decCount = 0;
   function addDecorativeCanopy(x: number, y: number, angleDeg: number, len: number, depth: number) {
-    if (depth > 4) return;
+    if (depth > 5) return;
     const rad = (angleDeg * Math.PI) / 180;
     const ex = x + Math.cos(rad) * len;
     const ey = y + Math.sin(rad) * len;
@@ -372,26 +373,29 @@ function generateInteractiveNarrativeTree() {
       id: nid,
       x: ex,
       y: ey,
-      size: Math.max(7 - depth * 1.1, 2.5)
+      size: Math.max(9 - depth * 1.1, 3.5)
     });
 
     decLinks.push({
       id: `dec-l-${decCount++}`,
-      d: `M ${x} ${y} Q ${x + (ex - x)*0.5} ${y + (ey - y)*0.5 - 3}, ${ex} ${ey}`
+      d: `M ${x} ${y} Q ${x + (ex - x)*0.5} ${y + (ey - y)*0.5 - 2}, ${ex} ${ey}`
     });
 
-    addDecorativeCanopy(ex, ey, angleDeg - 22, len * 0.72, depth + 1);
-    addDecorativeCanopy(ex, ey, angleDeg + 22, len * 0.72, depth + 1);
+    addDecorativeCanopy(ex, ey, angleDeg - 24, len * 0.74, depth + 1);
+    addDecorativeCanopy(ex, ey, angleDeg + 24, len * 0.74, depth + 1);
   }
 
-  // Generate background canopy
+  // Generate dense background canopy from all branches and trunk levels
   pipeline.forEach((p, idx) => {
-    addDecorativeCanopy(p.x, p.y, 230 - idx * 12, 40, 1);
+    addDecorativeCanopy(p.x, p.y, 230 - idx * 10, 42, 1);
   });
   capabilities.forEach((c, idx) => {
-    addDecorativeCanopy(c.x, c.y, 310 + idx * 12, 40, 1);
+    addDecorativeCanopy(c.x, c.y, 310 + idx * 10, 42, 1);
   });
-  addDecorativeCanopy(500, 200, 270, 48, 1);
+  trunk.slice(2).forEach((t, idx) => {
+    addDecorativeCanopy(t.x, t.y, 240, 36, 1);
+    addDecorativeCanopy(t.x, t.y, 300, 36, 1);
+  });
 
   return { nodes, links, decNodes, decLinks, rootLinks };
 }
@@ -483,7 +487,7 @@ export function LandingExperience({
         return idx < targetIdx;
       }
       if (currentStepNodeId?.startsWith('p-') || currentStepNodeId?.startsWith('c-')) {
-        return idx < 3; // trunk links active up to branching t-3
+        return idx < 1; // trunk links active from base
       }
     }
 
@@ -515,7 +519,7 @@ export function LandingExperience({
       if (currentStepNodeId?.startsWith('t-')) {
         return idx <= parseInt(currentStepNodeId.split('-')[1]);
       }
-      return idx <= 3;
+      return idx <= 1;
     }
     if (node.id.startsWith('p-') && currentStepNodeId?.startsWith('p-')) {
       const idx = parseInt(node.id.split('-')[1]);
@@ -535,16 +539,16 @@ export function LandingExperience({
     { scale: 1.5, x: 500, y: 590 },  // 1: Why We Built It
     { scale: 1.6, x: 500, y: 500 },  // 2: The Narrative Shift
     { scale: 1.6, x: 500, y: 410 },  // 3: Explainable Reasoning
-    { scale: 1.6, x: 420, y: 360 },  // 4: Upload -> Analyze -> Understand
-    { scale: 1.7, x: 340, y: 330 },  // 5: Dataset Ingestion
-    { scale: 1.8, x: 270, y: 310 },  // 6: Preprocessing
-    { scale: 1.8, x: 200, y: 300 },  // 7: Diagnostic Profiling
-    { scale: 1.8, x: 130, y: 300 },  // 8: Predictive Classifier
-    { scale: 1.8, x: 70, y: 310 },   // 9: Explainable AI
-    { scale: 1.6, x: 580, y: 360 },  // 10: Questions You Can Ask
-    { scale: 1.7, x: 660, y: 330 },  // 11: Outlier Analysis
-    { scale: 1.8, x: 730, y: 310 },  // 12: Churn Prediction
-    { scale: 1.8, x: 800, y: 300 },  // 13: Revenue Trends
+    { scale: 1.6, x: 410, y: 590 },  // 4: Upload -> Analyze -> Understand
+    { scale: 1.7, x: 320, y: 520 },  // 5: Dataset Ingestion
+    { scale: 1.8, x: 240, y: 460 },  // 6: Preprocessing
+    { scale: 1.8, x: 170, y: 410 },  // 7: Diagnostic Profiling
+    { scale: 1.8, x: 110, y: 370 },  // 8: Predictive Classifier
+    { scale: 1.8, x: 60, y: 340 },   // 9: Explainable AI
+    { scale: 1.6, x: 590, y: 590 },  // 10: Questions You Can Ask
+    { scale: 1.7, x: 680, y: 520 },  // 11: Outlier Analysis
+    { scale: 1.8, x: 760, y: 460 },  // 12: Churn Prediction
+    { scale: 1.8, x: 830, y: 410 },  // 13: Revenue Trends
     { scale: 0.92, x: 500, y: 430 }  // 14: Start Exploring / Workspace
   ];
 
@@ -694,7 +698,7 @@ export function LandingExperience({
                 y={dn.y - dn.size/2}
                 width={dn.size}
                 height={dn.size}
-                rx={Math.max(1, dn.size * 0.25)}
+                rx={Math.max(1.2, dn.size * 0.25)}
                 className="dec-node-shape"
               />
             ))}
