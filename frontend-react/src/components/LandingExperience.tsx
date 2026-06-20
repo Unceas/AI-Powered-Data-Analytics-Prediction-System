@@ -29,21 +29,6 @@ interface TreeLink {
   branch: 'left' | 'right' | 'center' | 'decorative';
 }
 
-// 3x3 Dot Grid Component
-const GridDotsIcon = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <rect x="4" y="4" width="3.2" height="3.2" rx="0.5" />
-    <rect x="10.4" y="4" width="3.2" height="3.2" rx="0.5" />
-    <rect x="16.8" y="4" width="3.2" height="3.2" rx="0.5" />
-    <rect x="4" y="10.4" width="3.2" height="3.2" rx="0.5" />
-    <rect x="10.4" y="10.4" width="3.2" height="3.2" rx="0.5" />
-    <rect x="16.8" y="10.4" width="3.2" height="3.2" rx="0.5" />
-    <rect x="4" y="16.8" width="3.2" height="3.2" rx="0.5" />
-    <rect x="10.4" y="16.8" width="3.2" height="3.2" rx="0.5" />
-    <rect x="16.8" y="16.8" width="3.2" height="3.2" rx="0.5" />
-  </svg>
-);
-
 // Narrative step configuration representing node-by-node story points
 const NARRATIVE_STEPS = [
   {
@@ -168,7 +153,7 @@ const NARRATIVE_STEPS = [
   }
 ];
 
-// Narrative Node Component drawing distinct shape symbols
+// Narrative Node Component drawing distinct rounded-square shape symbols
 interface NarrativeNodeProps {
   x: number;
   y: number;
@@ -178,99 +163,95 @@ interface NarrativeNodeProps {
 }
 
 const NarrativeNodeComponent = ({ x, y, shape, active, isComplete }: NarrativeNodeProps) => {
-  const size = 11;
-  const half = size / 2;
-  let element = null;
+  let size = 13;
+  let rx = 3.5;
 
-  if (shape === 'square') { // Root
-    element = (
-      <rect 
-        x={-half} 
-        y={-half} 
-        width={size} 
-        height={size} 
-        rx={1.5} 
-        className="node-shape shape-square" 
-      />
-    );
-  } else if (shape === 'diamond') { // Capability
-    element = (
-      <polygon 
-        points={`0,${-half - 2} ${half + 2},0 0,${half + 2} ${-half - 2},0`} 
-        className="node-shape shape-diamond" 
-      />
-    );
-  } else if (shape === 'circle') { // Explanation
-    element = (
-      <circle 
-        cx={0} 
-        cy={0} 
-        r={half} 
-        className="node-shape shape-circle" 
-      />
-    );
-  } else if (shape === 'double-square') { // Workspace
-    element = (
-      <g className="node-shape shape-double-square">
-        <rect x={-half - 2} y={-half - 2} width={size + 4} height={size + 4} rx={2.2} className="outer-box" />
-        <rect x={-half + 0.8} y={-half + 0.8} width={size - 1.6} height={size - 1.6} rx={1.2} className="inner-box" />
-      </g>
-    );
-  } else if (shape === 'star') { // Insight
-    element = (
-      <path 
-        d="M 0,-7 L 2.2,-2.2 L 7,0 L 2.2,2.2 L 0,7 L -2.2,2.2 L -7,0 L -2.2,-2.2 Z" 
-        className="node-shape shape-star" 
-      />
-    );
+  if (shape === 'square') { // Root node
+    size = 24;
+    rx = 6;
+  } else if (shape === 'double-square') { // Workspace node
+    size = 18;
+    rx = 4.5;
+  } else if (shape === 'star') { // Feature nodes
+    size = 14;
+    rx = 4;
+  } else if (shape === 'diamond') { // Action nodes
+    size = 13;
+    rx = 3.5;
   }
+
+  const half = size / 2;
 
   return (
     <g 
       transform={`translate(${x}, ${y})`} 
       className={`narrative-node-group ${active ? 'active' : ''} ${isComplete ? 'complete-glow' : ''}`}
     >
-      {element}
+      {shape === 'double-square' ? (
+        <g className="node-shape-wrapper shape-double-square">
+          <rect x={-half - 2.5} y={-half - 2.5} width={size + 5} height={size + 5} rx={rx + 1.2} className="outer-box" />
+          <rect x={-half} y={-half} width={size} height={size} rx={rx} className="inner-box" />
+        </g>
+      ) : (
+        <rect 
+          x={-half} 
+          y={-half} 
+          width={size} 
+          height={size} 
+          rx={rx} 
+          className="node-shape" 
+        />
+      )}
     </g>
   );
 };
+
+// Decorative background node interface
+interface DecNode {
+  id: string;
+  x: number;
+  y: number;
+  size: number;
+}
 
 // Generates structural Main and Background nodes
 function generateInteractiveNarrativeTree() {
   const nodes: TreeNode[] = [];
   const links: TreeLink[] = [];
+  const decNodes: DecNode[] = [];
+  const decLinks: { id: string; d: string }[] = [];
 
-  // Narrative Trunk nodes
+  // Central Vertical Trunk nodes (6 rounded squares vertically aligned)
   const trunk = [
     { id: 't-0', x: 500, y: 680, shape: 'square' as const },
     { id: 't-1', x: 500, y: 590, shape: 'circle' as const },
     { id: 't-2', x: 500, y: 500, shape: 'circle' as const },
     { id: 't-3', x: 500, y: 410, shape: 'circle' as const },
-    { id: 't-4', x: 500, y: 300, shape: 'circle' as const },
-    { id: 't-5', x: 500, y: 200, shape: 'double-square' as const }
+    { id: 't-4', x: 500, y: 320, shape: 'circle' as const },
+    { id: 't-5', x: 500, y: 230, shape: 'double-square' as const }
   ];
 
-  // Pipeline branch (left) fanning out from t-3
+  // Splayed Pipeline branch (left canopy curve) fanning out from trunk base
   const pipeline = [
-    { id: 'p-0', x: 420, y: 360, shape: 'diamond' as const },
-    { id: 'p-1', x: 340, y: 330, shape: 'diamond' as const },
-    { id: 'p-2', x: 270, y: 310, shape: 'diamond' as const },
-    { id: 'p-3', x: 200, y: 300, shape: 'diamond' as const },
-    { id: 'p-4', x: 130, y: 300, shape: 'diamond' as const },
-    { id: 'p-5', x: 70, y: 310, shape: 'star' as const }
+    { id: 'p-0', x: 410, y: 590, shape: 'diamond' as const },
+    { id: 'p-1', x: 320, y: 540, shape: 'diamond' as const },
+    { id: 'p-2', x: 240, y: 495, shape: 'diamond' as const },
+    { id: 'p-3', x: 170, y: 460, shape: 'diamond' as const },
+    { id: 'p-4', x: 110, y: 435, shape: 'diamond' as const },
+    { id: 'p-5', x: 60, y: 420, shape: 'star' as const }
   ];
 
-  // Capabilities branch (right) fanning out from t-3
+  // Splayed Capabilities branch (right canopy curve) fanning out from trunk base
   const capabilities = [
-    { id: 'c-0', x: 580, y: 360, shape: 'star' as const },
-    { id: 'c-1', x: 660, y: 330, shape: 'star' as const },
-    { id: 'c-2', x: 730, y: 310, shape: 'star' as const },
-    { id: 'c-3', x: 800, y: 300, shape: 'star' as const }
+    { id: 'c-0', x: 590, y: 590, shape: 'star' as const },
+    { id: 'c-1', x: 680, y: 540, shape: 'star' as const },
+    { id: 'c-2', x: 760, y: 495, shape: 'star' as const },
+    { id: 'c-3', x: 830, y: 460, shape: 'star' as const }
   ];
 
   nodes.push(...trunk, ...pipeline, ...capabilities);
 
-  // Link Trunk
+  // Link Trunk (Straight lines)
   for (let i = 0; i < trunk.length - 1; i++) {
     links.push({
       id: `l-trunk-${i}`,
@@ -281,12 +262,12 @@ function generateInteractiveNarrativeTree() {
     });
   }
 
-  // Link Left Branch
+  // Link Left Branch (curving upwards and outwards)
   links.push({
     id: 'l-pipe-start',
-    from: 't-3',
+    from: 't-0',
     to: 'p-0',
-    d: 'M 500 410 Q 450 395, 420 360',
+    d: 'M 500 680 Q 450 635, 410 590',
     branch: 'left'
   });
   for (let i = 0; i < pipeline.length - 1; i++) {
@@ -294,17 +275,17 @@ function generateInteractiveNarrativeTree() {
       id: `l-pipe-${i}`,
       from: pipeline[i].id,
       to: pipeline[i+1].id,
-      d: `M ${pipeline[i].x} ${pipeline[i].y} Q ${pipeline[i].x - 30} ${pipeline[i].y - 5}, ${pipeline[i+1].x} ${pipeline[i+1].y}`,
+      d: `M ${pipeline[i].x} ${pipeline[i].y} Q ${(pipeline[i].x + pipeline[i+1].x)/2} ${(pipeline[i].y + pipeline[i+1].y)/2 - 5}, ${pipeline[i+1].x} ${pipeline[i+1].y}`,
       branch: 'left'
     });
   }
 
-  // Link Right Branch
+  // Link Right Branch (curving upwards and outwards)
   links.push({
     id: 'l-cap-start',
-    from: 't-3',
+    from: 't-0',
     to: 'c-0',
-    d: 'M 500 410 Q 550 395, 580 360',
+    d: 'M 500 680 Q 550 635, 590 590',
     branch: 'right'
   });
   for (let i = 0; i < capabilities.length - 1; i++) {
@@ -312,56 +293,59 @@ function generateInteractiveNarrativeTree() {
       id: `l-cap-${i}`,
       from: capabilities[i].id,
       to: capabilities[i+1].id,
-      d: `M ${capabilities[i].x} ${capabilities[i].y} Q ${capabilities[i].x + 30} ${capabilities[i].y - 5}, ${capabilities[i+1].x} ${capabilities[i+1].y}`,
+      d: `M ${capabilities[i].x} ${capabilities[i].y} Q ${(capabilities[i].x + capabilities[i+1].x)/2} ${(capabilities[i].y + capabilities[i+1].y)/2 - 5}, ${capabilities[i+1].x} ${capabilities[i+1].y}`,
       branch: 'right'
     });
   }
 
-  // Golden root base fanning downwards
-  for (let i = -7; i <= 7; i++) {
+  // Golden base root fibers fanning out downwards from root node (500, 680)
+  for (let i = -8; i <= 8; i++) {
     const endX = 500 + i * 22;
     const endY = 800 + Math.abs(i) * 3;
     links.push({
       id: `root-line-${i}`,
       from: 't-0',
       to: `root-end-${i}`,
-      d: `M 500 680 C 500 715, ${500 + i * 10} 750, ${endX} ${endY}`,
+      d: `M 500 680 C 500 710, ${500 + i * 9} 740, ${endX} ${endY}`,
       branch: 'center'
     });
   }
 
-  // Symmetrical faint decorative canopy branches fanning out
+  // Recursive canopy sub-branch generator
   let decCount = 0;
   function addDecorativeCanopy(x: number, y: number, angleDeg: number, len: number, depth: number) {
-    if (depth > 3) return;
+    if (depth > 4) return;
     const rad = (angleDeg * Math.PI) / 180;
     const ex = x + Math.cos(rad) * len;
     const ey = y + Math.sin(rad) * len;
 
-    const nid = `dec-${decCount++}`;
-    nodes.push({ id: nid, x: ex, y: ey, shape: 'circle' as const });
-
-    links.push({
-      id: `l-dec-${decCount++}`,
-      from: `dec-parent-${x}-${y}`,
-      to: nid,
-      d: `M ${x} ${y} Q ${x + (ex - x)*0.5} ${y + (ey - y)*0.5 - 5}, ${ex} ${ey}`,
-      branch: 'decorative'
+    const nid = `dec-n-${decCount++}`;
+    decNodes.push({
+      id: nid,
+      x: ex,
+      y: ey,
+      size: Math.max(7 - depth * 1.1, 2.5)
     });
 
-    addDecorativeCanopy(ex, ey, angleDeg - 25, len * 0.72, depth + 1);
-    addDecorativeCanopy(ex, ey, angleDeg + 25, len * 0.72, depth + 1);
+    decLinks.push({
+      id: `dec-l-${decCount++}`,
+      d: `M ${x} ${y} Q ${x + (ex - x)*0.5} ${y + (ey - y)*0.5 - 3}, ${ex} ${ey}`
+    });
+
+    addDecorativeCanopy(ex, ey, angleDeg - 22, len * 0.72, depth + 1);
+    addDecorativeCanopy(ex, ey, angleDeg + 22, len * 0.72, depth + 1);
   }
 
+  // Generate background canopy from left, right, and top branches
   pipeline.forEach((p, idx) => {
-    addDecorativeCanopy(p.x, p.y, 250 - idx * 10, 45, 1);
+    addDecorativeCanopy(p.x, p.y, 230 - idx * 12, 40, 1);
   });
   capabilities.forEach((c, idx) => {
-    addDecorativeCanopy(c.x, c.y, 290 + idx * 10, 45, 1);
+    addDecorativeCanopy(c.x, c.y, 310 + idx * 12, 40, 1);
   });
-  addDecorativeCanopy(500, 200, 270, 50, 1);
+  addDecorativeCanopy(500, 230, 270, 48, 1);
 
-  return { nodes, links };
+  return { nodes, links, decNodes, decLinks };
 }
 
 export function LandingExperience({ 
@@ -374,7 +358,7 @@ export function LandingExperience({
   const [showPresets, setShowPresets] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { nodes, links } = generateInteractiveNarrativeTree();
+  const { nodes, links, decNodes, decLinks } = generateInteractiveNarrativeTree();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -383,20 +367,20 @@ export function LandingExperience({
     }
   };
 
-  // Keyboard navigation step-by-step
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         setActiveSlide(prev => Math.min(prev + 1, 14));
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-        setActiveSlide(prev => Math.max(prev - 1, 0));
+        setActiveSlide(prev => Math.max(prev - 0, 0));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Wheel navigation (debounced)
+  // Wheel navigation
   useEffect(() => {
     let lastTime = Date.now();
     const handleWheel = (e: WheelEvent) => {
@@ -437,10 +421,9 @@ export function LandingExperience({
 
   // Traversal path illumination calculations
   const isLinkActive = (link: TreeLink) => {
-    if (activeSlide === 14) return true; // Full tree illuminated at workspace
+    if (activeSlide === 14) return true;
     if (link.branch === 'decorative') return false;
     
-    // Root lines always highlight active
     if (link.id.startsWith('root-line-')) return true;
 
     const currentStepNodeId = NARRATIVE_STEPS[activeSlide]?.nodeId;
@@ -452,7 +435,7 @@ export function LandingExperience({
         return idx < targetIdx;
       }
       if (currentStepNodeId?.startsWith('p-') || currentStepNodeId?.startsWith('c-')) {
-        return idx < 3; // trunk links up to t-3
+        return idx < 1; // trunk links active from root to t-1
       }
     }
 
@@ -479,13 +462,12 @@ export function LandingExperience({
     const currentStepNodeId = NARRATIVE_STEPS[activeSlide]?.nodeId;
     if (node.id === currentStepNodeId) return true;
 
-    // Retain previous path node activation
     if (node.id.startsWith('t-')) {
       const idx = parseInt(node.id.split('-')[1]);
       if (currentStepNodeId?.startsWith('t-')) {
         return idx <= parseInt(currentStepNodeId.split('-')[1]);
       }
-      return idx <= 3;
+      return idx <= 1;
     }
     if (node.id.startsWith('p-') && currentStepNodeId?.startsWith('p-')) {
       const idx = parseInt(node.id.split('-')[1]);
@@ -499,28 +481,27 @@ export function LandingExperience({
     return false;
   };
 
-  // Traversal Camera positions for all 15 stages
+  // Traversal Camera positions mapped to the splayed tree coordinates
   const cameraTransforms = [
     { scale: 0.95, x: 500, y: 480 },  // 0: Root (entire tree visible)
     { scale: 1.5, x: 500, y: 590 },  // 1: Why We Built It
     { scale: 1.6, x: 500, y: 500 },  // 2: Most tools stop at charts
     { scale: 1.6, x: 500, y: 410 },  // 3: InsightGrid focuses on understanding
-    { scale: 1.6, x: 420, y: 360 },  // 4: Upload -> Analyze -> Understand
-    { scale: 1.7, x: 340, y: 330 },  // 5: Dataset Ingestion
-    { scale: 1.8, x: 270, y: 310 },  // 6: Preprocessing
-    { scale: 1.8, x: 200, y: 300 },  // 7: Diagnostic Profiling
-    { scale: 1.8, x: 130, y: 300 },  // 8: Predictive Classifier
-    { scale: 1.8, x: 70, y: 310 },   // 9: Explainable AI
-    { scale: 1.6, x: 580, y: 360 },  // 10: Questions You Can Ask
-    { scale: 1.7, x: 660, y: 330 },  // 11: Outlier Analysis
-    { scale: 1.8, x: 730, y: 310 },  // 12: Churn Prediction
-    { scale: 1.8, x: 800, y: 300 },  // 13: Revenue Trends
-    { scale: 0.92, x: 500, y: 430 }  // 14: Start Exploring / Workspace
+    { scale: 1.6, x: 410, y: 590 },  // 4: Upload -> Analyze -> Understand
+    { scale: 1.7, x: 320, y: 540 },  // 5: Dataset Ingestion
+    { scale: 1.8, x: 240, y: 495 },  // 6: Preprocessing
+    { scale: 1.8, x: 170, y: 460 },  // 7: Diagnostic Profiling
+    { scale: 1.8, x: 110, y: 435 },  // 8: Predictive Classifier
+    { scale: 1.8, x: 60, y: 420 },   // 9: Explainable AI
+    { scale: 1.6, x: 590, y: 590 },  // 10: Questions You Can Ask
+    { scale: 1.7, x: 680, y: 540 },  // 11: Outlier Analysis
+    { scale: 1.8, x: 760, y: 495 },  // 12: Churn Prediction
+    { scale: 1.8, x: 830, y: 460 },  // 13: Revenue Trends
+    { scale: 0.92, x: 500, y: 450 }  // 14: Start Exploring / Workspace
   ];
 
   const currentCamera = cameraTransforms[activeSlide] || cameraTransforms[0];
   
-  // Custom narrative experience camera translation
   const treeTransformStyle = {
     transform: `translate(50vw, 50vh) scale(${currentCamera.scale}) translate(-${currentCamera.x}px, -${currentCamera.y}px)`,
     transition: 'transform 1.4s cubic-bezier(0.2, 0.8, 0.2, 1)'
@@ -536,9 +517,7 @@ export function LandingExperience({
   ];
 
   const currentStep = NARRATIVE_STEPS[activeSlide] || NARRATIVE_STEPS[0];
-  const activeNode = nodes.find(n => n.id === currentStep.nodeId);
 
-  // Dash bar counts
   const progressDashesCount = 5;
   const currentCategoryIdx = activeSlide < 4 ? 0 : activeSlide < 10 ? 1 : activeSlide < 14 ? 2 : 3;
 
@@ -574,7 +553,7 @@ export function LandingExperience({
         </button>
       </header>
 
-      {/* Fixed Viewport Text Overlay (Heading & Description emerge on the side, not overlapping the tree) */}
+      {/* Fixed Viewport Text Overlay */}
       <div className={`narrative-viewport-overlay placement-${currentStep.placement}`}>
         {currentStep.id === 0 ? (
           <div className="emergent-root-content">
@@ -629,24 +608,42 @@ export function LandingExperience({
         <svg className="narrative-tree-svg" viewBox="0 0 1000 800">
           <g style={treeTransformStyle}>
             
-            {/* Tree Symmetrical Paths */}
+            {/* Symmetrical Background Canopy Links */}
+            {decLinks.map((dl, idx) => (
+              <path 
+                key={dl.id} 
+                d={dl.d} 
+                className="tree-path-fg decor"
+              />
+            ))}
+
+            {/* Main Tree Active/Inactive Paths */}
             {links.map(l => {
               const active = isLinkActive(l);
               return (
                 <path 
                   key={l.id} 
                   d={l.d} 
-                  className={`tree-path-fg ${active ? 'active' : ''} ${l.branch === 'decorative' ? 'decor' : ''} ${activeSlide === 14 ? 'complete-glow' : ''}`}
+                  className={`tree-path-fg ${active ? 'active' : ''} ${activeSlide === 14 ? 'complete-glow' : ''}`}
                 />
               );
             })}
 
-            {/* Custom Narrative Nodes Component */}
-            {nodes.map(n => {
-              // Decorative nodes are styled differently or omitted if unnecessary
-              const isDecorative = n.id.startsWith('dec-');
-              if (isDecorative) return null;
+            {/* Background Canopy Small Nodes */}
+            {decNodes.map(dn => (
+              <rect 
+                key={dn.id}
+                x={dn.x - dn.size/2}
+                y={dn.y - dn.size/2}
+                width={dn.size}
+                height={dn.size}
+                rx={Math.max(1, dn.size * 0.25)}
+                className="dec-node-shape"
+              />
+            ))}
 
+            {/* Main Narrative Coordinates Node Components */}
+            {nodes.map(n => {
               const active = isNodeActive(n);
               return (
                 <NarrativeNodeComponent 

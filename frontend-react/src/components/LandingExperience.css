@@ -174,66 +174,80 @@
   transform-origin: 0 0;
 }
 
-/* Thin, Apple-style elegant tree lines */
+/* Thin, Apple-style elegant tree lines with warm golden/orange glow */
 .tree-path-fg {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.06);
+  stroke: rgba(212, 175, 55, 0.06);
   stroke-width: 0.95px;
   transition: stroke 1.2s ease, stroke-width 1.2s ease;
 }
 
 .tree-path-fg.decor {
-  stroke: rgba(255, 255, 255, 0.015);
+  stroke: rgba(212, 175, 55, 0.022);
   stroke-width: 0.5px;
 }
 
 .tree-path-fg.active {
-  stroke: #d4af37;
-  stroke-width: 1.15px;
+  stroke: #ff9f43;
+  stroke-width: 1.2px;
+  filter: drop-shadow(0 0 1.5px rgba(255, 159, 67, 0.3));
 }
 
 .tree-path-fg.complete-glow {
-  stroke: #d4af37;
+  stroke: #ff9f43;
   stroke-width: 1.05px;
 }
 
 /* Node shapes styling */
 .node-shape {
   fill: #040608;
-  stroke: rgba(255, 255, 255, 0.22);
+  stroke: rgba(212, 175, 55, 0.28);
   stroke-width: 1.0px;
   transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .narrative-node-group.active .node-shape {
-  stroke: #d4af37;
-  stroke-width: 1.5px;
+  stroke: #ff9f43;
+  stroke-width: 1.8px;
+  filter: drop-shadow(0 0 5px rgba(255, 159, 67, 0.65));
 }
 
 .narrative-node-group.complete-glow .node-shape {
-  stroke: #d4af37;
+  stroke: #ff9f43;
   stroke-width: 1.2px;
+  filter: drop-shadow(0 0 3px rgba(255, 159, 67, 0.4));
 }
 
+/* Double square for Workspace node */
 .shape-double-square .outer-box {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.15);
+  stroke: rgba(212, 175, 55, 0.16);
   stroke-width: 0.8px;
+  transition: all 0.6s ease;
 }
 
 .shape-double-square .inner-box {
   fill: #040608;
-  stroke: rgba(255, 255, 255, 0.3);
+  stroke: rgba(212, 175, 55, 0.32);
   stroke-width: 1.0px;
+  transition: all 0.6s ease;
 }
 
 .narrative-node-group.active .shape-double-square .outer-box {
-  stroke: rgba(212, 175, 55, 0.35);
+  stroke: rgba(255, 159, 67, 0.45);
+  filter: drop-shadow(0 0 3px rgba(255, 159, 67, 0.3));
 }
 
 .narrative-node-group.active .shape-double-square .inner-box {
-  stroke: #d4af37;
-  fill: rgba(212, 175, 55, 0.04);
+  stroke: #ff9f43;
+  fill: rgba(255, 159, 67, 0.05);
+}
+
+/* Decorative background rounded nodes */
+.dec-node-shape {
+  fill: #040608;
+  stroke: rgba(212, 175, 55, 0.055);
+  stroke-width: 0.55px;
 }
 
 /* Fixed Viewport Text Overlay (Heading & Description emerge on the side, not overlapping the tree) */
