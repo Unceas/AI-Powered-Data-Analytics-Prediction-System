@@ -53,6 +53,48 @@ const GridDotsIcon = ({ size = 16, className = '' }: { size?: number; className?
   </svg>
 );
 
+// Custom InsightGrid Node component containing 3x3 dot grid
+interface NodeProps {
+  x: number;
+  y: number;
+  active: boolean;
+  isComplete: boolean;
+}
+
+const InsightGridSquareNode = ({ x, y, active, isComplete }: NodeProps) => {
+  const size = 12;
+  const half = size / 2;
+  
+  return (
+    <g 
+      transform={`translate(${x}, ${y})`} 
+      className={`tree-node-group ${active ? 'active' : ''} ${isComplete ? 'complete-glow' : ''}`}
+    >
+      {/* Outer rounded square box */}
+      <rect 
+        x={-half} 
+        y={-half} 
+        width={size} 
+        height={size} 
+        rx={2.2} 
+        className="node-box"
+      />
+      {/* 3x3 dot grid inside the box */}
+      <circle cx={-3} cy={-3} r={0.65} className="node-dot" />
+      <circle cx={0} cy={-3} r={0.65} className="node-dot" />
+      <circle cx={3} cy={-3} r={0.65} className="node-dot" />
+      
+      <circle cx={-3} cy={0} r={0.65} className="node-dot" />
+      <circle cx={0} cy={0} r={0.65} className="node-dot" />
+      <circle cx={3} cy={0} r={0.65} className="node-dot" />
+      
+      <circle cx={-3} cy={3} r={0.65} className="node-dot" />
+      <circle cx={0} cy={3} r={0.65} className="node-dot" />
+      <circle cx={3} cy={3} r={0.65} className="node-dot" />
+    </g>
+  );
+};
+
 // Symmetrical dense canopy generator
 function generateSplayedTree() {
   const nodes: TreeNode[] = [];
@@ -245,11 +287,11 @@ export function LandingExperience({
   // Symmetrical camera offsets matching side-floating text card layouts
   const cameraTransforms = [
     { scale: 1.0, x: 500, y: 450 }, // 01 ROOT
-    { scale: 1.15, x: 420, y: 450 }, // 02 PURPOSE (Card on the right -> camera shifts left)
-    { scale: 1.25, x: 580, y: 380 }, // 03 FLOW (Card on the left -> camera shifts right)
-    { scale: 1.15, x: 420, y: 350 }, // 04 BACKTRACK (Card on the right -> camera shifts left)
-    { scale: 1.05, x: 620, y: 300 }, // 05 POSSIBILITIES (Card on the left -> camera shifts right)
-    { scale: 1.0, x: 550, y: 450 }  // 06 EXPLORE
+    { scale: 1.05, x: 570, y: 460 }, // 02 PURPOSE (Card on the right -> camera shifts left by centering right of tree)
+    { scale: 1.15, x: 430, y: 420 }, // 03 FLOW (Card on the left -> camera shifts right by centering left of tree)
+    { scale: 1.05, x: 570, y: 380 }, // 04 BACKTRACK (Card on the right -> camera shifts left)
+    { scale: 1.0, x: 440, y: 350 }, // 05 POSSIBILITIES (Card on the left -> camera shifts right)
+    { scale: 0.95, x: 440, y: 450 }  // 06 EXPLORE
   ];
 
   const currentCamera = cameraTransforms[activeSlide] || cameraTransforms[0];
@@ -338,20 +380,18 @@ export function LandingExperience({
               );
             })}
 
-            {/* Symmetrical Square Node chips */}
+            {/* Custom Splayed Square Node chips with dot grids */}
             {nodes.map(n => {
               const active = isNodeActive(n);
               if (n.type === 'hub') return null; // Rendered in HTML overlay
               
               return (
-                <rect 
+                <InsightGridSquareNode 
                   key={n.id}
-                  x={n.x - 3.5}
-                  y={n.y - 3.5}
-                  width={7}
-                  height={7}
-                  rx={1.5}
-                  className={`tree-square-node ${active ? 'active' : ''} ${activeSlide === 5 ? 'complete-glow' : ''}`}
+                  x={n.x}
+                  y={n.y}
+                  active={active}
+                  isComplete={activeSlide === 5}
                 />
               );
             })}
