@@ -236,79 +236,86 @@
   fill: rgba(212, 175, 55, 0.04);
 }
 
-/* Emergent Narrative Text Cards */
-.narrative-emergent-card {
+/* Fixed Viewport Text Overlay (Heading & Description emerge on the side, not overlapping the tree) */
+.narrative-viewport-overlay {
   position: absolute;
-  pointer-events: auto;
-  opacity: 0;
-  animation: emergeCard 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: opacity, transform;
+  pointer-events: none;
+  z-index: 50;
+  width: 440px;
 }
 
-@keyframes emergeCard {
-  from {
-    opacity: 0;
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-  }
-}
-
-/* Placements relative to active nodes */
-.placement-right {
+/* Placements based on active node side */
+.narrative-viewport-overlay.placement-left {
+  left: 8%;
+  top: 38%;
   transform: translateY(-50%);
-  margin-left: 24px;
-  width: 290px;
   text-align: left;
 }
 
-.placement-left {
-  transform: translate(-100%, -50%);
-  margin-left: -24px;
-  width: 290px;
-  text-align: right;
+.narrative-viewport-overlay.placement-right {
+  right: 8%;
+  top: 38%;
+  transform: translateY(-50%);
+  text-align: left;
 }
 
-.placement-center-root {
-  transform: translate(-50%, -100%);
-  margin-top: -30px;
-  width: 440px;
+.narrative-viewport-overlay.placement-center-root {
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  width: 600px;
   text-align: center;
 }
 
-.placement-workspace {
-  transform: translate(-50%, 0);
-  margin-top: 24px;
-  width: 380px;
+.narrative-viewport-overlay.placement-workspace {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
   text-align: center;
 }
 
-/* Card inner content styles */
-.emergent-node-content {
-  background: rgba(4, 6, 8, 0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1rem 1.1rem;
-  border-radius: 6px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+/* Emergent side content font size and visibility upgrades */
+.emergent-side-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.emergent-node-title {
+.emergent-side-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 2.6rem; /* Huge, highly visible heading */
+  font-weight: 800;
+  line-height: 1.25;
   color: #fff;
-  margin: 0 0 0.4rem 0;
-  letter-spacing: 0.02em;
+  margin: 0;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, #fff 70%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: slideFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
 }
 
-.emergent-node-text {
-  font-size: 0.76rem;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.55);
+.emergent-side-text {
+  font-size: 1.15rem; /* Clean, spacious copy */
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.65);
   margin: 0;
+  font-weight: 400;
+  animation: slideFadeIn 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Root Welcome styles */

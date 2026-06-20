@@ -574,6 +574,54 @@ export function LandingExperience({
         </button>
       </header>
 
+      {/* Fixed Viewport Text Overlay (Heading & Description emerge on the side, not overlapping the tree) */}
+      <div className={`narrative-viewport-overlay placement-${currentStep.placement}`}>
+        {currentStep.id === 0 ? (
+          <div className="emergent-root-content">
+            <h1 className="root-main-title">INSIGHTGRID</h1>
+            <p className="root-main-tagline">{currentStep.text}</p>
+            
+            <div className="root-scroll-indicator">
+              <span>Scroll to begin journey</span>
+              <div className="scroll-arrow-down">↓</div>
+            </div>
+          </div>
+        ) : currentStep.id === 14 ? (
+          <div className="emergent-workspace-content exact-panels-spec">
+            <span className="workspace-ready-prefix">You're Ready</span>
+            <h2 className="spec-card-title">{currentStep.title}</h2>
+            <p className="spec-card-description">{currentStep.text}</p>
+            
+            <div className="workspace-action-row">
+              <input 
+                type="file" 
+                accept=".csv,.xls,.xlsx" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                style={{ display: 'none' }} 
+              />
+              
+              <button className="btn-primary" onClick={() => setShowPresets(true)}>
+                Enter Workspace <ArrowRight size={16} />
+              </button>
+              
+              <button 
+                className="btn-square-action" 
+                title="Upload Custom Spreadsheet" 
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <UploadCloud size={18} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="emergent-side-content">
+            <h2 className="emergent-side-title">{currentStep.title}</h2>
+            <p className="emergent-side-text">{currentStep.text}</p>
+          </div>
+        )}
+      </div>
+
       {/* Interactive Visual Canvas */}
       <div className="immersive-tree-environment">
         
@@ -613,65 +661,6 @@ export function LandingExperience({
             })}
           </g>
         </svg>
-
-        {/* HTML Narrative Text Overlay Layer */}
-        <div className="html-nodes-layer" style={treeTransformStyle}>
-          {activeNode && (
-            <div 
-              className={`narrative-emergent-card placement-${currentStep.placement}`}
-              style={{ 
-                left: activeNode.x, 
-                top: activeNode.y,
-              }}
-            >
-              {currentStep.id === 0 ? (
-                <div className="emergent-root-content">
-                  <h1 className="root-main-title">INSIGHTGRID</h1>
-                  <p className="root-main-tagline">{currentStep.text}</p>
-                  
-                  <div className="root-scroll-indicator">
-                    <span>Scroll to begin journey</span>
-                    <div className="scroll-arrow-down">↓</div>
-                  </div>
-                </div>
-              ) : currentStep.id === 14 ? (
-                <div className="emergent-workspace-content exact-panels-spec">
-                  <span className="workspace-ready-prefix">You're Ready</span>
-                  <h2 className="spec-card-title">{currentStep.title}</h2>
-                  <p className="spec-card-description">{currentStep.text}</p>
-                  
-                  <div className="workspace-action-row">
-                    <input 
-                      type="file" 
-                      accept=".csv,.xls,.xlsx" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange} 
-                      style={{ display: 'none' }} 
-                    />
-                    
-                    <button className="btn-primary" onClick={() => setShowPresets(true)}>
-                      Enter Workspace <ArrowRight size={16} />
-                    </button>
-                    
-                    <button 
-                      className="btn-square-action" 
-                      title="Upload Custom Spreadsheet" 
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <UploadCloud size={18} />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="emergent-node-content">
-                  <h3 className="emergent-node-title">{currentStep.title}</h3>
-                  <p className="emergent-node-text">{currentStep.text}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
       </div>
 
       {/* Preset Datasets Modal Drawer Overlay */}
