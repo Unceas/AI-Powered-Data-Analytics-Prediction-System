@@ -198,6 +198,18 @@
   stroke-width: 1.05px;
 }
 
+/* Organic crackled root fibers extending horizontally */
+.tree-root-fiber {
+  fill: none;
+  stroke: rgba(255, 159, 67, 0.08); /* Warm gold-orange */
+  stroke-width: 0.65px;
+  transition: stroke 0.8s ease;
+}
+
+.landing-viewport.slide-experience.full-narrative .tree-root-fiber {
+  stroke: rgba(255, 159, 67, 0.12);
+}
+
 /* Node shapes styling */
 .node-shape {
   fill: #040608;

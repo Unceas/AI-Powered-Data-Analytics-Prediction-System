@@ -153,7 +153,7 @@ const NARRATIVE_STEPS = [
   }
 ];
 
-// Narrative Node Component drawing distinct rounded-square shape symbols
+// Narrative Node Component drawing distinct shape symbols (Restore original shapes)
 interface NarrativeNodeProps {
   x: number;
   y: number;
@@ -163,47 +163,67 @@ interface NarrativeNodeProps {
 }
 
 const NarrativeNodeComponent = ({ x, y, shape, active, isComplete }: NarrativeNodeProps) => {
-  let size = 13;
-  let rx = 3.5;
-
-  if (shape === 'square') { // Root node
-    size = 24;
-    rx = 6;
-  } else if (shape === 'double-square') { // Workspace node
-    size = 18;
-    rx = 4.5;
-  } else if (shape === 'star') { // Feature nodes
-    size = 14;
-    rx = 4;
-  } else if (shape === 'diamond') { // Action nodes
-    size = 13;
-    rx = 3.5;
-  }
-
+  const size = 11;
   const half = size / 2;
+  let element = null;
+
+  if (shape === 'square') { // Root
+    element = (
+      <rect 
+        x={-half - 1} 
+        y={-half - 1} 
+        width={size + 2} 
+        height={size + 2} 
+        rx={2} 
+        className="node-shape shape-square" 
+      />
+    );
+  } else if (shape === 'diamond') { // Capability
+    element = (
+      <polygon 
+        points={`0,${-half - 2.5} ${half + 2.5},0 0,${half + 2.5} ${-half - 2.5},0`} 
+        className="node-shape shape-diamond" 
+      />
+    );
+  } else if (shape === 'circle') { // Explanation
+    element = (
+      <circle 
+        cx={0} 
+        cy={0} 
+        r={half + 0.5} 
+        className="node-shape shape-circle" 
+      />
+    );
+  } else if (shape === 'double-square') { // Workspace
+    element = (
+      <g className="node-shape shape-double-square">
+        <rect x={-half - 2} y={-half - 2} width={size + 4} height={size + 4} rx={2.2} className="outer-box" />
+        <rect x={-half + 0.8} y={-half + 0.8} width={size - 1.6} height={size - 1.6} rx={1.2} className="inner-box" />
+      </g>
+    );
+  } else if (shape === 'star') { // Insight
+    element = (
+      <path 
+        d="M 0,-7.5 L 2.3,-2.3 L 7.5,0 L 2.3,2.3 L 0,7.5 L -2.3,2.3 L -7.5,0 L -2.3,-2.3 Z" 
+        className="node-shape shape-star" 
+      />
+    );
+  }
 
   return (
     <g 
       transform={`translate(${x}, ${y})`} 
       className={`narrative-node-group ${active ? 'active' : ''} ${isComplete ? 'complete-glow' : ''}`}
     >
-      {shape === 'double-square' ? (
-        <g className="node-shape-wrapper shape-double-square">
-          <rect x={-half - 2.5} y={-half - 2.5} width={size + 5} height={size + 5} rx={rx + 1.2} className="outer-box" />
-          <rect x={-half} y={-half} width={size} height={size} rx={rx} className="inner-box" />
-        </g>
-      ) : (
-        <rect 
-          x={-half} 
-          y={-half} 
-          width={size} 
-          height={size} 
-          rx={rx} 
-          className="node-shape" 
-        />
-      )}
+      {element}
     </g>
   );
+};
+
+// Deterministic noise helper for organic root fiber crackles
+const getDeterministicNoise = (seed: number) => {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
 };
 
 // Decorative background node interface
@@ -220,38 +240,39 @@ function generateInteractiveNarrativeTree() {
   const links: TreeLink[] = [];
   const decNodes: DecNode[] = [];
   const decLinks: { id: string; d: string }[] = [];
+  const rootLinks: { id: string; d: string }[] = [];
 
-  // Central Vertical Trunk nodes (6 rounded squares vertically aligned)
+  // Central Vertical Trunk nodes (Tree structure splits from t-3)
   const trunk = [
     { id: 't-0', x: 500, y: 680, shape: 'square' as const },
     { id: 't-1', x: 500, y: 590, shape: 'circle' as const },
     { id: 't-2', x: 500, y: 500, shape: 'circle' as const },
     { id: 't-3', x: 500, y: 410, shape: 'circle' as const },
-    { id: 't-4', x: 500, y: 320, shape: 'circle' as const },
-    { id: 't-5', x: 500, y: 230, shape: 'double-square' as const }
+    { id: 't-4', x: 500, y: 300, shape: 'circle' as const },
+    { id: 't-5', x: 500, y: 200, shape: 'double-square' as const }
   ];
 
-  // Splayed Pipeline branch (left canopy curve) fanning out from trunk base
+  // Pipeline branch (left) fanning out from t-3
   const pipeline = [
-    { id: 'p-0', x: 410, y: 590, shape: 'diamond' as const },
-    { id: 'p-1', x: 320, y: 540, shape: 'diamond' as const },
-    { id: 'p-2', x: 240, y: 495, shape: 'diamond' as const },
-    { id: 'p-3', x: 170, y: 460, shape: 'diamond' as const },
-    { id: 'p-4', x: 110, y: 435, shape: 'diamond' as const },
-    { id: 'p-5', x: 60, y: 420, shape: 'star' as const }
+    { id: 'p-0', x: 420, y: 360, shape: 'diamond' as const },
+    { id: 'p-1', x: 340, y: 330, shape: 'diamond' as const },
+    { id: 'p-2', x: 270, y: 310, shape: 'diamond' as const },
+    { id: 'p-3', x: 200, y: 300, shape: 'diamond' as const },
+    { id: 'p-4', x: 130, y: 300, shape: 'diamond' as const },
+    { id: 'p-5', x: 70, y: 310, shape: 'star' as const }
   ];
 
-  // Splayed Capabilities branch (right canopy curve) fanning out from trunk base
+  // Capabilities branch (right) fanning out from t-3
   const capabilities = [
-    { id: 'c-0', x: 590, y: 590, shape: 'star' as const },
-    { id: 'c-1', x: 680, y: 540, shape: 'star' as const },
-    { id: 'c-2', x: 760, y: 495, shape: 'star' as const },
-    { id: 'c-3', x: 830, y: 460, shape: 'star' as const }
+    { id: 'c-0', x: 580, y: 360, shape: 'star' as const },
+    { id: 'c-1', x: 660, y: 330, shape: 'star' as const },
+    { id: 'c-2', x: 730, y: 310, shape: 'star' as const },
+    { id: 'c-3', x: 800, y: 300, shape: 'star' as const }
   ];
 
   nodes.push(...trunk, ...pipeline, ...capabilities);
 
-  // Link Trunk (Straight lines)
+  // Link Trunk
   for (let i = 0; i < trunk.length - 1; i++) {
     links.push({
       id: `l-trunk-${i}`,
@@ -262,12 +283,12 @@ function generateInteractiveNarrativeTree() {
     });
   }
 
-  // Link Left Branch (curving upwards and outwards)
+  // Link Left Branch
   links.push({
     id: 'l-pipe-start',
-    from: 't-0',
+    from: 't-3',
     to: 'p-0',
-    d: 'M 500 680 Q 450 635, 410 590',
+    d: 'M 500 410 Q 450 395, 420 360',
     branch: 'left'
   });
   for (let i = 0; i < pipeline.length - 1; i++) {
@@ -280,12 +301,12 @@ function generateInteractiveNarrativeTree() {
     });
   }
 
-  // Link Right Branch (curving upwards and outwards)
+  // Link Right Branch
   links.push({
     id: 'l-cap-start',
-    from: 't-0',
+    from: 't-3',
     to: 'c-0',
-    d: 'M 500 680 Q 550 635, 590 590',
+    d: 'M 500 410 Q 550 395, 580 360',
     branch: 'right'
   });
   for (let i = 0; i < capabilities.length - 1; i++) {
@@ -298,18 +319,45 @@ function generateInteractiveNarrativeTree() {
     });
   }
 
-  // Golden base root fibers fanning out downwards from root node (500, 680)
-  for (let i = -8; i <= 8; i++) {
-    const endX = 500 + i * 22;
-    const endY = 800 + Math.abs(i) * 3;
-    links.push({
-      id: `root-line-${i}`,
-      from: 't-0',
-      to: `root-end-${i}`,
-      d: `M 500 680 C 500 710, ${500 + i * 9} 740, ${endX} ${endY}`,
-      branch: 'center'
+  // Generate recursive splayed ground roots extending horizontally left/right (Replicating Root Reference)
+  let rootCount = 0;
+  function addOrganicRootBranch(sx: number, sy: number, angleDeg: number, len: number, depth: number) {
+    if (depth > 5) return;
+    const seed = rootCount;
+    const rad = (angleDeg * Math.PI) / 180;
+    
+    // Crackling fiber coordinates offset
+    const nX = (getDeterministicNoise(seed * 13) - 0.5) * 5;
+    const nY = (getDeterministicNoise(seed * 19) - 0.5) * 3;
+
+    const ex = sx + Math.cos(rad) * len;
+    const ey = sy + Math.sin(rad) * len;
+
+    rootLinks.push({
+      id: `root-l-${rootCount++}`,
+      d: `M ${sx} ${sy} Q ${sx + (ex - sx)*0.5 + nX} ${sy + (ey - sy)*0.5 + nY}, ${ex} ${ey}`
     });
+
+    const splitLen = len * 0.77;
+    const angleOffset1 = 17 + getDeterministicNoise(seed * 7) * 14;
+    const angleOffset2 = 17 + getDeterministicNoise(seed * 11) * 14;
+
+    addOrganicRootBranch(ex, ey, angleDeg - angleOffset1, splitLen, depth + 1);
+    addOrganicRootBranch(ex, ey, angleDeg + angleOffset2, splitLen, depth + 1);
   }
+
+  // Left root system
+  addOrganicRootBranch(500, 680, 165, 34, 1);
+  addOrganicRootBranch(500, 680, 140, 40, 1);
+  addOrganicRootBranch(500, 680, 115, 30, 1);
+
+  // Right root system
+  addOrganicRootBranch(500, 680, 15, 34, 1);
+  addOrganicRootBranch(500, 680, 40, 40, 1);
+  addOrganicRootBranch(500, 680, 65, 30, 1);
+
+  // Straight down root
+  addOrganicRootBranch(500, 680, 90, 26, 1);
 
   // Recursive canopy sub-branch generator
   let decCount = 0;
@@ -336,16 +384,16 @@ function generateInteractiveNarrativeTree() {
     addDecorativeCanopy(ex, ey, angleDeg + 22, len * 0.72, depth + 1);
   }
 
-  // Generate background canopy from left, right, and top branches
+  // Generate background canopy
   pipeline.forEach((p, idx) => {
     addDecorativeCanopy(p.x, p.y, 230 - idx * 12, 40, 1);
   });
   capabilities.forEach((c, idx) => {
     addDecorativeCanopy(c.x, c.y, 310 + idx * 12, 40, 1);
   });
-  addDecorativeCanopy(500, 230, 270, 48, 1);
+  addDecorativeCanopy(500, 200, 270, 48, 1);
 
-  return { nodes, links, decNodes, decLinks };
+  return { nodes, links, decNodes, decLinks, rootLinks };
 }
 
 export function LandingExperience({ 
@@ -358,7 +406,7 @@ export function LandingExperience({
   const [showPresets, setShowPresets] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { nodes, links, decNodes, decLinks } = generateInteractiveNarrativeTree();
+  const { nodes, links, decNodes, decLinks, rootLinks } = generateInteractiveNarrativeTree();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -373,7 +421,7 @@ export function LandingExperience({
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         setActiveSlide(prev => Math.min(prev + 1, 14));
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-        setActiveSlide(prev => Math.max(prev - 0, 0));
+        setActiveSlide(prev => Math.max(prev - 1, 0));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -435,7 +483,7 @@ export function LandingExperience({
         return idx < targetIdx;
       }
       if (currentStepNodeId?.startsWith('p-') || currentStepNodeId?.startsWith('c-')) {
-        return idx < 1; // trunk links active from root to t-1
+        return idx < 3; // trunk links active up to branching t-3
       }
     }
 
@@ -467,7 +515,7 @@ export function LandingExperience({
       if (currentStepNodeId?.startsWith('t-')) {
         return idx <= parseInt(currentStepNodeId.split('-')[1]);
       }
-      return idx <= 1;
+      return idx <= 3;
     }
     if (node.id.startsWith('p-') && currentStepNodeId?.startsWith('p-')) {
       const idx = parseInt(node.id.split('-')[1]);
@@ -485,19 +533,19 @@ export function LandingExperience({
   const cameraTransforms = [
     { scale: 0.95, x: 500, y: 480 },  // 0: Root (entire tree visible)
     { scale: 1.5, x: 500, y: 590 },  // 1: Why We Built It
-    { scale: 1.6, x: 500, y: 500 },  // 2: Most tools stop at charts
-    { scale: 1.6, x: 500, y: 410 },  // 3: InsightGrid focuses on understanding
-    { scale: 1.6, x: 410, y: 590 },  // 4: Upload -> Analyze -> Understand
-    { scale: 1.7, x: 320, y: 540 },  // 5: Dataset Ingestion
-    { scale: 1.8, x: 240, y: 495 },  // 6: Preprocessing
-    { scale: 1.8, x: 170, y: 460 },  // 7: Diagnostic Profiling
-    { scale: 1.8, x: 110, y: 435 },  // 8: Predictive Classifier
-    { scale: 1.8, x: 60, y: 420 },   // 9: Explainable AI
-    { scale: 1.6, x: 590, y: 590 },  // 10: Questions You Can Ask
-    { scale: 1.7, x: 680, y: 540 },  // 11: Outlier Analysis
-    { scale: 1.8, x: 760, y: 495 },  // 12: Churn Prediction
-    { scale: 1.8, x: 830, y: 460 },  // 13: Revenue Trends
-    { scale: 0.92, x: 500, y: 450 }  // 14: Start Exploring / Workspace
+    { scale: 1.6, x: 500, y: 500 },  // 2: The Narrative Shift
+    { scale: 1.6, x: 500, y: 410 },  // 3: Explainable Reasoning
+    { scale: 1.6, x: 420, y: 360 },  // 4: Upload -> Analyze -> Understand
+    { scale: 1.7, x: 340, y: 330 },  // 5: Dataset Ingestion
+    { scale: 1.8, x: 270, y: 310 },  // 6: Preprocessing
+    { scale: 1.8, x: 200, y: 300 },  // 7: Diagnostic Profiling
+    { scale: 1.8, x: 130, y: 300 },  // 8: Predictive Classifier
+    { scale: 1.8, x: 70, y: 310 },   // 9: Explainable AI
+    { scale: 1.6, x: 580, y: 360 },  // 10: Questions You Can Ask
+    { scale: 1.7, x: 660, y: 330 },  // 11: Outlier Analysis
+    { scale: 1.8, x: 730, y: 310 },  // 12: Churn Prediction
+    { scale: 1.8, x: 800, y: 300 },  // 13: Revenue Trends
+    { scale: 0.92, x: 500, y: 430 }  // 14: Start Exploring / Workspace
   ];
 
   const currentCamera = cameraTransforms[activeSlide] || cameraTransforms[0];
@@ -608,6 +656,15 @@ export function LandingExperience({
         <svg className="narrative-tree-svg" viewBox="0 0 1000 800">
           <g style={treeTransformStyle}>
             
+            {/* Crackling Organic Ground Roots (Replicating Root Reference) */}
+            {rootLinks.map(rl => (
+              <path 
+                key={rl.id} 
+                d={rl.d} 
+                className="tree-root-fiber"
+              />
+            ))}
+
             {/* Symmetrical Background Canopy Links */}
             {decLinks.map((dl, idx) => (
               <path 
