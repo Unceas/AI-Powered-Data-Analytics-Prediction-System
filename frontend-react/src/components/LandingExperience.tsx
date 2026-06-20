@@ -59,7 +59,7 @@ const NARRATIVE_STEPS = [
     nodeId: 't-1',
     title: 'Why We Built It',
     text: 'Modern analytics workflows are fragmented. We unify data analysis, machine learning models, and explainable intelligence into one workspace.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'WHY'
   },
   {
@@ -67,7 +67,7 @@ const NARRATIVE_STEPS = [
     nodeId: 't-2',
     title: 'The Narrative Shift',
     text: 'Most analytics tools stop at static charts and raw metrics.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'WHY'
   },
   {
@@ -75,7 +75,7 @@ const NARRATIVE_STEPS = [
     nodeId: 't-3',
     title: 'Explainable Reasoning',
     text: 'InsightGrid focuses on deep, traceable understanding of variables and target behaviors.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'WHY'
   },
   {
@@ -83,7 +83,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'p-0',
     title: 'Upload → Analyze → Understand',
     text: 'Traverse the five-stage automated pipeline.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'PIPELINE'
   },
   {
@@ -91,7 +91,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'p-1',
     title: 'Dataset Ingestion',
     text: 'Upload custom spreadsheet or launch live samples instantly.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'PIPELINE'
   },
   {
@@ -99,7 +99,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'p-2',
     title: 'Preprocessing',
     text: 'Automated mean imputation, feature encoding, and standard scaling.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'PIPELINE'
   },
   {
@@ -107,7 +107,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'p-3',
     title: 'Diagnostic Profiling',
     text: 'Analyze statistical distributions, skewness, and correlation matrices.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'PIPELINE'
   },
   {
@@ -115,7 +115,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'p-4',
     title: 'Predictive Classifier',
     text: 'Train Random Forest models to calculate feature importances and predictions.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'PIPELINE'
   },
   {
@@ -123,7 +123,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'p-5',
     title: 'Explainable Intelligence',
     text: 'Synthesize natural language explanations grounded in ML weights and anomalies.',
-    placement: 'right',
+    placement: 'left',
     watermark: 'PIPELINE'
   },
   {
@@ -131,7 +131,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'c-0',
     title: 'Questions You Can Ask',
     text: 'Interact directly with the Insight Engine using plain English.',
-    placement: 'left',
+    placement: 'right',
     watermark: 'ANSWERS'
   },
   {
@@ -139,7 +139,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'c-1',
     title: 'Outlier Analysis',
     text: '\"Are there anomalous outlier spikes in my telemetry?\"',
-    placement: 'left',
+    placement: 'right',
     watermark: 'ANSWERS'
   },
   {
@@ -147,7 +147,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'c-2',
     title: 'Churn Prediction',
     text: '\"What primary drivers contribute to customer subscription churn?\"',
-    placement: 'left',
+    placement: 'right',
     watermark: 'ANSWERS'
   },
   {
@@ -155,7 +155,7 @@ const NARRATIVE_STEPS = [
     nodeId: 'c-3',
     title: 'Revenue Trends',
     text: '\"How will store sales and profit margins trend next quarter?\"',
-    placement: 'left',
+    placement: 'right',
     watermark: 'ANSWERS'
   },
   {
