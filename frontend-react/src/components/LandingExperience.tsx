@@ -325,13 +325,6 @@ function linkPath(link: NetworkLink, nodeById: Map<string, NetworkNode>) {
   return `M ${from.x.toFixed(2)} ${from.y.toFixed(2)} Q ${cx.toFixed(2)} ${cy.toFixed(2)} ${to.x.toFixed(2)} ${to.y.toFixed(2)}`;
 }
 
-function getNodeScreenPosition(node: NetworkNode, camera: JourneyStep['camera']) {
-  return {
-    x: VIEWBOX_CENTER_X + (node.x - camera.x) * camera.scale,
-    y: VIEWBOX_CENTER_Y + (node.y - camera.y) * camera.scale
-  };
-}
-
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
