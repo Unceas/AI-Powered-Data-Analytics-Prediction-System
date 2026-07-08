@@ -289,9 +289,10 @@ InsightGrid is being designed as a scalable AI-assisted analytics infrastructure
 
 The long-term goal is to combine:
 - intelligent data pipelines
-- automated ML workflows
+- aumated ML
 - AI-driven interpretation
 - scalable backend orchestration
+- Direct pdf takeaway redy to be used in real world presentations.
 
 into a unified analytics operating system.
 
