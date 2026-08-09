@@ -543,23 +543,60 @@ with tab3:
                     st.stop()
             if res.status_code == 200:
                 data = res.json()
-                if data["status"] == "error":
+                if data.get("status") == "error":
                     st.error(f"❌ {data['message']}")
                 else:
-                    st.success(f"✅ Model trained: **{data['model_type']}**")
-                    met_cols = st.columns(len(data["metrics"]))
-                    for col, (k, v) in zip(met_cols, data["metrics"].items()):
-                        with col:
-                            st.markdown(f"""
-                            <div class="pipeline-step">
-                                <div class="metric-value">{v:.4f}</div>
-                                <div class="step-sub" style="margin-top:0.3rem">{k.replace('_',' ').title()}</div>
-                            </div>""", unsafe_allow_html=True)
+                    # 1. Primary User-Facing Result
+                    pred_obj = data.get("prediction", {})
+                    rel = data.get("reliability", "Medium")
+                    summary = pred_obj.get("summary") or f"Expected value: {pred_obj.get('value')}"
+                    
+                    st.markdown(f"### 🎯 {summary}")
+                    st.caption("Predicted value: **" + str(pred_obj.get("value", "N/A")) + "**")
+                    
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        if pred_obj.get("change"):
+                            st.metric("Estimated Change", str(pred_obj.get("change")), delta=pred_obj.get("direction"))
+                    with c2:
+                        st.metric("Reliability Assessment", rel, help="Based on validation quality and available data.")
 
-                    if data.get("feature_importance"):
-                        st.markdown('<div class="section-header" style="margin-top:1.5rem">Top Feature Importances</div>', unsafe_allow_html=True)
-                        fi = pd.Series(data["feature_importance"]).sort_values(ascending=True)
-                        st.bar_chart(fi, use_container_width=True)
+                    # Warnings
+                    warnings = data.get("warnings", [])
+                    if warnings:
+                        for w in warnings:
+                            st.warning(f"⚠️ {w}")
+
+                    # Key Influencing Factors
+                    drivers = data.get("drivers") or []
+                    if drivers:
+                        st.markdown('<div class="section-header" style="margin-top:1rem">Key Influencing Factors</div>', unsafe_allow_html=True)
+                        for d in drivers:
+                            f_name = d.get("feature", "")
+                            inf = d.get("influence", "Moderate influence")
+                            st.markdown(f"- **{f_name}** — *{inf}*")
+
+                    # 2. Collapsible Advanced / Developer Details
+                    with st.expander("⚙️ Advanced details", expanded=False):
+                        st.markdown(f"**Selected Model Algorithm:** `{data.get('technical', {}).get('model', data.get('model_type'))}`")
+                        
+                        metrics = data.get("metrics", {})
+                        if metrics:
+                            st.markdown("**Validation Metrics:**")
+                            met_cols = st.columns(len(metrics))
+                            for col, (k, v) in zip(met_cols, metrics.items()):
+                                with col:
+                                    val_str = f"{v*100:.1f}%" if k in ['accuracy', 'precision', 'recall', 'f1_score', 'r2_score'] else f"{v:.4f}"
+                                    st.metric(label=k.replace('_', ' ').title(), value=val_str)
+
+                        cands = data.get("technical", {}).get("candidate_evaluations", [])
+                        if cands:
+                            st.markdown("**Candidate Selection Results:**")
+                            st.dataframe(pd.DataFrame(cands), use_container_width=True)
+
+                        training_info = data.get("technical", {}).get("training", {})
+                        if training_info:
+                            st.json(training_info)
             else:
                 st.error(f"Request failed: {res.text}")
 

@@ -132,38 +132,170 @@ export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetect
 
             {mlResult && mlResult.status !== 'error' && (
               <div className="ml-results card animate-fade-in" style={{ marginTop: '1.5rem', borderLeft: '4px solid var(--accent-color)' }}>
-                <h4 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  <Cpu size={16} className="text-accent" /> MODEL TYPE: {mlResult.model_type}
-                </h4>
-                <div className="metrics-grid">
-                  {Object.entries(mlResult.metrics).map(([k, v]: [string, any]) => (
-                    <div key={k} className="metric-box">
-                      <span className="metric-v">{(v * 100).toFixed(1)}%</span>
-                      <span className="metric-k">{k.replace('_', ' ')}</span>
+                {/* User-facing Prediction Overview */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+                        PREDICTION
+                      </span>
+                      <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.2rem', marginBottom: '0.3rem' }}>
+                        {mlResult.prediction?.summary || `Expected prediction value: ${mlResult.prediction?.value}`}
+                      </h3>
+                      {mlResult.prediction?.value !== undefined && (
+                        <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                          Predicted value: <strong style={{ color: 'var(--text-primary)' }}>{String(mlResult.prediction.value)}</strong>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  <div className="metric-box" style={{ background: 'var(--accent-light)', borderColor: 'var(--accent-border)' }}>
-                     <span className="metric-v" style={{ color: 'var(--accent-color)' }}>High</span>
-                     <span className="metric-k" style={{ color: 'var(--text-secondary)' }}>PREDICTION CONFIDENCE</span>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        {mlResult.prediction?.change && (
+                          <div style={{ background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '99px', padding: '0.35rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, color: mlResult.prediction?.direction === 'increase' ? 'var(--success)' : (mlResult.prediction?.direction === 'decrease' ? 'var(--danger)' : 'var(--text-secondary)') }}>
+                            {mlResult.prediction?.direction === 'increase' ? '▲ ' : (mlResult.prediction?.direction === 'decrease' ? '▼ ' : '• ')}
+                            {mlResult.prediction?.change}
+                          </div>
+                        )}
+                        <div style={{
+                          borderRadius: '99px',
+                          padding: '0.35rem 0.85rem',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          border: '1px solid',
+                          borderColor: (mlResult.reliability === 'High' ? 'rgba(34,197,94,0.4)' : (mlResult.reliability === 'Medium' ? 'rgba(245,158,11,0.4)' : 'rgba(244,63,94,0.4)')),
+                          background: (mlResult.reliability === 'High' ? 'rgba(34,197,94,0.1)' : (mlResult.reliability === 'Medium' ? 'rgba(245,158,11,0.1)' : 'rgba(244,63,94,0.1)')),
+                          color: (mlResult.reliability === 'High' ? 'var(--success)' : (mlResult.reliability === 'Medium' ? 'var(--warning)' : 'var(--danger)'))
+                        }}>
+                          Reliability: {mlResult.reliability || (mlResult.reliability_score > 75 ? 'High' : 'Medium')}
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        Based on validation quality and available data.
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {mlResult.feature_importance && Object.keys(mlResult.feature_importance).length > 0 && (
-                  <div style={{ marginTop: '1.5rem' }}>
-                    <h5 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Top Feature Weights</h5>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      {Object.entries(mlResult.feature_importance).map(([feature, weight]: [string, any]) => (
-                        <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem' }}>
-                          <span style={{ width: '120px', fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{feature}</span>
-                          <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.03)', borderRadius: '99px', overflow: 'hidden' }}>
-                            <div style={{ width: `${weight * 100}%`, height: '100%', background: 'var(--accent-color)' }}></div>
-                          </div>
-                          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{(weight * 100).toFixed(1)}%</span>
+                {/* User Warnings Banner */}
+                {mlResult.warnings && mlResult.warnings.length > 0 && (
+                  <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <AlertCircle size={14} /> Data Quality & Validation Warnings
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      {mlResult.warnings.map((warn: string, idx: number) => (
+                        <li key={idx}>{warn}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Key Influencing Factors */}
+                {((mlResult.drivers && mlResult.drivers.length > 0) || (mlResult.feature_importance && Object.keys(mlResult.feature_importance).length > 0)) && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <h5 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
+                      Key Influencing Factors
+                    </h5>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {(mlResult.drivers || Object.entries(mlResult.feature_importance || {}).map(([f, imp], idx) => ({ feature: f, influence: idx === 0 ? 'High influence' : (imp > 0.2 ? 'Moderate influence' : 'Low influence'), importance: imp }))).slice(0, 5).map((driver: any, idx: number) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.85rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '0.5rem', fontSize: '0.85rem' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {driver.feature}
+                          </span>
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: driver.influence?.includes('High') ? 'var(--accent-color)' : (driver.influence?.includes('Moderate') ? 'var(--text-primary)' : 'var(--text-secondary)'),
+                            background: driver.influence?.includes('High') ? 'var(--accent-light)' : 'transparent',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '4px',
+                            border: driver.influence?.includes('High') ? '1px solid var(--accent-border)' : '1px solid transparent'
+                          }}>
+                            {driver.influence || 'Moderate influence'}
+                          </span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
+
+                {/* Collapsible Advanced / Developer Details Section */}
+                <details style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '1rem', cursor: 'pointer' }}>
+                  <summary style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', outline: 'none', userSelect: 'none' }}>
+                    ⚙️ Advanced details
+                  </summary>
+                  
+                  <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.82rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-color)', padding: '0.65rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+                      <Cpu size={16} className="text-accent" />
+                      <span>Selected Model Algorithm: <strong>{mlResult.technical?.model || mlResult.model_type}</strong></span>
+                    </div>
+
+                    {/* Metrics Grid */}
+                    {mlResult.metrics && Object.keys(mlResult.metrics).length > 0 && (
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                          Validation Performance Metrics
+                        </div>
+                        <div className="metrics-grid" style={{ marginTop: 0 }}>
+                          {Object.entries(mlResult.metrics).map(([k, v]: [string, any]) => (
+                            <div key={k} className="metric-box">
+                              <span className="metric-v">
+                                {['accuracy', 'precision', 'recall', 'f1_score', 'r2_score'].includes(k) ? `${(v * 100).toFixed(1)}%` : v}
+                              </span>
+                              <span className="metric-k">{k.replace('_', ' ')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Candidate Evaluations */}
+                    {mlResult.technical?.candidate_evaluations && mlResult.technical.candidate_evaluations.length > 0 && (
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                          Candidate Model Selection Results
+                        </div>
+                        <div className="preview-table-container">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Candidate Model</th>
+                                <th>Status</th>
+                                <th>Validation Score</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {mlResult.technical.candidate_evaluations.map((cand: any, i: number) => (
+                                <tr key={i}>
+                                  <td>{cand.model}</td>
+                                  <td>
+                                    <span style={{ color: cand.status === 'success' ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
+                                      {cand.status}
+                                    </span>
+                                  </td>
+                                  <td>{cand.selection_score !== undefined ? cand.selection_score : (cand.reason || 'N/A')}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Preprocessing & Training Specs */}
+                    {mlResult.technical?.training && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', background: 'var(--bg-color)', padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+                        <div><strong>Total Samples:</strong> {mlResult.technical.training.total_samples}</div>
+                        <div><strong>Train Split:</strong> {mlResult.technical.training.train_samples}</div>
+                        <div><strong>Validation Split:</strong> {mlResult.technical.training.val_samples}</div>
+                        <div><strong>Feature Count:</strong> {mlResult.technical.features}</div>
+                      </div>
+                    )}
+                  </div>
+                </details>
               </div>
             )}
           </div>

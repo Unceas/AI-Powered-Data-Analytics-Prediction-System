@@ -1,49 +1,52 @@
-from fastapi.testclient import TestClient
+import pytest
+from httpx import AsyncClient, ASGITransport
 
 from backend.ingestion.loader import load_from_api
 from backend.main import app
 
+@pytest.fixture
+def client_factory():
+    def _client():
+        return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+    return _client
 
-client = TestClient(app)
+@pytest.mark.anyio
+async def test_upload_rejects_unsupported_extension(client_factory):
+    async with client_factory() as client:
+        response = await client.post(
+            "/api/upload-csv",
+            files={"file": ("data.txt", b"a,b\n1,2\n", "text/plain")},
+        )
+        assert response.status_code == 400
 
+@pytest.mark.anyio
+async def test_process_rejects_invalid_config_json(client_factory):
+    async with client_factory() as client:
+        response = await client.post(
+            "/api/process-csv",
+            data={"config": "{not-json"},
+            files={"file": ("data.csv", b"a,b\n1,2\n", "text/csv")},
+        )
+        assert response.status_code == 422
 
-def test_upload_rejects_unsupported_extension():
-    response = client.post(
-        "/api/upload-csv",
-        files={"file": ("data.txt", b"a,b\n1,2\n", "text/plain")},
-    )
+@pytest.mark.anyio
+async def test_anomaly_detection_rejects_invalid_contamination(client_factory):
+    async with client_factory() as client:
+        response = await client.post(
+            "/api/detect-anomalies",
+            data={"contamination": "0.9"},
+            files={"file": ("data.csv", b"a,b\n1,2\n3,4\n", "text/csv")},
+        )
+        assert response.status_code == 422
 
-    assert response.status_code == 400
-
-
-def test_process_rejects_invalid_config_json():
-    response = client.post(
-        "/api/process-csv",
-        data={"config": "{not-json"},
-        files={"file": ("data.csv", b"a,b\n1,2\n", "text/csv")},
-    )
-
-    assert response.status_code == 422
-
-
-def test_anomaly_detection_rejects_invalid_contamination():
-    response = client.post(
-        "/api/detect-anomalies",
-        data={"contamination": "0.9"},
-        files={"file": ("data.csv", b"a,b\n1,2\n3,4\n", "text/csv")},
-    )
-
-    assert response.status_code == 422
-
-
-def test_api_ingestion_blocks_localhost():
-    response = client.post(
-        "/api/ingest-api",
-        json={"url": "http://localhost:8000/health", "method": "GET"},
-    )
-
-    assert response.status_code == 400
-
+@pytest.mark.anyio
+async def test_api_ingestion_blocks_localhost(client_factory):
+    async with client_factory() as client:
+        response = await client.post(
+            "/api/ingest-api",
+            json={"url": "http://localhost:8000/health", "method": "GET"},
+        )
+        assert response.status_code == 400
 
 def test_loader_blocks_private_ip_url():
     try:

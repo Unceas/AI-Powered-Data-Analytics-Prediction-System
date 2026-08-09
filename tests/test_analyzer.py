@@ -9,7 +9,7 @@ def test_analyze_dataframe_basic():
         'num2': [10, 20, np.nan, 40],
         'cat': ['a','b','a','c']
     })
-    desc, corr, cat, dist = analyze_dataframe(df)
+    desc, corr, cat, dist, health_score, health_details = analyze_dataframe(df)
     assert isinstance(desc, dict)
     assert isinstance(corr, dict) or corr is None
     assert isinstance(cat, dict)

@@ -10,7 +10,7 @@ def test_insight_generator_with_mock():
                 "choices": [
                     {
                         "message": {
-                            "content": "Sample insights:\n- Insight 1\n- Insight 2\n- Insight 3"
+                            "content": '[{"category": "Prediction", "finding": "Sample insights"}]'
                         }
                     }
                 ]
@@ -20,4 +20,5 @@ def test_insight_generator_with_mock():
         os.environ['GROQ_API_KEY'] = 'test'
         from backend.ai.insight_generator import generate_natural_language_insights
         out = generate_natural_language_insights({'a':1}, 'context')
-        assert 'Sample insights' in out
+        assert isinstance(out, list)
+        assert out[0]['finding'] == 'Sample insights'

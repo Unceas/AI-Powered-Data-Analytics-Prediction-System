@@ -115,23 +115,40 @@ async def predict_csv(
     df = await load_csv_from_upload(file)
     
     try:
-        model_type, metrics, feature_importance, reliability_score, reliability_details = train_and_evaluate(df, target_col=target_column)
+        (
+            model_type, 
+            metrics, 
+            feature_importance, 
+            reliability_score, 
+            reliability_details,
+            prediction_obj,
+            reliability_str,
+            drivers_list,
+            warnings_list,
+            technical_obj
+        ) = train_and_evaluate(df, target_col=target_column)
     except ValueError as e:
         return MLPredictionResponse(
             status="error",
             message=str(e),
             model_type="None",
-            metrics={}
+            metrics={},
+            warnings=[str(e)]
         )
         
     return MLPredictionResponse(
         status="success",
-        message="Model trained successfully",
+        message="Prediction model selected and evaluated successfully",
         model_type=model_type,
         metrics=metrics,
         feature_importance=feature_importance,
         reliability_score=reliability_score,
-        reliability_details=reliability_details
+        reliability_details=reliability_details,
+        prediction=prediction_obj,
+        reliability=reliability_str,
+        drivers=drivers_list,
+        warnings=warnings_list,
+        technical=technical_obj
     )
 
 @router.post("/detect-anomalies", response_model=AnomalyDetectionResponse)
