@@ -15,7 +15,7 @@ def test_regression_pipeline_model_selection():
     
     (
         model_type, metrics, feature_importance, reliability_score, reliability_details,
-        prediction_obj, reliability_str, drivers_list, warnings_list, technical_obj
+        prediction_obj, reliability_str, reliability_desc, drivers_list, warnings_list, technical_obj
     ) = train_and_evaluate(df, target_col="target")
 
     assert "Regression" in model_type
@@ -42,7 +42,7 @@ def test_classification_pipeline_stratified():
 
     (
         model_type, metrics, feature_importance, reliability_score, reliability_details,
-        prediction_obj, reliability_str, drivers_list, warnings_list, technical_obj
+        prediction_obj, reliability_str, reliability_desc, drivers_list, warnings_list, technical_obj
     ) = train_and_evaluate(df, target_col="target")
 
     assert "Classification" in model_type
@@ -62,7 +62,7 @@ def test_data_leakage_and_preprocessing_isolation():
     
     (
         model_type, metrics, feature_importance, reliability_score, reliability_details,
-        prediction_obj, reliability_str, drivers_list, warnings_list, technical_obj
+        prediction_obj, reliability_str, reliability_desc, drivers_list, warnings_list, technical_obj
     ) = train_and_evaluate(df, target_col="target")
 
     assert technical_obj["training"]["train_samples"] == 8

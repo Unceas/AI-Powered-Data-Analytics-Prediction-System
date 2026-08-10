@@ -123,6 +123,7 @@ async def predict_csv(
             reliability_details,
             prediction_obj,
             reliability_str,
+            reliability_desc,
             drivers_list,
             warnings_list,
             technical_obj
@@ -146,6 +147,7 @@ async def predict_csv(
         reliability_details=reliability_details,
         prediction=prediction_obj,
         reliability=reliability_str,
+        reliability_description=reliability_desc,
         drivers=drivers_list,
         warnings=warnings_list,
         technical=technical_obj

@@ -559,7 +559,8 @@ with tab3:
                         if pred_obj.get("change"):
                             st.metric("Estimated Change", str(pred_obj.get("change")), delta=pred_obj.get("direction"))
                     with c2:
-                        st.metric("Reliability Assessment", rel, help="Based on validation quality and available data.")
+                        rel_desc = data.get("reliability_description") or "Based on validation quality and available data."
+                        st.metric("Reliability Assessment", rel, help=rel_desc)
 
                     # Warnings
                     warnings = data.get("warnings", [])

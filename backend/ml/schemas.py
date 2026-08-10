@@ -13,6 +13,7 @@ class MLPredictionResponse(BaseModel):
     # User-facing layer
     prediction: Optional[Dict[str, Any]] = None
     reliability: Optional[str] = None
+    reliability_description: Optional[str] = None
     drivers: Optional[List[Dict[str, Any]]] = None
     warnings: Optional[List[str]] = None
     

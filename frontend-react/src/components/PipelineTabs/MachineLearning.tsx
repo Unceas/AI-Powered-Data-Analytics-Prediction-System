@@ -171,8 +171,8 @@ export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetect
                           Reliability: {mlResult.reliability || (mlResult.reliability_score > 75 ? 'High' : 'Medium')}
                         </div>
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                        Based on validation quality and available data.
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontStyle: 'italic', textAlign: 'right', maxWidth: '280px' }}>
+                        {mlResult.reliability_description || "Based on validation quality and available data."}
                       </span>
                     </div>
                   </div>

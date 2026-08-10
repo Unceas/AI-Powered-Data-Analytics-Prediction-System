@@ -38,10 +38,10 @@ def train_and_evaluate(
     target_col: str, 
     test_size: float = 0.2, 
     random_state: int = 42
-) -> Tuple[str, Dict[str, float], Dict[str, float], int, Dict[str, float], Dict[str, Any], str, List[Dict[str, Any]], List[str], Dict[str, Any]]:
+) -> Tuple[str, Dict[str, float], Dict[str, float], int, Dict[str, float], Dict[str, Any], str, str, List[Dict[str, Any]], List[str], Dict[str, Any]]:
     """
     Evaluates candidate ML models using validation performance (scikit-learn Pipeline with ColumnTransformer).
-    Returns backward-compatible outputs along with plain-language prediction, qualitative drivers, warnings, and technical objects.
+    Returns backward-compatible outputs along with plain-language prediction, qualitative drivers, warnings, reliability description, and technical objects.
     """
     warnings: List[str] = []
 
@@ -58,7 +58,9 @@ def train_and_evaluate(
         raise ValueError(f"Target column '{target_col}' contains only a single unique value. Model training requires varying target values.")
 
     is_classification = False
-    if y.dtype in ['object', 'category', 'bool'] or y.nunique() < 15:
+    if pd.api.types.is_bool_dtype(y) or pd.api.types.is_object_dtype(y) or isinstance(y.dtype, pd.CategoricalDtype):
+        is_classification = True
+    elif not pd.api.types.is_float_dtype(y) and y.nunique() < 10:
         is_classification = True
 
     # 2. Feature Extraction and Preprocessing Setup
@@ -105,7 +107,7 @@ def train_and_evaluate(
                 X, y, test_size=test_size, random_state=random_state, stratify=y
             )
         else:
-            warnings.append("Class count too low for stratified split; used standard random split.")
+            warnings.append("Class count too low for stratified split; standard random split was used.")
             X_train, X_val, y_train, y_val = train_test_split(
                 X, y, test_size=test_size, random_state=random_state
             )
@@ -208,7 +210,7 @@ def train_and_evaluate(
 
     # 6. Classification Diversity Guard Check
     if is_classification and y_val.nunique() < 2:
-        warnings.append("Validation set contains only a single target class. F1/Accuracy scores may not reflect generalization.")
+        warnings.append("Validation data contains limited class diversity. Treat this prediction cautiously.")
 
     # 7. Extract Feature Importances & Drivers with Transformed Feature Recovery
     fitted_preprocessor = best_pipeline.named_steps['preprocessor']
@@ -220,34 +222,42 @@ def train_and_evaluate(
     try:
         transformed_feature_names = fitted_preprocessor.get_feature_names_out()
         raw_importances = None
+        raw_coefficients = None
 
         if hasattr(fitted_model, "feature_importances_"):
             raw_importances = fitted_model.feature_importances_
         elif hasattr(fitted_model, "coef_"):
             coef = fitted_model.coef_
             if coef.ndim > 1:
-                raw_importances = np.mean(np.abs(coef), axis=0)
+                raw_coefficients = np.mean(coef, axis=0)
+                raw_importances = np.abs(raw_coefficients)
             else:
-                raw_importances = np.abs(coef)
+                raw_coefficients = coef
+                raw_importances = np.abs(raw_coefficients)
 
         if raw_importances is not None and len(raw_importances) == len(transformed_feature_names):
             total_imp = np.sum(raw_importances)
             norm_importances = raw_importances / total_imp if total_imp > 0 else raw_importances
 
             base_col_importances: Dict[str, float] = {}
+            base_col_directions: Dict[str, List[float]] = {}
             detailed_feature_importances: Dict[str, float] = {}
 
-            for feat_name, imp_val in zip(transformed_feature_names, norm_importances):
+            for idx_feat, (feat_name, imp_val) in enumerate(zip(transformed_feature_names, norm_importances)):
                 clean_name = _clean_feature_name(feat_name)
                 base_col = _get_base_column(feat_name)
 
                 detailed_feature_importances[clean_name] = float(imp_val)
                 base_col_importances[base_col] = base_col_importances.get(base_col, 0.0) + float(imp_val)
 
+                if raw_coefficients is not None:
+                    if base_col not in base_col_directions:
+                        base_col_directions[base_col] = []
+                    base_col_directions[base_col].append(float(raw_coefficients[idx_feat]))
+
             sorted_drivers = sorted(base_col_importances.items(), key=lambda x: x[1], reverse=True)[:5]
             
             for idx, (col_name, imp) in enumerate(sorted_drivers):
-                # Qualitative influence level instead of causal percentage
                 if idx == 0 or imp >= 0.35:
                     influence_label = "High influence"
                 elif imp >= 0.15:
@@ -256,10 +266,21 @@ def train_and_evaluate(
                     influence_label = "Low influence"
 
                 formatted_col = col_name.replace("_", " ").title()
+                
+                # Determine impact direction only if reliably available (e.g., linear models)
+                direction_val = None
+                if col_name in base_col_directions and len(base_col_directions[col_name]) > 0:
+                    avg_coef = np.mean(base_col_directions[col_name])
+                    if avg_coef > 0:
+                        direction_val = "positive"
+                    elif avg_coef < 0:
+                        direction_val = "negative"
+
                 drivers.append({
                     "feature": formatted_col,
                     "influence": influence_label,
-                    "importance": round(imp, 4)
+                    "importance": round(imp, 4),
+                    "direction": direction_val
                 })
 
             feature_importance = {
@@ -286,12 +307,15 @@ def train_and_evaluate(
     if sample_size >= 100 and val_sample_size >= 20 and has_good_score and num_warnings == 0:
         reliability = "High"
         reliability_score = 90
+        reliability_desc = "Based on strong validation results and sufficient data."
     elif sample_size >= 30 and val_sample_size >= 6 and has_moderate_score and num_warnings <= 1:
         reliability = "Medium"
         reliability_score = 70
+        reliability_desc = "Useful prediction, but limited by data or validation quality."
     else:
         reliability = "Low"
         reliability_score = 50
+        reliability_desc = "Treat this prediction cautiously because the available data provides limited validation confidence."
 
     if sample_size < 30:
         warnings.append(f"Small dataset ({sample_size} total records). Model reliability is limited.")
@@ -369,6 +393,7 @@ def train_and_evaluate(
         reliability_details,
         prediction_obj,
         reliability,
+        reliability_desc,
         drivers,
         warnings,
         technical_obj
