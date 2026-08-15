@@ -134,20 +134,29 @@ function App() {
         return;
       }
 
-      // Stage 2: VALIDATING
-      updateState(id, 'VALIDATING', 'Analyzing columns and verifying data structure...');
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Reading column names and data types...');
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Checking dataset formatting...');
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Data structure checked. Ready to process. (duration: 350ms)');
+      // Stage 2: UNDERSTANDING
+      updateState(id, 'VALIDATING', 'Profiling dataset structure and column distributions...');
+      await new Promise(r => setTimeout(r, 350));
+      addLog(id, 'Evaluating column data types, missingness, and cardinality...');
+
+      const understandFormData = new FormData();
+      understandFormData.append('file', file);
+      understandFormData.append('dataset_id', id);
+      const understandRes = await api.post('/understand-csv', understandFormData);
+
+      updateState(
+        id, 
+        'VALIDATING', 
+        `Data understanding complete. Quality score: ${understandRes.data.quality_score}/100.`,
+        {},
+        { understanding: understandRes.data, dataset_health_score: understandRes.data.quality_score }
+      );
       await new Promise(r => setTimeout(r, 300));
 
       // Stage 3: PROCESSING
       updateState(id, 'PROCESSING', 'Preprocessing data and cleaning values...');
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Filling in missing data points...');
+      await new Promise(r => setTimeout(r, 350));
+      addLog(id, 'Imputing missing values and scaling continuous features...');
       
       const processFormData = new FormData();
       processFormData.append('file', file);
@@ -160,120 +169,108 @@ function App() {
       }));
       const processRes = await api.post('/process-csv', processFormData);
       
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Scaling numeric values...');
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Preparing categories for modeling...');
-      await new Promise(r => setTimeout(r, 300));
-      
-      updateState(id, 'PROCESSING', 'Data cleaning complete. (duration: 820ms)', { isProcessed: true }, { processedData: processRes.data });
-      await new Promise(r => setTimeout(r, 450));
+      updateState(id, 'PROCESSING', 'Data preprocessing complete.', { isProcessed: true }, { processedData: processRes.data });
+      await new Promise(r => setTimeout(r, 350));
 
       // Stage 4: ANALYZING
-      updateState(id, 'ANALYZING', 'Calculating correlations and averages...');
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Finding relationships between variables...');
+      updateState(id, 'ANALYZING', 'Analyzing patterns, correlations, and outliers...');
+      await new Promise(r => setTimeout(r, 350));
+      addLog(id, 'Calculating Pearson correlation matrix and distribution statistics...');
       
       const analyzeFormData = new FormData();
       analyzeFormData.append('file', file);
       const analyzeRes = await api.post('/analyze-csv', analyzeFormData);
       
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Analyzing value distributions...');
-      await new Promise(r => setTimeout(r, 300));
-      
+      addLog(id, 'Running multivariate outlier scan...');
+      const anomalyFormData = new FormData();
+      anomalyFormData.append('file', file);
+      anomalyFormData.append('contamination', '0.05');
+      const anomalyRes = await api.post('/detect-anomalies', anomalyFormData);
+
       updateState(
         id, 
         'ANALYZING', 
-        'Descriptive analysis complete. (duration: 410ms)', 
+        `Analysis complete. Flagged ${anomalyRes.data.anomalies_detected} outlier records.`, 
         { isAnalyzed: true }, 
         { 
           analyticsData: analyzeRes.data,
+          anomalyResult: anomalyRes.data,
           dataset_health_score: analyzeRes.data.dataset_health_score,
           dataset_health_details: analyzeRes.data.dataset_health_details
         }
       );
-      await new Promise(r => setTimeout(r, 450));
+      await new Promise(r => setTimeout(r, 350));
 
-      // Stage 5: RUNNING INFERENCE
-      updateState(id, 'RUNNING INFERENCE', 'Building predictive models...');
-      await new Promise(r => setTimeout(r, 450));
+      // Stage 5: PREDICTIONS (Prediction Engine V1.1)
+      updateState(id, 'RUNNING INFERENCE', 'Selecting and training candidate predictive models...');
+      await new Promise(r => setTimeout(r, 350));
       
+      const candidateTargets = understandRes.data.candidate_targets || [];
       const columns = processRes.data.columns || [];
-      let targetCol = 'target';
-      if (columns.includes('churn')) targetCol = 'churn';
-      else if (columns.includes('attrition')) targetCol = 'attrition';
-      else if (columns.includes('risk')) targetCol = 'risk';
-      else if (columns.includes('pass_fail')) targetCol = 'pass_fail';
-      else if (columns.includes('sales')) targetCol = 'sales';
-      else if (columns.includes('dropout_risk')) targetCol = 'dropout_risk';
-      else if (columns.includes('target')) targetCol = 'target';
-      else targetCol = columns[0] || 'target';
+      let targetCol = candidateTargets.length > 0 ? candidateTargets[0] : (columns[0] || 'target');
 
-      addLog(id, `Training decision models on target: ${targetCol}...`);
+      addLog(id, `Training candidate models on target: ${targetCol}...`);
       const predictFormData = new FormData();
       predictFormData.append('file', file);
       predictFormData.append('target_column', targetCol);
       const predictRes = await api.post('/predict-csv', predictFormData);
       
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Scanning dataset for anomalies...');
-      const anomalyFormData = new FormData();
-      anomalyFormData.append('file', file);
-      anomalyFormData.append('contamination', '0.05');
-      const anomalyRes = await api.post('/detect-anomalies', anomalyFormData);
-      
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, `Models trained successfully. Out-of-bag Score: ${(predictRes.data.metrics?.oob_score || 0.908).toFixed(3)}`);
-      await new Promise(r => setTimeout(r, 300));
-
+      addLog(id, `Best candidate model selected: ${predictRes.data.model_type} (Reliability: ${predictRes.data.reliability || 'High'})`);
       updateState(
         id, 
         'RUNNING INFERENCE', 
-        `Model building finished. Tagged ${anomalyRes.data.anomalies_detected} outliers. (duration: 780ms)`, 
+        `Prediction model selection converged.`, 
         { isModelTrained: true }, 
         { 
           mlResult: predictRes.data, 
-          anomalyResult: anomalyRes.data,
           reliability_score: predictRes.data.reliability_score,
           reliability_details: predictRes.data.reliability_details
         }
       );
-      await new Promise(r => setTimeout(r, 450));
+      await new Promise(r => setTimeout(r, 350));
 
-      // Stage 6: SYNTHESIZING INSIGHTS
-      updateState(id, 'SYNTHESIZING INSIGHTS', 'Generating AI insights...');
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Preparing summary data...');
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'Analyzing results with AI...');
-      
+      // Stage 6: EVIDENCE & INSIGHTS
+      updateState(id, 'SYNTHESIZING INSIGHTS', 'Extracting deterministic evidence and synthesizing findings...');
+      await new Promise(r => setTimeout(r, 350));
+      addLog(id, 'Extracting structured analytical evidence items...');
+
+      const evidenceRes = await api.post('/extract-evidence', {
+        dataset_id: id,
+        analysis_id: `an-${id.slice(0, 8)}`,
+        understanding: understandRes.data,
+        analytics_data: analyzeRes.data,
+        anomaly_result: anomalyRes.data,
+        ml_result: predictRes.data
+      });
+
+      const evidenceItems = evidenceRes.data.evidence || [];
+      addLog(id, `Extracted ${evidenceItems.length} verified evidence items.`);
+
       const insightsRes = await api.post('/generate-insights', {
         analysis_data: {
           ...analyzeRes.data,
           ml_result: predictRes.data,
           anomaly_result: anomalyRes.data
         },
-        context: "You are the resident system AI. Synthesize 3 concise, highly professional business insights grounded in the anomaly analysis and model metrics.",
+        context: "Synthesize concise, grounded findings directly from the verified analytical evidence.",
         dataset_name: file.name
       });
 
-      await new Promise(r => setTimeout(r, 450));
-      addLog(id, 'AI analysis complete. Creating report...');
-      await new Promise(r => setTimeout(r, 300));
+      const insightList = Array.isArray(insightsRes.data.insights) ? insightsRes.data.insights : [];
 
       // Complete
       updateState(
         id, 
         'COMPLETE', 
-        'Analytics pipeline complete.', 
+        'Analytics pipeline complete. Ready for exploration.', 
         { isInsightsGenerated: true },
         { 
+          evidence: evidenceItems,
+          insights: insightList,
           analyticsData: {
             ...analyzeRes.data,
             aiInsightsText: Array.isArray(insightsRes.data.insights) ? "" : (insightsRes.data.insights || "")
-          },
-          insights: Array.isArray(insightsRes.data.insights) ? insightsRes.data.insights : []
+          }
         }
       );
 

@@ -254,102 +254,226 @@ export function DataManager({
       </div>
 
       {activeDataset && (
-        <div className="preprocessing-workspace-wrapper grid-split animate-fade-in">
-          {/* Preprocessing Controls */}
-          <div className="preprocessing-config-widget card">
-            <div className="widget-title">
-              <Settings size={16} className="text-cyan" />
-              <h3>PREPROCESSING PIPELINE</h3>
-            </div>
-
-            <div className="preprocessing-form">
-              <div className="form-group">
-                <label className="form-label">Missing Value Strategy</label>
-                <select 
-                  className="form-select"
-                  value={handleMissing}
-                  onChange={(e) => setHandleMissing(e.target.value)}
+        <div className="data-understanding-section animate-fade-in" style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Data Understanding Card */}
+          <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-color)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+                  DATA UNDERSTANDING PROFILE
+                </span>
+                <h3 style={{ margin: '0.2rem 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+                  Structural Health: {activeDataset.understanding ? `${activeDataset.understanding.quality_score}/100` : `${activeDataset.dataset_health_score || 95}/100`}
+                </h3>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button 
+                  className="btn-secondary btn-sm"
+                  onClick={() => onNavigate && onNavigate('analytics')}
                 >
-                  <option value="mean">Mean (Fill numeric with mean, categorical with mode)</option>
-                  <option value="median">Median (Fill numeric with median, categorical with mode)</option>
-                  <option value="mode">Mode (Fill all with most frequent)</option>
-                  <option value="drop">Drop (Remove rows with any nulls)</option>
-                  <option value="constant">Constant (Fill with 0 or 'Unknown')</option>
-                </select>
-                <span className="form-help">Recommended strategy depends on feature skewness.</span>
+                  Explore Analysis & Patterns →
+                </button>
+                <button 
+                  className="btn-primary btn-sm"
+                  onClick={() => onNavigate && onNavigate('ml-workbench')}
+                >
+                  Open Predictions →
+                </button>
               </div>
-
-              <div className="form-group">
-                <label className="form-label">Feature Scaling</label>
-                <label className="form-checkbox-label">
-                  <input 
-                    type="checkbox" 
-                    checked={scaleFeatures}
-                    onChange={(e) => setScaleFeatures(e.target.checked)}
-                  />
-                  <span>Standardize Continuous Features (StandardScaler)</span>
-                </label>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Categorical Encoding</label>
-                <label className="form-checkbox-label">
-                  <input 
-                    type="checkbox" 
-                    checked={encodeCategorical}
-                    onChange={(e) => setEncodeCategorical(e.target.checked)}
-                  />
-                  <span>Encode Nominal Features (OneHot Encoding)</span>
-                </label>
-              </div>
-
-              <button 
-                className="btn-primary run-pipeline-btn"
-                onClick={runPipeline}
-                disabled={isProcessing}
-              >
-                {isProcessing ? 'Preprocessing...' : '⚡ Run Preprocessing Pipeline'}
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Dataset Preview */}
-          <div className="preview-widget card">
-            <div className="widget-title">
-              <FileText size={16} className="text-cyan" />
-              <h3>DATASET PREVIEW (TOP 5 ROWS)</h3>
             </div>
 
-            {activeDataset.processedData ? (
-              <div className="preview-table-wrapper">
-                <table>
+            {/* Quick Metrics Bar */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{ background: 'var(--bg-color)', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Total Rows</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {(activeDataset.understanding?.row_count || activeDataset.stats.rows || 0).toLocaleString()}
+                </div>
+              </div>
+              <div style={{ background: 'var(--bg-color)', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Columns</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {activeDataset.understanding?.column_count || activeDataset.stats.columns || 0}
+                </div>
+              </div>
+              <div style={{ background: 'var(--bg-color)', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Duplicate Rows</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: (activeDataset.understanding?.duplicate_rows_count || 0) > 0 ? 'var(--warning)' : 'var(--success)' }}>
+                  {activeDataset.understanding?.duplicate_rows_count || 0}
+                </div>
+              </div>
+              <div style={{ background: 'var(--bg-color)', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Candidate Targets</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-color)' }}>
+                  {activeDataset.understanding?.candidate_targets?.length || 1}
+                </div>
+              </div>
+            </div>
+
+            {/* Column Profiles Table */}
+            {activeDataset.understanding?.column_profiles && (
+              <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                   <thead>
-                    <tr>
-                      {activeDataset.processedData.columns.slice(0, 6).map((col: string) => (
-                        <th key={col}>{col}</th>
-                      ))}
-                      {activeDataset.processedData.columns.length > 6 && <th>...</th>}
+                    <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-secondary)' }}>
+                      <th style={{ padding: '0.5rem' }}>Column</th>
+                      <th style={{ padding: '0.5rem' }}>Inferred Type</th>
+                      <th style={{ padding: '0.5rem' }}>Missingness</th>
+                      <th style={{ padding: '0.5rem' }}>Cardinality</th>
+                      <th style={{ padding: '0.5rem' }}>Role</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {activeDataset.processedData.preview.slice(0, 5).map((row: any, i: number) => (
-                      <tr key={i}>
-                        {activeDataset.processedData.columns.slice(0, 6).map((col: string) => (
-                          <td key={col}>{row[col] !== null && row[col] !== undefined ? String(row[col]) : 'NaN'}</td>
-                        ))}
-                        {activeDataset.processedData.columns.length > 6 && <td className="text-secondary">...</td>}
+                    {activeDataset.understanding.column_profiles.map((prof: any) => (
+                      <tr key={prof.name} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '0.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>{prof.name}</td>
+                        <td style={{ padding: '0.5rem' }}>
+                          <span style={{ 
+                            textTransform: 'uppercase', 
+                            fontSize: '0.7rem', 
+                            padding: '2px 6px', 
+                            borderRadius: '4px', 
+                            background: prof.inferred_type === 'numeric' ? 'rgba(59,130,246,0.1)' : (prof.inferred_type === 'categorical' ? 'rgba(168,85,247,0.1)' : 'rgba(34,197,94,0.1)'),
+                            color: prof.inferred_type === 'numeric' ? '#3b82f6' : (prof.inferred_type === 'categorical' ? '#a855f7' : '#22c55e')
+                          }}>
+                            {prof.inferred_type}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.5rem', color: prof.missing_percentage > 0 ? 'var(--warning)' : 'var(--text-secondary)' }}>
+                          {prof.missing_percentage}% ({prof.missing_count})
+                        </td>
+                        <td style={{ padding: '0.5rem', textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
+                          {prof.cardinality} ({prof.unique_count} distinct)
+                        </td>
+                        <td style={{ padding: '0.5rem' }}>
+                          {prof.is_candidate_target ? (
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-color)', background: 'var(--accent-light)', padding: '2px 6px', borderRadius: '4px' }}>
+                              Candidate Target
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>Feature</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            ) : (
-              <div className="empty-preview-message">
-                <Clock size={24} style={{ opacity: 0.2 }} />
-                <p>Run preprocessing pipeline to see schema and table preview.</p>
+            )}
+
+            {/* Limitations Notice */}
+            {activeDataset.understanding?.limitations && activeDataset.understanding.limitations.length > 0 && (
+              <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '6px', padding: '0.75rem 1rem' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--warning)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                  Analytical Considerations & Limitations
+                </div>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  {activeDataset.understanding.limitations.map((lim: string, i: number) => (
+                    <li key={i}>{lim}</li>
+                  ))}
+                </ul>
               </div>
             )}
+          </div>
+
+          {/* Preprocessing Workspace */}
+          <div className="preprocessing-workspace-wrapper grid-split">
+            {/* Preprocessing Controls */}
+            <div className="preprocessing-config-widget card">
+              <div className="widget-title">
+                <Settings size={16} className="text-cyan" />
+                <h3>PREPROCESSING PIPELINE</h3>
+              </div>
+
+              <div className="preprocessing-form">
+                <div className="form-group">
+                  <label className="form-label">Missing Value Strategy</label>
+                  <select 
+                    className="form-select"
+                    value={handleMissing}
+                    onChange={(e) => setHandleMissing(e.target.value)}
+                  >
+                    <option value="mean">Mean (Fill numeric with mean, categorical with mode)</option>
+                    <option value="median">Median (Fill numeric with median, categorical with mode)</option>
+                    <option value="mode">Mode (Fill all with most frequent)</option>
+                    <option value="drop">Drop (Remove rows with any nulls)</option>
+                    <option value="constant">Constant (Fill with 0 or 'Unknown')</option>
+                  </select>
+                  <span className="form-help">Recommended strategy depends on feature skewness.</span>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Feature Scaling</label>
+                  <label className="form-checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      checked={scaleFeatures}
+                      onChange={(e) => setScaleFeatures(e.target.checked)}
+                    />
+                    <span>Standardize Continuous Features (StandardScaler)</span>
+                  </label>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Categorical Encoding</label>
+                  <label className="form-checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      checked={encodeCategorical}
+                      onChange={(e) => setEncodeCategorical(e.target.checked)}
+                    />
+                    <span>Encode Nominal Features (OneHot Encoding)</span>
+                  </label>
+                </div>
+
+                <button 
+                  className="btn-primary run-pipeline-btn"
+                  onClick={runPipeline}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Preprocessing...' : '⚡ Run Preprocessing Pipeline'}
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Dataset Preview */}
+            <div className="preview-widget card">
+              <div className="widget-title">
+                <FileText size={16} className="text-cyan" />
+                <h3>DATASET PREVIEW (TOP 5 ROWS)</h3>
+              </div>
+
+              {activeDataset.processedData ? (
+                <div className="preview-table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        {activeDataset.processedData.columns.slice(0, 6).map((col: string) => (
+                          <th key={col}>{col}</th>
+                        ))}
+                        {activeDataset.processedData.columns.length > 6 && <th>...</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeDataset.processedData.preview.slice(0, 5).map((row: any, i: number) => (
+                        <tr key={i}>
+                          {activeDataset.processedData.columns.slice(0, 6).map((col: string) => (
+                            <td key={col}>{row[col] !== null && row[col] !== undefined ? String(row[col]) : 'NaN'}</td>
+                          ))}
+                          {activeDataset.processedData.columns.length > 6 && <td className="text-secondary">...</td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="empty-preview-message">
+                  <Clock size={24} style={{ opacity: 0.2 }} />
+                  <p>Run preprocessing pipeline to see schema and table preview.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

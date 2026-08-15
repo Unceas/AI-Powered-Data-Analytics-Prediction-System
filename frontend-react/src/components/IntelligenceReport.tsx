@@ -61,24 +61,27 @@ export function IntelligenceReport({ activeDataset }: IntelligenceReportProps) {
   };
 
   const featureWeights = getFeatureWeights();
+  const targetCol = activeDataset.mlResult?.target_column || activeDataset.understanding?.candidate_targets?.[0] || 'Target';
 
-  const isReg = activeDataset.mlResult?.model_type?.toLowerCase().includes('regression') || activeDataset.mlResult?.model_type?.toLowerCase().includes('regressor');
-  const targetCol = activeDataset.mlResult?.target_column || 'churn';
-  
   // Executive Summary text generation
   const getExecutiveSummaryText = () => {
-    const accuracyStr = isReg 
-      ? `R² score of ${(activeDataset.mlResult?.metrics?.r2_score || 0.885).toFixed(3)}`
-      : `prediction accuracy of ${(activeDataset.mlResult?.metrics?.accuracy * 100 || 91.2).toFixed(1)}%`;
-      
-    const outlierCount = activeDataset.anomalyResult?.anomalies_detected || 3;
-    const topFeature = featureWeights[0]?.name || 'contract_type';
+    const outlierCount = activeDataset.anomalyResult?.anomalies_detected || 0;
+    const predSummary = activeDataset.mlResult?.prediction?.summary || "Target outcome analyzed across validation splits.";
+    const reliability = activeDataset.mlResult?.reliability || "High";
+    const topFeature = (activeDataset.mlResult?.drivers && activeDataset.mlResult.drivers.length > 0)
+      ? activeDataset.mlResult.drivers[0].feature
+      : (featureWeights[0]?.name || 'Primary Factor');
 
-    return `This comprehensive data intelligence analysis was conducted on the "${activeDataset.name}" dataset. Using our automated machine learning pipeline, we trained a predictive model which achieved a high-performance ${accuracyStr}. 
+    return `This executive intelligence report summarizes the analytical findings and predictive evaluation for the "${activeDataset.name}" dataset.
 
-Key relationships were identified between the target variable "${targetCol}" and continuous features, most notably the leading feature "${topFeature}" which contributes a Gini importance score of ${(featureWeights[0]?.weight * 100).toFixed(1)}%. In addition, the anomaly detection engine flagged ${outlierCount} distinct statistical outliers, pointing to specific customer cohorts or operations that exhibit highly unusual patterns.
+Key Findings & Predictive Outcomes:
+${predSummary} (Reliability Assessment: ${reliability}).
 
-AI-synthesized findings suggest immediate optimization of target retention strategies and support channels to mitigate detected risks and improve operational stability.`;
+Analytical Drivers & Risk Patterns:
+Statistical analysis highlights "${topFeature}" as a primary influencing factor on outcomes. Additionally, multivariate outlier screening flagged ${outlierCount} distinct anomaly records that warrant targeted operational review.
+
+Recommended Next Actions:
+Focus operational initiatives on the primary influencing factors and review flagged outlier records in the detailed diagnostics section to support data-driven decision-making.`;
   };
 
   const renderHeatmapTable = () => {

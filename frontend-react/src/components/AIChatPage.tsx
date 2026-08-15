@@ -89,40 +89,27 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
     setIsLoading(true);
 
     try {
-      const dataPayload = activeDataset.analyticsData || {
-        rows: activeDataset.stats.rows,
-        columns: activeDataset.stats.columns
-      };
-
-      const response = await api.post('/generate-insights', {
-        analysis_data: {
-          ...dataPayload,
-          ml_result: activeDataset.mlResult || null,
-          anomaly_result: activeDataset.anomalyResult || null
-        },
-        context: `You are the Insight Engine, an expert senior data scientist. The user asks: "${text}". Respond concisely, professionally, and ground all insights in the provided dataset schema. Use Markdown formatting.`
+      const response = await api.post('/ask-insightgrid', {
+        question: text,
+        dataset_id: activeDataset.id,
+        dataset_name: activeDataset.name,
+        evidence_items: activeDataset.evidence || []
       });
-
-      // Grounding: simulated confidence / links if response touches certain words
-      let linked: any = undefined;
-      const lower = response.data.insights.toLowerCase();
-      if (lower.includes('anomaly') || lower.includes('outlier')) {
-        linked = { type: 'anomaly', value: 'outlier_marker' };
-      } else if (lower.includes('feature') || lower.includes('weight') || lower.includes('importance')) {
-        linked = { type: 'feature', value: 'feature_importance_weights' };
-      }
 
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: response.data.insights,
+        content: response.data.answer || 'No direct evidence answer produced.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        linkedElement: linked
+        linkedElement: response.data.referenced_evidence_ids?.length > 0 ? {
+          type: 'metrics',
+          value: `Referenced Evidence: ${response.data.referenced_evidence_ids.join(', ')}`
+        } : undefined
       }]);
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'An error occurred while generating insights. Please verify connection and try again.',
+        content: 'An error occurred while querying the intelligence assistant. Please verify connection and try again.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
     } finally {

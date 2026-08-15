@@ -71,65 +71,62 @@ export function Sidebar({ status, currentView, onNavigate, activeDataset, onExit
           <button 
             className={`nav-btn ${currentView === 'dashboard' ? 'active' : ''}`} 
             onClick={() => onNavigate('dashboard')}
-            title="Dashboard"
+            title="Overview"
           >
             <LayoutDashboard size={18} />
-            {isExpanded && <span>Dashboard</span>}
-          </button>
-
-          <button 
-            className={`nav-btn ${currentView === 'diagnostics' ? 'active' : ''}`} 
-            onClick={() => onNavigate('diagnostics')}
-            title="Analysis Progress"
-          >
-            <Activity size={18} />
-            {isExpanded && <span>Analysis Progress</span>}
-            {isExpanded && activeDataset && activeDataset.engineState !== 'COMPLETE' && activeDataset.engineState !== 'IDLE' && activeDataset.engineState !== 'ERROR' && (
-              <span className="active-dot-indicator processing-dot"></span>
-            )}
-            {isExpanded && activeDataset && activeDataset.engineState === 'COMPLETE' && (
-              <span className="active-dot-indicator complete-dot"></span>
-            )}
+            {isExpanded && <span>Overview</span>}
           </button>
 
           <button 
             className={`nav-btn ${currentView === 'data-manager' ? 'active' : ''}`} 
             onClick={() => onNavigate('data-manager')}
-            title="Data Manager"
+            title="Data & Understanding"
           >
             <Database size={18} />
-            {isExpanded && <span>Data Manager</span>}
-            {isExpanded && status.isProcessed && <span className="active-dot-indicator"></span>}
+            {isExpanded && <span>Data & Understanding</span>}
+            {isExpanded && status.isLoaded && <span className="active-dot-indicator"></span>}
           </button>
 
           <button 
             className={`nav-btn ${currentView === 'analytics' ? 'active' : ''}`} 
             onClick={() => onNavigate('analytics')}
-            title="Data Explorer"
+            title="Analysis & Patterns"
           >
             <TrendingUp size={18} />
-            {isExpanded && <span>Data Explorer</span>}
+            {isExpanded && <span>Analysis & Patterns</span>}
             {isExpanded && status.isAnalyzed && <span className="active-dot-indicator"></span>}
           </button>
 
           <button 
             className={`nav-btn ${currentView === 'ml-workbench' ? 'active' : ''}`} 
             onClick={() => onNavigate('ml-workbench')}
-            title="Prediction Studio"
+            title="Predictions"
           >
             <Brain size={18} />
-            {isExpanded && <span>Prediction Studio</span>}
+            {isExpanded && <span>Predictions</span>}
             {isExpanded && status.isModelTrained && <span className="active-dot-indicator"></span>}
           </button>
 
           <button 
             className={`nav-btn ${currentView === 'ai-chat' ? 'active' : ''}`} 
             onClick={() => onNavigate('ai-chat')}
-            title="Intelligence Studio"
+            title="Ask InsightGrid"
           >
             <MessageSquareCode size={18} />
-            {isExpanded && <span>Intelligence Studio</span>}
+            {isExpanded && <span>Ask InsightGrid</span>}
             {isExpanded && status.isInsightsGenerated && <span className="active-dot-indicator"></span>}
+          </button>
+
+          <button 
+            className={`nav-btn ${currentView === 'diagnostics' ? 'active' : ''}`} 
+            onClick={() => onNavigate('diagnostics')}
+            title="Diagnostics"
+          >
+            <Activity size={18} />
+            {isExpanded && <span>Diagnostics</span>}
+            {isExpanded && activeDataset && activeDataset.engineState !== 'COMPLETE' && activeDataset.engineState !== 'IDLE' && activeDataset.engineState !== 'ERROR' && (
+              <span className="active-dot-indicator processing-dot"></span>
+            )}
           </button>
 
           <button 

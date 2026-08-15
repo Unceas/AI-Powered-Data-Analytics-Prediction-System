@@ -17,6 +17,11 @@ class MLPredictionResponse(BaseModel):
     drivers: Optional[List[Dict[str, Any]]] = None
     warnings: Optional[List[str]] = None
     
+    # Traceability IDs
+    dataset_id: Optional[str] = None
+    analysis_id: Optional[str] = None
+    evidence_ids: Optional[List[str]] = None
+
     # Developer/Technical layer
     technical: Optional[Dict[str, Any]] = None
 

@@ -32,6 +32,13 @@ async def upload_csv(file: UploadFile = File(...)):
         preview=preview
     )
 
+@router.post("/understand-csv")
+async def understand_csv(file: UploadFile = File(...), dataset_id: str = Form("")):
+    """Compute deterministic Data Understanding profile for a CSV dataset."""
+    from backend.analytics.understanding import profile_dataset
+    df = await load_csv_from_upload(file)
+    return profile_dataset(df, dataset_id=dataset_id)
+
 @router.post("/ingest-api", response_model=IngestionResponse)
 async def ingest_api(request: APIIngestionRequest = Body(...)):
     """Ingest dataset from an external API."""
@@ -194,3 +201,57 @@ async def generate_insights(request: AIInsightRequest = Body(...)):
         message="Insights generated",
         insights=insights
     )
+
+@router.post("/extract-evidence")
+async def extract_evidence_endpoint(payload: dict = Body(...)):
+    """Extract deterministic, structured Evidence items from analysis artifacts."""
+    from backend.analytics.evidence import extract_evidence
+    dataset_id = payload.get("dataset_id", "")
+    analysis_id = payload.get("analysis_id", "")
+    understanding = payload.get("understanding")
+    analytics_data = payload.get("analytics_data")
+    anomaly_result = payload.get("anomaly_result")
+    ml_result = payload.get("ml_result")
+
+    evidence_items = extract_evidence(
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        understanding=understanding,
+        analytics_data=analytics_data,
+        anomaly_result=anomaly_result,
+        ml_result=ml_result
+    )
+
+    return {
+        "status": "success",
+        "message": "Evidence extracted successfully",
+        "dataset_id": dataset_id,
+        "analysis_id": analysis_id,
+        "total_evidence_count": len(evidence_items),
+        "evidence": [e.model_dump() for e in evidence_items]
+    }
+
+@router.post("/ask-insightgrid")
+async def ask_insightgrid_endpoint(payload: dict = Body(...)):
+    """Answer user questions strictly grounded in observed Evidence items."""
+    from backend.ai.insight_generator import answer_question_grounded_in_evidence
+    from backend.domain.contracts import EvidenceItem
+
+    question = payload.get("question", "")
+    dataset_name = payload.get("dataset_name", "Active Dataset")
+    raw_evidence = payload.get("evidence_items", [])
+    
+    evidence_items = []
+    for item in raw_evidence:
+        if isinstance(item, dict):
+            try:
+                evidence_items.append(EvidenceItem(**item))
+            except Exception:
+                pass
+
+    result = answer_question_grounded_in_evidence(
+        question=question,
+        dataset_name=dataset_name,
+        evidence_items=evidence_items
+    )
+    return result.model_dump()

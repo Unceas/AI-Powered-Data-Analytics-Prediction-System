@@ -199,7 +199,7 @@ export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetect
                       Key Influencing Factors
                     </h5>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {(mlResult.drivers || Object.entries(mlResult.feature_importance || {}).map(([f, imp], idx) => ({ feature: f, influence: idx === 0 ? 'High influence' : (imp > 0.2 ? 'Moderate influence' : 'Low influence'), importance: imp }))).slice(0, 5).map((driver: any, idx: number) => (
+                      {(mlResult.drivers || Object.entries(mlResult.feature_importance || {}).map(([f, imp]: [string, any], idx) => ({ feature: f, influence: idx === 0 ? 'High influence' : (Number(imp) > 0.2 ? 'Moderate influence' : 'Low influence'), importance: Number(imp) }))).slice(0, 5).map((driver: any, idx: number) => (
                         <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.85rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '0.5rem', fontSize: '0.85rem' }}>
                           <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                             {driver.feature}
