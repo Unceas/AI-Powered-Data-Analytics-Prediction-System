@@ -55,14 +55,19 @@ class EvidenceItem(BaseModel):
     evidence_id: str
     analysis_id: str
     dataset_id: str
-    category: Literal["correlation", "anomaly", "distribution", "metric", "driver", "quality"]
+    category: Literal["correlation", "anomaly", "distribution", "metric", "driver", "quality", "trend", "segment"]
     title: str
     description: str
     metric_name: str
     metric_value: Any
-    strength: Literal["High", "Medium", "Low"]
+    unit: Optional[str] = None
+    period: Optional[str] = None
+    scope: Optional[str] = None
+    strength: Literal["High", "Medium", "Low"] = "Medium"
     related_columns: List[str] = Field(default_factory=list)
     source: str
+    provenance: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
     technical_details: Optional[Dict[str, Any]] = None
 
 
@@ -84,6 +89,10 @@ class InsightItem(BaseModel):
     summary: str
     why_it_matters: str
     severity: Literal["Critical", "High", "Medium", "Low"]
+    priority: Literal["High", "Medium", "Low"] = "Medium"
+    priority_score: float = 0.0
+    priority_reasons: List[str] = Field(default_factory=list)
+    is_key_finding: bool = False
     evidence_ids: List[str] = Field(default_factory=list)
     evidence_items: List[EvidenceItem] = Field(default_factory=list)
     related_columns: List[str] = Field(default_factory=list)
@@ -99,12 +108,74 @@ class InsightListResponse(BaseModel):
     insights: List[InsightItem]
 
 
+class InvestigationDimension(BaseModel):
+    dimension: str
+    dimension_type: Literal["categorical", "temporal", "segment", "feature"]
+    distinct_count: int
+    sample_values: List[Any] = Field(default_factory=list)
+    rationale: str
+
+
+class InvestigationContext(BaseModel):
+    investigation_id: str
+    insight_id: Optional[str] = None
+    dataset_id: str
+    analysis_id: str
+    primary_feature: str
+    target_feature: Optional[str] = None
+    relevant_dimensions: List[InvestigationDimension] = Field(default_factory=list)
+    drill_down_path: List[str] = Field(default_factory=list)
+    supporting_evidence_ids: List[str] = Field(default_factory=list)
+    summary: str
+    suggested_prediction_target: Optional[str] = None
+
+
+class InvestigationResponse(BaseModel):
+    status: str
+    message: str
+    investigation: InvestigationContext
+
+
+class DecisionBrief(BaseModel):
+    brief_id: str
+    dataset_id: str
+    analysis_id: str
+    what_happened: str
+    why_it_matters: str
+    what_data_suggests: str
+    what_may_happen_next: Optional[str] = None
+    reliability: Optional[str] = None
+    reliability_explanation: Optional[str] = None
+    investigate_next: str
+    supporting_evidence_ids: List[str] = Field(default_factory=list)
+    generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
+
+class DecisionBriefResponse(BaseModel):
+    status: str
+    message: str
+    decision_brief: DecisionBrief
+
+
+class AnalyticalContext(BaseModel):
+    dataset_id: str
+    dataset_name: Optional[str] = None
+    analysis_id: Optional[str] = None
+    active_insight_id: Optional[str] = None
+    active_target: Optional[str] = None
+    active_dimensions: List[str] = Field(default_factory=list)
+    previous_subject: Optional[str] = None
+    conversation_history: List[Dict[str, str]] = Field(default_factory=list)
+
+
 class AskInsightGridRequest(BaseModel):
     question: str
     dataset_id: str
     analysis_id: Optional[str] = None
     evidence_items: Optional[List[EvidenceItem]] = None
     dataset_name: Optional[str] = None
+    context: Optional[AnalyticalContext] = None
+    history: Optional[List[Dict[str, str]]] = None
 
 
 class GroundedAnswerResponse(BaseModel):
@@ -114,6 +185,7 @@ class GroundedAnswerResponse(BaseModel):
     answer: str
     referenced_evidence_ids: List[str] = Field(default_factory=list)
     confidence: Literal["High", "Medium", "Low"] = "High"
+    resolved_subject: Optional[str] = None
     suggested_followups: List[str] = Field(default_factory=list)
 
 
@@ -123,6 +195,8 @@ class ReportPayload(BaseModel):
     understanding: Optional[DataUnderstandingResponse] = None
     analysis: Optional[AnalysisSummary] = None
     insights: List[InsightItem] = Field(default_factory=list)
+    decision_brief: Optional[DecisionBrief] = None
+    investigations: List[InvestigationContext] = Field(default_factory=list)
     prediction: Optional[Dict[str, Any]] = None
     evidence: List[EvidenceItem] = Field(default_factory=list)
     executive_summary: str

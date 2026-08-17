@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Body, Form, HTTPException
+from typing import Optional, List, Dict, Any
 from backend.ingestion.loader import load_csv_from_upload, load_from_api
 from backend.ingestion.schemas import IngestionResponse, APIIngestionRequest
 from backend.processing.schemas import ProcessingConfig, ProcessingResponse
@@ -113,14 +114,24 @@ async def analyze_csv(file: UploadFile = File(...)):
 @router.post("/predict-csv", response_model=MLPredictionResponse)
 async def predict_csv(
     target_column: str = Form(...),
+    investigation_context: Optional[str] = Form(None),
+    dataset_id: Optional[str] = Form(None),
+    analysis_id: Optional[str] = Form(None),
     file: UploadFile = File(...)
 ):
-    """Upload a CSV, auto-detect problem type, and train a baseline ML model."""
+    """Upload a CSV, auto-detect problem type, and train a baseline ML model with optional analytical context."""
     target_column = target_column.strip() if target_column else ""
     if target_column == "":
         raise HTTPException(status_code=422, detail="Target column must be provided and non-empty")
     df = await load_csv_from_upload(file)
     
+    parsed_inv_context = None
+    if investigation_context:
+        try:
+            parsed_inv_context = json.loads(investigation_context)
+        except Exception:
+            pass
+
     try:
         (
             model_type, 
@@ -157,7 +168,10 @@ async def predict_csv(
         reliability_description=reliability_desc,
         drivers=drivers_list,
         warnings=warnings_list,
-        technical=technical_obj
+        technical=technical_obj,
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        investigation_context=parsed_inv_context
     )
 
 @router.post("/detect-anomalies", response_model=AnomalyDetectionResponse)
@@ -231,15 +245,111 @@ async def extract_evidence_endpoint(payload: dict = Body(...)):
         "evidence": [e.model_dump() for e in evidence_items]
     }
 
+@router.post("/investigate-insight")
+async def investigate_insight_endpoint(payload: dict = Body(...)):
+    """Derive deterministic investigation dimensions and drill-down paths for an insight."""
+    from backend.analytics.investigation import derive_investigation_context
+    from backend.domain.contracts import InsightItem, EvidenceItem
+
+    dataset_id = payload.get("dataset_id", "")
+    analysis_id = payload.get("analysis_id", "")
+    understanding = payload.get("understanding")
+    raw_insight = payload.get("insight")
+    raw_evidence = payload.get("evidence_items", [])
+    target_col = payload.get("target_column")
+
+    insight = None
+    if raw_insight and isinstance(raw_insight, dict):
+        try:
+            insight = InsightItem(**raw_insight)
+        except Exception:
+            pass
+
+    evidence_items = []
+    for item in raw_evidence:
+        if isinstance(item, dict):
+            try:
+                evidence_items.append(EvidenceItem(**item))
+            except Exception:
+                pass
+
+    inv_context = derive_investigation_context(
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        insight=insight,
+        understanding=understanding,
+        evidence_items=evidence_items,
+        target_col=target_col
+    )
+
+    return {
+        "status": "success",
+        "message": "Investigation context derived successfully",
+        "investigation": inv_context.model_dump()
+    }
+
+@router.post("/generate-decision-brief")
+async def generate_decision_brief_endpoint(payload: dict = Body(...)):
+    """Synthesize compact 6-part executive Decision Brief from existing verified artifacts."""
+    from backend.analytics.decision_brief import build_decision_brief
+    from backend.domain.contracts import InsightItem, EvidenceItem, InvestigationContext
+
+    dataset_id = payload.get("dataset_id", "")
+    analysis_id = payload.get("analysis_id", "")
+    raw_insights = payload.get("insights", [])
+    raw_evidence = payload.get("evidence_items", [])
+    ml_result = payload.get("ml_result")
+    raw_inv = payload.get("investigation")
+
+    insights = []
+    for ins in raw_insights:
+        if isinstance(ins, dict):
+            try:
+                insights.append(InsightItem(**ins))
+            except Exception:
+                pass
+
+    evidence_items = []
+    for item in raw_evidence:
+        if isinstance(item, dict):
+            try:
+                evidence_items.append(EvidenceItem(**item))
+            except Exception:
+                pass
+
+    investigation = None
+    if raw_inv and isinstance(raw_inv, dict):
+        try:
+            investigation = InvestigationContext(**raw_inv)
+        except Exception:
+            pass
+
+    brief = build_decision_brief(
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        insights=insights,
+        evidence_items=evidence_items,
+        ml_result=ml_result,
+        investigation=investigation
+    )
+
+    return {
+        "status": "success",
+        "message": "Decision Brief generated successfully",
+        "decision_brief": brief.model_dump()
+    }
+
 @router.post("/ask-insightgrid")
 async def ask_insightgrid_endpoint(payload: dict = Body(...)):
-    """Answer user questions strictly grounded in observed Evidence items."""
+    """Answer user questions strictly grounded in observed Evidence items with conversational context continuity."""
     from backend.ai.insight_generator import answer_question_grounded_in_evidence
-    from backend.domain.contracts import EvidenceItem
+    from backend.domain.contracts import EvidenceItem, AnalyticalContext
 
     question = payload.get("question", "")
     dataset_name = payload.get("dataset_name", "Active Dataset")
     raw_evidence = payload.get("evidence_items", [])
+    raw_context = payload.get("context")
+    history = payload.get("history")
     
     evidence_items = []
     for item in raw_evidence:
@@ -249,9 +359,18 @@ async def ask_insightgrid_endpoint(payload: dict = Body(...)):
             except Exception:
                 pass
 
+    context = None
+    if raw_context and isinstance(raw_context, dict):
+        try:
+            context = AnalyticalContext(**raw_context)
+        except Exception:
+            pass
+
     result = answer_question_grounded_in_evidence(
         question=question,
         dataset_name=dataset_name,
-        evidence_items=evidence_items
+        evidence_items=evidence_items,
+        context=context,
+        history=history
     )
     return result.model_dump()

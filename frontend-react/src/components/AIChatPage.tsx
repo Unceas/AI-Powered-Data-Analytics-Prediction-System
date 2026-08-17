@@ -75,6 +75,8 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const [lastSubject, setLastSubject] = useState<string | undefined>(undefined);
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || !activeDataset) return;
     
@@ -84,7 +86,8 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    const newHistory = [...messages, userMsg];
+    setMessages(newHistory);
     setInputValue('');
     setIsLoading(true);
 
@@ -93,8 +96,20 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
         question: text,
         dataset_id: activeDataset.id,
         dataset_name: activeDataset.name,
-        evidence_items: activeDataset.evidence || []
+        evidence_items: activeDataset.evidence || [],
+        context: {
+          dataset_id: activeDataset.id,
+          dataset_name: activeDataset.name,
+          previous_subject: lastSubject,
+          active_target: activeDataset.mlResult?.target_column,
+          active_dimensions: activeDataset.activeInvestigation?.drill_down_path || []
+        },
+        history: newHistory.map(m => ({ role: m.role, content: m.content }))
       });
+
+      if (response.data.resolved_subject) {
+        setLastSubject(response.data.resolved_subject);
+      }
 
       setMessages(prev => [...prev, {
         role: 'assistant',
@@ -102,7 +117,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         linkedElement: response.data.referenced_evidence_ids?.length > 0 ? {
           type: 'metrics',
-          value: `Referenced Evidence: ${response.data.referenced_evidence_ids.join(', ')}`
+          value: `Referenced Evidence: ${response.data.referenced_evidence_ids.join(', ')} (${response.data.confidence || 'High'} Confidence)`
         } : undefined
       }]);
     } catch (error) {

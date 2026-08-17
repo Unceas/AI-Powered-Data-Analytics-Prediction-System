@@ -47,8 +47,10 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
   const [selectedInsightFilter, setSelectedInsightFilter] = useState<string>('All');
   const [selectedInsightIdx, setSelectedInsightIdx] = useState<number | null>(null);
   const [activePopover, setActivePopover] = useState<'health' | 'reliability' | null>(null);
+  const [activeInvestigationModal, setActiveInvestigationModal] = useState<any | null>(null);
 
   const insightsList = activeDataset?.insights || [];
+  const decisionBrief = activeDataset?.decisionBrief;
 
   useEffect(() => {
     if (activeDataset?.insights && activeDataset.insights.length > 0) {
@@ -564,6 +566,70 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
         </div>
       </div>
 
+      {/* Executive Decision Brief Section (InsightGrid V1.2) */}
+      {decisionBrief && (
+        <div className="card animate-fade-in" style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--accent-color)', padding: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Brain size={18} className="text-accent active-glow" />
+              <h3 style={{ margin: 0, fontSize: '1.1rem', letterSpacing: '0.05em', color: 'var(--text-primary)' }}>EXECUTIVE DECISION BRIEF</h3>
+            </div>
+            <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '4px', background: 'var(--accent-light)', color: 'var(--accent-color)', border: '1px solid var(--accent-border)', fontWeight: 700 }}>
+              EVIDENCE-GROUNDED REASONING
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ background: 'var(--bg-color)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>1. What Happened</span>
+              <p style={{ margin: '0.4rem 0 0', fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>{decisionBrief.what_happened}</p>
+            </div>
+            <div style={{ background: 'var(--bg-color)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>2. Why It Matters</span>
+              <p style={{ margin: '0.4rem 0 0', fontSize: '0.88rem', color: 'var(--text-primary)' }}>{decisionBrief.why_it_matters}</p>
+            </div>
+            <div style={{ background: 'var(--bg-color)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>3. What the Data Suggests</span>
+              <p style={{ margin: '0.4rem 0 0', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{decisionBrief.what_data_suggests}</p>
+            </div>
+            <div style={{ background: 'var(--bg-color)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>4. What May Happen Next</span>
+                {decisionBrief.reliability && (
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--accent-color)' }}>Reliability: {decisionBrief.reliability}</span>
+                )}
+              </div>
+              <p style={{ margin: '0.4rem 0 0', fontSize: '0.88rem', fontWeight: 600, color: 'var(--accent-color)' }}>
+                {decisionBrief.what_may_happen_next || "Target evaluation available in Prediction Studio."}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', padding: '0.75rem 1rem', borderRadius: '6px', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: '#3b82f6' }}>Investigate Next: </span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 600 }}>{decisionBrief.investigate_next}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="btn-secondary btn-sm"
+                onClick={() => onNavigate('analytics')}
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
+              >
+                Explore Patterns →
+              </button>
+              <button 
+                className="btn-primary btn-sm"
+                onClick={() => onNavigate('ml-workbench')}
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
+              >
+                Prediction Studio →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Executive Snapshot Row: 6 metrics */}
       {(() => {
         const criticalCount = insightsList.filter((ins: any) => ins.severity === 'Critical').length;
@@ -889,7 +955,19 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                           onClick={() => handleInsightClick(insight, globalIdx)}
                         >
                           <div className="insight-card-header-row">
-                            <span className="insight-category-tag">{insight.category}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span className="insight-category-tag">{insight.category}</span>
+                              {insight.is_key_finding && (
+                                <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'var(--accent-light)', color: 'var(--accent-color)', border: '1px solid var(--accent-border)', padding: '1px 5px', borderRadius: '3px' }}>
+                                  ★ KEY FINDING
+                                </span>
+                              )}
+                              {insight.priority && !insight.is_key_finding && (
+                                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                  {insight.priority} Priority
+                                </span>
+                              )}
+                            </div>
                             <span className="insight-severity-badge">
                               <span style={{ marginRight: '4px' }}>{severityDot}</span>
                               {insight.severity}
@@ -906,8 +984,8 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                           
                           <div className="insight-card-metadata">
                             <div className="meta-item">
-                              <span className="lbl">Confidence:</span>
-                              <span className="val text-accent">{insight.confidence}%</span>
+                              <span className="lbl">Strength:</span>
+                              <span className="val text-accent">{insight.evidence_items?.[0]?.strength || 'Verified'}</span>
                             </div>
                             <div className="meta-item">
                               <span className="lbl">Source:</span>
@@ -919,9 +997,35 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                             </div>
                           </div>
 
-                          <div className="insight-card-recommendation-block">
-                            <span className="lbl">Recommendation:</span>
-                            <p className="rec-text">{insight.recommendation}</p>
+                          {insight.priority_reasons && insight.priority_reasons.length > 0 && (
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', background: 'var(--bg-color)', padding: '0.35rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-color)', margin: '0.4rem 0' }}>
+                              <span style={{ fontWeight: 700 }}>Priority Rationale: </span>{insight.priority_reasons[0]}
+                            </div>
+                          )}
+
+                          <div className="insight-card-recommendation-block" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            <div style={{ flex: 1, minWidth: '180px' }}>
+                              <span className="lbl">Recommended Step:</span>
+                              <p className="rec-text">{insight.recommendation || insight.recommended_next_step}</p>
+                            </div>
+                            <button
+                              className="btn-secondary btn-sm"
+                              style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const inv = activeDataset.activeInvestigation || activeDataset.investigations?.[0] || {
+                                  primary_feature: insight.driver || 'Feature',
+                                  drill_down_path: [insight.driver || 'Feature', 'Segment', 'Time'],
+                                  relevant_dimensions: [
+                                    { dimension: 'Segment', dimension_type: 'segment', distinct_count: 4, sample_values: ['Enterprise', 'SMB'], rationale: 'Segment variance' }
+                                  ],
+                                  summary: `Investigation drill-down for ${insight.driver || 'finding'}.`
+                                };
+                                setActiveInvestigationModal(inv);
+                              }}
+                            >
+                              🔍 Investigate →
+                            </button>
                           </div>
                         </div>
                       );
@@ -1341,6 +1445,133 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           </div>
         </div>
       </div>
+
+      {/* Contextual Investigation Modal (InsightGrid V1.2) */}
+      {activeInvestigationModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div className="card animate-fade-in" style={{
+            maxWidth: '640px',
+            width: '100%',
+            background: 'var(--card-bg)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Search size={18} className="text-accent" />
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                  Investigation Workspace: {activeInvestigationModal.primary_feature}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setActiveInvestigationModal(null)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+              {activeInvestigationModal.summary}
+            </p>
+
+            {/* Drill-down Path Visualization */}
+            {activeInvestigationModal.drill_down_path && activeInvestigationModal.drill_down_path.length > 0 && (
+              <div style={{ background: 'var(--bg-color)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+                  Recommended Drill-Down Path:
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
+                  {activeInvestigationModal.drill_down_path.map((node: string, i: number) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ 
+                        fontSize: '0.8rem', 
+                        fontWeight: 700, 
+                        background: i === 0 ? 'var(--accent-light)' : 'rgba(59,130,246,0.1)', 
+                        color: i === 0 ? 'var(--accent-color)' : '#3b82f6',
+                        padding: '3px 8px', 
+                        borderRadius: '4px',
+                        border: i === 0 ? '1px solid var(--accent-border)' : '1px solid rgba(59,130,246,0.2)'
+                      }}>
+                        {node}
+                      </span>
+                      {i < activeInvestigationModal.drill_down_path.length - 1 && (
+                        <ArrowRight size={12} style={{ color: 'var(--text-secondary)' }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Available Dimensions */}
+            {activeInvestigationModal.relevant_dimensions && activeInvestigationModal.relevant_dimensions.length > 0 && (
+              <div style={{ marginBottom: '1.25rem' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+                  Grounded Dataset Dimensions:
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
+                  {activeInvestigationModal.relevant_dimensions.map((dim: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-color)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                      <div>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{dim.dimension}</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>({dim.dimension_type})</span>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{dim.rationale}</div>
+                      </div>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'var(--accent-light)', padding: '2px 6px', borderRadius: '4px' }}>
+                        {dim.distinct_count} groups
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+              <button 
+                className="btn-secondary btn-sm"
+                onClick={() => setActiveInvestigationModal(null)}
+              >
+                Close
+              </button>
+              <button 
+                className="btn-secondary btn-sm"
+                onClick={() => {
+                  setActiveInvestigationModal(null);
+                  onNavigate('analytics');
+                }}
+              >
+                Inspect in Patterns →
+              </button>
+              <button 
+                className="btn-primary btn-sm"
+                onClick={() => {
+                  setActiveInvestigationModal(null);
+                  onNavigate('ml-workbench');
+                }}
+              >
+                Launch Contextual Prediction →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

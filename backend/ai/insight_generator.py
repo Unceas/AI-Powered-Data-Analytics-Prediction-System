@@ -3,14 +3,114 @@ import os
 import requests
 import uuid
 from typing import Dict, Any, List, Optional
-from backend.domain.contracts import EvidenceItem, InsightItem, GroundedAnswerResponse
+from backend.domain.contracts import (
+    EvidenceItem,
+    InsightItem,
+    GroundedAnswerResponse,
+    AnalyticalContext
+)
+
+
+def rank_and_prioritize_insights(
+    insights: List[InsightItem],
+    target_col: Optional[str] = None,
+    quality_score: int = 100
+) -> List[InsightItem]:
+    """
+    Deterministically ranks and prioritizes insights using statistical strength,
+    severity, category weights, target relevance, anomaly magnitude, and supporting evidence counts.
+    Surfaces high-value 'Key Findings' first while preserving access to all findings.
+    """
+    if not insights:
+        return []
+
+    ranked: List[InsightItem] = []
+
+    for ins in insights:
+        score = 0.0
+        reasons: List[str] = []
+
+        # 1. Category Weights
+        cat_weights = {
+            "Prediction": 25.0,
+            "Anomaly": 22.0,
+            "Correlation": 18.0,
+            "Quality": 14.0,
+            "Trend": 12.0,
+            "Recommendation": 10.0
+        }
+        score += cat_weights.get(ins.category, 10.0)
+
+        # 2. Severity
+        sev_weights = {
+            "Critical": 35.0,
+            "High": 25.0,
+            "Medium": 15.0,
+            "Low": 5.0
+        }
+        score += sev_weights.get(ins.severity, 10.0)
+
+        # 3. Target Relevance
+        if target_col and (target_col in ins.related_columns or ins.actionable_investigation_target == target_col):
+            score += 25.0
+            reasons.append(f"Directly influences candidate target variable '{target_col}'")
+
+        # 4. Statistical Strength from supporting evidence
+        if ins.evidence_items:
+            for ev in ins.evidence_items:
+                if ev.strength == "High":
+                    score += 20.0
+                    if ev.category == "correlation":
+                        reasons.append(f"High linear correlation strength (|r| = {ev.metric_value})")
+                    elif ev.category == "anomaly":
+                        reasons.append(f"Elevated outlier volume ({ev.metric_value} records)")
+                    elif ev.category == "driver":
+                        reasons.append(f"Primary predictive factor ({ev.metric_name})")
+                    elif ev.category == "quality":
+                        reasons.append(f"Data completeness alert ({ev.metric_value}%)")
+                elif ev.strength == "Medium":
+                    score += 10.0
+
+            # Bonus for multiple supporting evidence items
+            if len(ins.evidence_items) > 1:
+                score += len(ins.evidence_items) * 5.0
+                reasons.append(f"Corroborated by {len(ins.evidence_items)} independent analytical evidence items")
+        elif ins.evidence_ids:
+            score += len(ins.evidence_ids) * 10.0
+
+        # Assign Priority Level
+        if score >= 60.0:
+            priority_level = "High"
+        elif score >= 35.0:
+            priority_level = "Medium"
+        else:
+            priority_level = "Low"
+
+        # Construct updated InsightItem
+        ranked_ins = ins.model_copy(update={
+            "priority": priority_level,
+            "priority_score": round(score, 1),
+            "priority_reasons": reasons if reasons else ["Observed dataset distribution pattern"]
+        })
+        ranked.append(ranked_ins)
+
+    # Sort descending by priority_score
+    ranked.sort(key=lambda x: x.priority_score, reverse=True)
+
+    # Mark top 3 as Key Findings
+    for idx, ins in enumerate(ranked):
+        if idx < 3:
+            ins.is_key_finding = True
+
+    return ranked
 
 
 def generate_grounded_insights_from_evidence(
     evidence_items: List[EvidenceItem],
     dataset_name: str = "",
     analysis_id: str = "",
-    dataset_id: str = ""
+    dataset_id: str = "",
+    target_col: Optional[str] = None
 ) -> List[InsightItem]:
     """
     Generates structured, evidence-backed Insight objects referencing immutable EvidenceItem IDs.
@@ -28,6 +128,10 @@ def generate_grounded_insights_from_evidence(
                 summary="Dataset structure verified with clean baseline metrics.",
                 why_it_matters="Provides a solid foundation for predictive modeling and segmentation.",
                 severity="Low",
+                priority="Low",
+                priority_score=10.0,
+                priority_reasons=["Baseline schema initialization"],
+                is_key_finding=True,
                 evidence_ids=[],
                 evidence_items=[],
                 related_columns=[],
@@ -146,42 +250,102 @@ def generate_grounded_insights_from_evidence(
             actionable_investigation_target=col
         ))
 
-    return insights
+    # Deterministically rank and prioritize insights
+    return rank_and_prioritize_insights(insights, target_col=target_col)
 
 
 def answer_question_grounded_in_evidence(
     question: str,
     dataset_name: str,
-    evidence_items: List[EvidenceItem]
+    evidence_items: List[EvidenceItem],
+    context: Optional[AnalyticalContext] = None,
+    history: Optional[List[Dict[str, str]]] = None
 ) -> GroundedAnswerResponse:
     """
-    Answers user questions strictly grounded in observed EvidenceItem objects.
-    The LLM never hallucinates or guesses uncomputed facts.
+    Answers user questions strictly grounded in observed EvidenceItem objects and
+    retains analytical conversation context across follow-ups.
+    If the available evidence is insufficient to answer the question, it explicitly reports data boundaries.
     """
     q_lower = question.lower()
-    
+    resolved_subject = None
+
+    # Context Resolution: Check if this is a follow-up inquiry referencing previous subject
+    combined_query = q_lower
+    if context and context.previous_subject:
+        # If user asks about a dimension ("What about India?", "How about Q3?"), combine with previous subject
+        if any(pronoun in q_lower for pronoun in ["what about", "how about", "why", "who", "where", "which", "that"]):
+            combined_query = f"{context.previous_subject} {q_lower}"
+            resolved_subject = context.previous_subject
+
     # Filter matching evidence
     matched_evidence = []
     for ev in evidence_items:
-        # Check if question mentions evidence category or related columns
-        if ev.category in q_lower or any(col.lower() in q_lower for col in ev.related_columns) or ev.metric_name.lower() in q_lower:
+        # Check direct mentions of category, related columns, or metric name
+        matches_query = (
+            ev.category.lower() in combined_query
+            or any(col.lower() in combined_query for col in ev.related_columns)
+            or ev.metric_name.lower() in combined_query
+            or ev.title.lower() in combined_query
+        )
+        if matches_query:
             matched_evidence.append(ev)
 
+    # Check for specific column mentions in question
+    explicit_col_match = any(
+        any(col.lower() in q_lower for col in ev.related_columns)
+        for ev in evidence_items
+    )
+
+    # If the user asked for something specific that is completely absent from all evidence
+    is_unsupported_query = (
+        len(matched_evidence) == 0
+        and len(evidence_items) > 0
+        and any(kw in q_lower for kw in ["competitor", "market share", "external", "forecast 2030", "ceo", "stock price", "untracked"])
+    )
+
+    if is_unsupported_query:
+        available_topics = ", ".join(sorted(list({f"'{c}'" for e in evidence_items for c in e.related_columns})))
+        return GroundedAnswerResponse(
+            status="success",
+            message="Evidence boundary declared",
+            question=question,
+            answer=(
+                f"### Evidence Limitation Notice\n\n"
+                f"The available dataset evidence for **{dataset_name}** does not establish or track information regarding this specific query.\n\n"
+                f"**Verified evidence in this session is grounded in:** {available_topics if available_topics else 'the uploaded dataset features'}.\n\n"
+                f"Please ask questions related to the verified feature correlations, multivariate outliers, or model prediction drivers."
+            ),
+            referenced_evidence_ids=[],
+            confidence="Low",
+            resolved_subject=resolved_subject,
+            suggested_followups=[
+                "What features exhibit the highest predictive influence?",
+                "Are there strong correlations between continuous variables?",
+                "What statistical outliers were flagged in the dataset?"
+            ]
+        )
+
     if not matched_evidence:
-        # Include top general evidence
+        # Include top prioritized evidence
         matched_evidence = evidence_items[:4]
 
     referenced_ids = [e.evidence_id for e in matched_evidence]
+    if not resolved_subject and matched_evidence:
+        resolved_subject = matched_evidence[0].related_columns[0] if matched_evidence[0].related_columns else matched_evidence[0].title
 
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         # Deterministic grounded fallback response
         bullet_points = []
         for e in matched_evidence:
-            bullet_points.append(f"- **{e.title}**: {e.description} *(Source: {e.source}, Strength: {e.strength})*")
-        
+            bullet_points.append(
+                f"- **{e.title}**: {e.description} *(Source: {e.source}, Metric: {e.metric_name} = {e.metric_value} {e.unit or ''}, Strength: {e.strength})*"
+            )
+
+        context_note = f"\n*Context continuity: Resolved query with analytical subject '{resolved_subject}'.*\n" if resolved_subject else ""
         answer_text = (
             f"### Evidence Summary for '{dataset_name}'\n\n"
+            f"{context_note}"
             f"Based on the verified analytical evidence extracted from the dataset:\n\n"
             + "\n".join(bullet_points) + "\n\n"
             "**Recommended Investigation:** Use the linked features in Analysis & Patterns to inspect these distributions further."
@@ -194,18 +358,21 @@ def answer_question_grounded_in_evidence(
             answer=answer_text,
             referenced_evidence_ids=referenced_ids,
             confidence="High" if len(matched_evidence) >= 2 else "Medium",
+            resolved_subject=resolved_subject,
             suggested_followups=[
                 "Which features exhibit the highest predictive influence?",
                 "What statistical outliers were flagged in the dataset?",
-                "Are there strong correlations between continuous variables?"
+                "What drill-down path is recommended for investigation?"
             ]
         )
 
     try:
         evidence_context = []
         for e in matched_evidence:
+            provenance_str = f" [Method: {e.provenance.get('method')}]" if e.provenance else ""
             evidence_context.append(
-                f"[Evidence ID: {e.evidence_id}] Category: {e.category} | Title: {e.title} | Details: {e.description} | Metric: {e.metric_name}={e.metric_value} | Source: {e.source} | Columns: {', '.join(e.related_columns)}"
+                f"[Evidence ID: {e.evidence_id}] Category: {e.category} | Title: {e.title} | Details: {e.description} | "
+                f"Metric: {e.metric_name}={e.metric_value} {e.unit or ''} | Strength: {e.strength} | Source: {e.source}{provenance_str} | Columns: {', '.join(e.related_columns)}"
             )
         evidence_str = "\n".join(evidence_context)
 
@@ -214,6 +381,10 @@ def answer_question_grounded_in_evidence(
             "Content-Type": "application/json",
         }
 
+        history_context = ""
+        if history:
+            history_context = "\nRecent Conversation History:\n" + "\n".join([f"{h.get('role', 'user')}: {h.get('content', '')}" for h in history[-3:]])
+
         payload = {
             "model": "llama-3.1-8b-instant",
             "messages": [
@@ -221,14 +392,16 @@ def answer_question_grounded_in_evidence(
                     "role": "system",
                     "content": (
                         "You are InsightGrid Intelligence Assistant. Answer the user's question concisely, professionally, and strictly ground your explanation in the provided verified evidence. "
-                        "Do not guess or fabricate uncomputed dataset facts. If the evidence does not contain the answer, politely state what analytical evidence is available. "
-                        "Always use clear Markdown formatting."
+                        "Do not guess, fabricate, or extrapolate uncomputed dataset facts. If the evidence does not contain the answer, politely state what analytical evidence is available. "
+                        "Maintain context continuity with previous analytical subjects if this is a follow-up question. Always use clear Markdown formatting."
                     )
                 },
                 {
                     "role": "user",
                     "content": (
                         f"Dataset: {dataset_name}\n"
+                        f"{history_context}\n"
+                        f"Active Analytical Context: {resolved_subject or 'General'}\n"
                         f"User Question: {question}\n\n"
                         f"Verified Analytical Evidence:\n{evidence_str}"
                     )
@@ -248,6 +421,7 @@ def answer_question_grounded_in_evidence(
                 answer=content,
                 referenced_evidence_ids=referenced_ids,
                 confidence="High",
+                resolved_subject=resolved_subject,
                 suggested_followups=[
                     "What are the key influencing factors?",
                     "Where are the largest outliers located?",
@@ -266,6 +440,7 @@ def answer_question_grounded_in_evidence(
         answer=f"### Verified Evidence Findings\n\n" + "\n".join(bullet_points),
         referenced_evidence_ids=referenced_ids,
         confidence="Medium",
+        resolved_subject=resolved_subject,
         suggested_followups=["Explore feature distributions in Analysis & Patterns"]
     )
 
@@ -322,6 +497,10 @@ def generate_natural_language_insights(analysis_data, context="", dataset_name="
             "impact": ins.summary,
             "why_it_matters": ins.why_it_matters,
             "confidence": 90 if ins.severity in ["Critical", "High"] else 75,
+            "priority": ins.priority,
+            "priority_score": ins.priority_score,
+            "priority_reasons": ins.priority_reasons,
+            "is_key_finding": ins.is_key_finding,
             "source": ins.evidence_items[0].source if ins.evidence_items else "InsightGrid Engine",
             "driver": ins.actionable_investigation_target or (ins.related_columns[0] if ins.related_columns else "general"),
             "severity": ins.severity,

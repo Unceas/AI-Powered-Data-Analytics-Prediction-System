@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Dict, Any, List, Optional
 from backend.domain.contracts import EvidenceItem, EvidenceResponse, DataUnderstandingResponse
 
@@ -14,9 +15,13 @@ def extract_evidence(
     """
     Deterministically extracts structured, immutable Evidence items from statistical analytics,
     outlier detection, data understanding, and machine learning prediction outputs.
-    All evidence items represent observed analytical facts with explicit source traceability.
+    All evidence items represent observed analytical facts with explicit provenance and source traceability.
     """
     evidence_items: List[EvidenceItem] = []
+    now_iso = datetime.utcnow().isoformat()
+    total_rows = 0
+    if understanding:
+        total_rows = understanding.get("row_count", 0)
 
     # 1. Evidence from Data Understanding & Quality
     if understanding:
@@ -31,12 +36,20 @@ def extract_evidence(
                 dataset_id=dataset_id,
                 category="quality",
                 title="Duplicate Records Detected",
-                description=f"Found {dup_count} duplicate row(s) in dataset.",
+                description=f"Found {dup_count} duplicate row(s) across the dataset.",
                 metric_name="duplicate_rows_count",
                 metric_value=dup_count,
+                unit="records",
+                scope=f"Dataset ({total_rows} total rows)",
                 strength="High" if dup_count > 10 else "Medium",
                 related_columns=[],
                 source="Data Understanding Profiler",
+                provenance={
+                    "method": "Exact duplicate row hash matching",
+                    "sample_size": total_rows,
+                    "computed_at": now_iso,
+                    "pipeline_stage": "Data Understanding"
+                },
                 technical_details={"quality_score": quality_score}
             ))
 
@@ -53,9 +66,17 @@ def extract_evidence(
                     description=f"Column '{col_name}' is missing {miss_pct}% of its data points ({prof.get('missing_count')} rows).",
                     metric_name="missing_percentage",
                     metric_value=miss_pct,
+                    unit="%",
+                    scope=f"Column '{col_name}' ({total_rows} observations)",
                     strength="High" if miss_pct >= 30.0 else "Medium",
                     related_columns=[col_name],
                     source="Data Understanding Profiler",
+                    provenance={
+                        "method": "Column-wise null & NaN count profiling",
+                        "sample_size": total_rows,
+                        "computed_at": now_iso,
+                        "pipeline_stage": "Data Understanding"
+                    },
                     technical_details={"missing_count": prof.get("missing_count")}
                 ))
 
@@ -71,9 +92,17 @@ def extract_evidence(
                     description=f"Column '{col_name}' displays high {direction} skewness (skew = {skew}).",
                     metric_name="skewness",
                     metric_value=skew,
+                    unit="skew",
+                    scope=f"Column '{col_name}'",
                     strength="High" if abs(skew) >= 2.5 else "Medium",
                     related_columns=[col_name],
                     source="Distribution Analyzer",
+                    provenance={
+                        "method": "Fisher-Pearson coefficient of skewness",
+                        "sample_size": total_rows,
+                        "computed_at": now_iso,
+                        "pipeline_stage": "Descriptive Analysis"
+                    },
                     technical_details={"skewness": skew}
                 ))
 
@@ -107,9 +136,16 @@ def extract_evidence(
                                 description=f"Moderate-to-strong {rel_type} linear association (r = {round(val, 3)}) between '{col1}' and '{col2}'.",
                                 metric_name="pearson_correlation",
                                 metric_value=round(val, 3),
+                                unit="r",
+                                scope=f"Bivariate continuous feature pair ({col1}, {col2})",
                                 strength=strength_label,
                                 related_columns=[col1, col2],
                                 source="Correlation Engine",
+                                provenance={
+                                    "method": "Pearson pairwise linear correlation coefficient",
+                                    "computed_at": now_iso,
+                                    "pipeline_stage": "Statistical Analysis"
+                                },
                                 technical_details={"r": round(val, 3)}
                             ))
 
@@ -127,15 +163,23 @@ def extract_evidence(
                 description=f"Multivariate outlier scan identified {detected} unusual records ({pct}% of total observations).",
                 metric_name="anomaly_count",
                 metric_value=detected,
+                unit="records",
+                scope=f"Dataset-wide multivariate scan ({pct}% contamination)",
                 strength="High" if pct >= 3.0 else "Medium",
                 related_columns=[],
                 source="Anomaly Detection Engine",
-                technical_details={"percentage": pct}
+                provenance={
+                    "method": "Isolation Forest multivariate outlier detection (contamination=0.05)",
+                    "computed_at": now_iso,
+                    "pipeline_stage": "Anomaly Detection"
+                },
+                technical_details={"percentage": pct, "anomaly_count": detected}
             ))
 
     # 4. Evidence from Prediction Drivers
     if ml_result and ml_result.get("status") == "success":
         drivers = ml_result.get("drivers", [])
+        model_type = ml_result.get("model_type", "Validation Model")
         for drv in drivers[:3]:
             feat = drv.get("feature", "")
             imp = drv.get("importance", 0.0)
@@ -152,10 +196,17 @@ def extract_evidence(
                 description=f"Feature '{feat}' exhibited {infl.lower()}{dir_text} in candidate model validation.",
                 metric_name="feature_importance",
                 metric_value=imp,
+                unit="importance",
+                scope=f"Feature '{feat}' across validation splits",
                 strength="High" if "High" in infl else "Medium",
                 related_columns=[feat],
                 source="Prediction Engine V1.1",
-                technical_details={"influence": infl, "direction": direction}
+                provenance={
+                    "method": f"{model_type} feature driver analysis (validation-based)",
+                    "computed_at": now_iso,
+                    "pipeline_stage": "Prediction Modeling"
+                },
+                technical_details={"influence": infl, "direction": direction, "model_type": model_type}
             ))
 
     return evidence_items

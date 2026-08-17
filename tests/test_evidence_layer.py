@@ -97,7 +97,9 @@ def test_grounded_insights_generation():
     )
 
     assert len(insights) >= 2
-    assert insights[0].evidence_ids == ["ev-drv-1"]
+    all_ev_ids = [eid for ins in insights for eid in ins.evidence_ids]
+    assert "ev-drv-1" in all_ev_ids
+    assert "ev-corr-1" in all_ev_ids
     assert len(insights[0].why_it_matters) > 10
     assert len(insights[0].recommended_next_step) > 10
 

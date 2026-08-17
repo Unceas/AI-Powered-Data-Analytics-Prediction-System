@@ -35,14 +35,19 @@ export interface EvidenceItem {
   evidence_id: string;
   analysis_id: string;
   dataset_id: string;
-  category: 'correlation' | 'anomaly' | 'distribution' | 'metric' | 'driver' | 'quality';
+  category: 'correlation' | 'anomaly' | 'distribution' | 'metric' | 'driver' | 'quality' | 'trend' | 'segment';
   title: string;
   description: string;
   metric_name: string;
   metric_value: any;
+  unit?: string;
+  period?: string;
+  scope?: string;
   strength: 'High' | 'Medium' | 'Low';
   related_columns: string[];
   source: string;
+  provenance?: Record<string, any>;
+  metadata?: Record<string, any>;
   technical_details?: Record<string, any>;
 }
 
@@ -57,11 +62,16 @@ export interface Insight {
   impact?: string;
   why_it_matters?: string;
   confidence: number | string;
+  priority?: 'High' | 'Medium' | 'Low';
+  priority_score?: number;
+  priority_reasons?: string[];
+  is_key_finding?: boolean;
   source: string;
   driver?: string;
   severity: 'Critical' | 'High' | 'Medium' | 'Low';
   recommendation?: string;
   recommended_next_step?: string;
+  actionable_investigation_target?: string;
   evidence_ids?: string[];
   evidence_items?: EvidenceItem[];
   evidence?: {
@@ -72,6 +82,54 @@ export interface Insight {
   related_columns?: string[];
   linked_visualization?: 'weights' | 'correlation' | 'anomalies' | 'confidence' | 'distribution';
   linked_feature?: string;
+}
+
+export interface InvestigationDimension {
+  dimension: string;
+  dimension_type: 'categorical' | 'temporal' | 'segment' | 'feature';
+  distinct_count: number;
+  sample_values: any[];
+  rationale: string;
+}
+
+export interface InvestigationContext {
+  investigation_id: string;
+  insight_id?: string;
+  dataset_id: string;
+  analysis_id: string;
+  primary_feature: string;
+  target_feature?: string;
+  relevant_dimensions: InvestigationDimension[];
+  drill_down_path: string[];
+  supporting_evidence_ids: string[];
+  summary: string;
+  suggested_prediction_target?: string;
+}
+
+export interface DecisionBrief {
+  brief_id: string;
+  dataset_id: string;
+  analysis_id: string;
+  what_happened: string;
+  why_it_matters: string;
+  what_data_suggests: string;
+  what_may_happen_next?: string;
+  reliability?: string;
+  reliability_explanation?: string;
+  investigate_next: string;
+  supporting_evidence_ids: string[];
+  generated_at: string;
+}
+
+export interface AnalyticalContext {
+  dataset_id: string;
+  dataset_name?: string;
+  analysis_id?: string;
+  active_insight_id?: string;
+  active_target?: string;
+  active_dimensions: string[];
+  previous_subject?: string;
+  conversation_history?: Array<{ role: string; content: string }>;
 }
 
 export interface Dataset {
@@ -100,6 +158,9 @@ export interface Dataset {
   logs: DatasetLog[];
   insights?: Insight[];
   evidence?: EvidenceItem[];
+  decisionBrief?: DecisionBrief;
+  investigations?: InvestigationContext[];
+  activeInvestigation?: InvestigationContext;
   engineState?: 'IDLE' | 'INITIALIZING' | 'VALIDATING' | 'PROCESSING' | 'ANALYZING' | 'RUNNING INFERENCE' | 'SYNTHESIZING INSIGHTS' | 'COMPLETE' | 'ERROR';
 }
 
@@ -109,6 +170,8 @@ export interface ReportPayload {
   understanding?: DataUnderstanding;
   analysis?: any;
   insights: Insight[];
+  decision_brief?: DecisionBrief;
+  investigations?: InvestigationContext[];
   prediction?: any;
   evidence: EvidenceItem[];
   executive_summary: string;

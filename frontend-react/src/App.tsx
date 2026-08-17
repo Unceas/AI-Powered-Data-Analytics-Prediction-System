@@ -258,6 +258,30 @@ function App() {
 
       const insightList = Array.isArray(insightsRes.data.insights) ? insightsRes.data.insights : [];
 
+      // Stage 7: INVESTIGATION & DECISION BRIEF
+      addLog(id, 'Deriving contextual investigation paths and synthesizing Decision Brief...');
+      const invRes = await api.post('/investigate-insight', {
+        dataset_id: id,
+        analysis_id: `an-${id.slice(0, 8)}`,
+        understanding: understandRes.data,
+        insight: insightList[0] || null,
+        evidence_items: evidenceItems,
+        target_column: targetCol
+      });
+
+      const invContext = invRes.data.investigation;
+
+      const briefRes = await api.post('/generate-decision-brief', {
+        dataset_id: id,
+        analysis_id: `an-${id.slice(0, 8)}`,
+        insights: insightList,
+        evidence_items: evidenceItems,
+        ml_result: predictRes.data,
+        investigation: invContext
+      });
+
+      const decisionBrief = briefRes.data.decision_brief;
+
       // Complete
       updateState(
         id, 
@@ -267,6 +291,9 @@ function App() {
         { 
           evidence: evidenceItems,
           insights: insightList,
+          decisionBrief: decisionBrief,
+          investigations: invContext ? [invContext] : [],
+          activeInvestigation: invContext,
           analyticsData: {
             ...analyzeRes.data,
             aiInsightsText: Array.isArray(insightsRes.data.insights) ? "" : (insightsRes.data.insights || "")

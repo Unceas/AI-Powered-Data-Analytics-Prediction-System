@@ -203,11 +203,11 @@ Focus operational initiatives on the primary influencing factors and review flag
         </div>
       </div>
 
-      {/* PAGE 2: EXECUTIVE SUMMARY & DATASET OVERVIEW */}
+      {/* PAGE 2: EXECUTIVE SUMMARY & DECISION BRIEF */}
       <div className="report-page">
         <div className="report-page-header">
           <span className="logo-sm">INSIGHTGRID</span>
-          <span className="title-sm">Executive Summary</span>
+          <span className="title-sm">Executive Summary & Decision Brief</span>
         </div>
 
         <div className="report-page-body">
@@ -217,6 +217,35 @@ Focus operational initiatives on the primary influencing factors and review flag
               <p>{getExecutiveSummaryText()}</p>
             </div>
           </div>
+
+          {/* Decision Brief Block */}
+          {activeDataset.decisionBrief && (
+            <div className="report-section">
+              <h2 className="section-heading">Executive Decision Brief</h2>
+              <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.8rem' }}>
+                <div>
+                  <strong style={{ color: '#0f172a' }}>1. What Happened:</strong>
+                  <p style={{ margin: '0.2rem 0', color: '#334155' }}>{activeDataset.decisionBrief.what_happened}</p>
+                </div>
+                <div>
+                  <strong style={{ color: '#0f172a' }}>2. Why It Matters:</strong>
+                  <p style={{ margin: '0.2rem 0', color: '#334155' }}>{activeDataset.decisionBrief.why_it_matters}</p>
+                </div>
+                <div>
+                  <strong style={{ color: '#0f172a' }}>3. What the Data Suggests:</strong>
+                  <p style={{ margin: '0.2rem 0', color: '#334155' }}>{activeDataset.decisionBrief.what_data_suggests}</p>
+                </div>
+                <div>
+                  <strong style={{ color: '#0f172a' }}>4. What May Happen Next:</strong>
+                  <p style={{ margin: '0.2rem 0', color: '#334155' }}>{activeDataset.decisionBrief.what_may_happen_next || 'Evaluation available in Prediction Studio.'} ({activeDataset.decisionBrief.reliability || 'High'} Reliability)</p>
+                </div>
+                <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
+                  <strong style={{ color: '#0f172a' }}>Investigate Next: </strong>
+                  <span style={{ color: '#334155' }}>{activeDataset.decisionBrief.investigate_next}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="report-section">
             <h2 className="section-heading">Dataset Structure Overview</h2>
@@ -242,13 +271,6 @@ Focus operational initiatives on the primary influencing factors and review flag
                 </span>
               </div>
             </div>
-          </div>
-
-          <div className="report-section">
-            <h2 className="section-heading">Information Architecture details</h2>
-            <p className="section-paragraph">
-              All column schemas were parsed, imputed, scaled, and analyzed using standard MinMaxScaler/StandardScaler algorithms. The predictive capability was evaluated using a K-Fold cross-validation strategy on the fitted classifier model.
-            </p>
           </div>
         </div>
 
