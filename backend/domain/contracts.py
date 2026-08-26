@@ -165,6 +165,8 @@ class AnalyticalContext(BaseModel):
     active_target: Optional[str] = None
     active_dimensions: List[str] = Field(default_factory=list)
     previous_subject: Optional[str] = None
+    investigation: Optional[Dict[str, Any]] = None
+    active_evidence_ids: List[str] = Field(default_factory=list)
     conversation_history: List[Dict[str, str]] = Field(default_factory=list)
 
 

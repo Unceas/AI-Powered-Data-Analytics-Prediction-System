@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, FileText, ChevronRight, Brain, Bot, Download } from 'lucide-react';
+import { useWorkspace } from '../context/WorkspaceContext';
 import api from '../utils/api';
 import './AIChatPage.css';
 import type { Dataset } from '../types';
@@ -22,6 +23,7 @@ interface ChatMessage {
 }
 
 export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGenerateReport }: AIChatPageProps) {
+  const { workspace } = useWorkspace();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,11 +31,28 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
 
   const activeDataset = datasets.find(d => d.id === activeDatasetId);
 
-  // Suggested quick prompts
-  const quickPrompts = [
+  // Suggested quick prompts adapted to current workspace investigation
+  const quickPrompts = workspace.investigation?.active ? [
+    { 
+      label: `🔍 Why did ${workspace.investigation.subject} change?`, 
+      text: `What underlying evidence and drivers explain the patterns observed in ${workspace.investigation.subject}?` 
+    },
+    { 
+      label: `📊 Breakdown by ${workspace.investigation.selected_dimensions[0] || 'dimension'}`, 
+      text: `How does ${workspace.investigation.subject} distribute across ${workspace.investigation.selected_dimensions[0] || 'segments'}?` 
+    },
+    { 
+      label: `🤖 Predict ${workspace.prediction_context?.target || workspace.investigation.subject}`, 
+      text: `What can we reasonably predict about ${workspace.prediction_context?.target || workspace.investigation.subject} based on verified evidence?` 
+    },
+    { 
+      label: `📈 Top Evidence`, 
+      text: `Summarize the strongest correlation and outlier evidence related to ${workspace.investigation.subject}.` 
+    }
+  ] : [
     { label: "📊 Summarize correlations", text: "What are the most notable feature correlations in this dataset?" },
     { label: "🔍 Explain anomalies", text: "Can you detail the anomaly detection results? What features are skewing the outliers?" },
-    { label: "🤖 Evaluate trained model", text: "Analyze the random forest metrics. Which features are contributing most to predictions?" },
+    { label: "🤖 Evaluate trained model", text: "Analyze the prediction metrics. Which features are contributing most to outcomes?" },
     { label: "📈 Overall patterns", text: "Identify the top 3 actionable insights from this data." }
   ];
 
@@ -100,9 +119,11 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
         context: {
           dataset_id: activeDataset.id,
           dataset_name: activeDataset.name,
-          previous_subject: lastSubject,
-          active_target: activeDataset.mlResult?.target_column,
-          active_dimensions: activeDataset.activeInvestigation?.drill_down_path || []
+          analysis_id: workspace.analysis_id || undefined,
+          active_insight_id: workspace.active_insight_id || undefined,
+          previous_subject: workspace.investigation?.subject || lastSubject,
+          active_target: workspace.prediction_context?.target || activeDataset.mlResult?.target_column,
+          active_dimensions: workspace.investigation?.selected_dimensions || activeDataset.activeInvestigation?.drill_down_path || []
         },
         history: newHistory.map(m => ({ role: m.role, content: m.content }))
       });
@@ -168,10 +189,13 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
             <div className="active-grounding-meta">
               <h4 className="grounding-title">Grounded Context Elements</h4>
               <ul className="grounding-list">
-                <li><span>Target Column:</span> <strong>{activeDataset.mlResult ? 'dropout_risk' : 'Not set'}</strong></li>
+                <li><span>Target Column:</span> <strong>{workspace.prediction_context?.target || (activeDataset.mlResult ? 'dropout_risk' : 'Not set')}</strong></li>
                 <li><span>Features Parsed:</span> <strong>{activeDataset.stats.columns}</strong></li>
                 <li><span>Inference Mode:</span> <strong>{activeDataset.status.isModelTrained ? 'ACTIVE' : 'STANDBY'}</strong></li>
                 <li><span>Confidence Band:</span> <strong>95% CI (Fitted)</strong></li>
+                {workspace.investigation?.active && (
+                  <li><span>Active Focus:</span> <strong className="text-accent">{workspace.investigation.subject}</strong></li>
+                )}
               </ul>
             </div>
           )}
@@ -179,10 +203,23 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
 
         {/* Right Side: Chat Workspace */}
         <div className="chat-workspace-panel card">
-          <div className="chat-header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="header-status">
+          <div className="chat-header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div className="header-status" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Bot size={16} className="text-accent active-glow" />
               <span>Intelligence Studio</span>
+              {workspace.investigation?.active && (
+                <span style={{ 
+                  fontSize: '0.72rem', 
+                  background: 'var(--accent-light)', 
+                  color: 'var(--accent-color)', 
+                  border: '1px solid var(--accent-border)',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  fontWeight: 600
+                }}>
+                  Exploring: {workspace.investigation.subject}
+                </span>
+              )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               {activeDataset && activeDataset.status.isInsightsGenerated && onGenerateReport && (

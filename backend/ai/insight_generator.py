@@ -269,13 +269,19 @@ def answer_question_grounded_in_evidence(
     q_lower = question.lower()
     resolved_subject = None
 
-    # Context Resolution: Check if this is a follow-up inquiry referencing previous subject
+    # Context Resolution: Check if this is a follow-up inquiry referencing previous subject or active investigation
     combined_query = q_lower
-    if context and context.previous_subject:
-        # If user asks about a dimension ("What about India?", "How about Q3?"), combine with previous subject
-        if any(pronoun in q_lower for pronoun in ["what about", "how about", "why", "who", "where", "which", "that"]):
-            combined_query = f"{context.previous_subject} {q_lower}"
-            resolved_subject = context.previous_subject
+    if context:
+        inv_subj = None
+        if context.investigation and isinstance(context.investigation, dict):
+            inv_subj = context.investigation.get("subject")
+        target_subj = context.previous_subject or inv_subj or context.active_target
+
+        if target_subj:
+            # If user asks about a dimension or follow-up question, combine with target subject
+            if any(pronoun in q_lower for pronoun in ["what about", "how about", "why", "who", "where", "which", "that", "predict", "dimension", "trend", "cause"]):
+                combined_query = f"{target_subj} {' '.join(context.active_dimensions)} {q_lower}"
+                resolved_subject = target_subj
 
     # Filter matching evidence
     matched_evidence = []
@@ -284,6 +290,7 @@ def answer_question_grounded_in_evidence(
         matches_query = (
             ev.category.lower() in combined_query
             or any(col.lower() in combined_query for col in ev.related_columns)
+            or (context and any(dim.lower() in [c.lower() for c in ev.related_columns] for dim in context.active_dimensions))
             or ev.metric_name.lower() in combined_query
             or ev.title.lower() in combined_query
         )
@@ -296,10 +303,9 @@ def answer_question_grounded_in_evidence(
         for ev in evidence_items
     )
 
-    # If the user asked for something specific that is completely absent from all evidence
+    # Check if the user query is asking for something completely outside dataset scope
     is_unsupported_query = (
-        len(matched_evidence) == 0
-        and len(evidence_items) > 0
+        len(evidence_items) > 0
         and any(kw in q_lower for kw in ["competitor", "market share", "external", "forecast 2030", "ceo", "stock price", "untracked"])
     )
 
@@ -351,13 +357,16 @@ def answer_question_grounded_in_evidence(
             "**Recommended Investigation:** Use the linked features in Analysis & Patterns to inspect these distributions further."
         )
 
+        has_high_evidence = any(e.strength == "High" for e in matched_evidence)
+        confidence_val = "High" if (len(matched_evidence) >= 2 or has_high_evidence) else "Medium"
+
         return GroundedAnswerResponse(
             status="success",
             message="Answer generated from deterministic evidence",
             question=question,
             answer=answer_text,
             referenced_evidence_ids=referenced_ids,
-            confidence="High" if len(matched_evidence) >= 2 else "Medium",
+            confidence=confidence_val,
             resolved_subject=resolved_subject,
             suggested_followups=[
                 "Which features exhibit the highest predictive influence?",
@@ -433,13 +442,16 @@ def answer_question_grounded_in_evidence(
 
     # Fallback to deterministic if API request fails
     bullet_points = [f"- **{e.title}**: {e.description}" for e in matched_evidence]
+    has_high = any(e.strength == "High" for e in matched_evidence)
+    fallback_confidence = "High" if (len(matched_evidence) >= 2 or has_high) else "Medium"
+
     return GroundedAnswerResponse(
         status="success",
         message="Answer generated from deterministic evidence fallback",
         question=question,
         answer=f"### Verified Evidence Findings\n\n" + "\n".join(bullet_points),
         referenced_evidence_ids=referenced_ids,
-        confidence="Medium",
+        confidence=fallback_confidence,
         resolved_subject=resolved_subject,
         suggested_followups=["Explore feature distributions in Analysis & Patterns"]
     )

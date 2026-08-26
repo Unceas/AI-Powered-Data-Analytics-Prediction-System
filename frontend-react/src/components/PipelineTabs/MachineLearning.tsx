@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Cpu, ShieldAlert, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Cpu, ShieldAlert, AlertCircle, Brain } from 'lucide-react';
+import { useWorkspace } from '../../context/WorkspaceContext';
 import api from '../../utils/api';
 import './PipelineTabs.css';
 
@@ -10,10 +11,18 @@ interface MachineLearningProps {
 }
 
 export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetected }: MachineLearningProps) {
+  const { workspace, setPredictionFromInvestigation } = useWorkspace();
   const [targetCol, setTargetCol] = useState('');
   const [isLoadingML, setIsLoadingML] = useState(false);
   const [contamination, setContamination] = useState(5);
   const [isLoadingAnomaly, setIsLoadingAnomaly] = useState(false);
+
+  // Synchronize target column with active workspace context
+  useEffect(() => {
+    if (workspace.prediction_context?.target && !targetCol) {
+      setTargetCol(workspace.prediction_context.target);
+    }
+  }, [workspace.prediction_context?.target]);
 
   const mlResult = activeDataset?.mlResult || null;
   const anomalyResult = activeDataset?.anomalyResult || null;
@@ -37,12 +46,16 @@ export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetect
     const formData = new FormData();
     formData.append('file', fileObj);
     formData.append('target_column', targetCol);
+    if (workspace.investigation) {
+      formData.append('investigation_context', JSON.stringify(workspace.investigation));
+    }
 
     try {
       const response = await api.post('/predict-csv', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       onModelTrained(activeDataset.id, response.data);
+      setPredictionFromInvestigation(targetCol);
     } catch (error) {
       console.error('ML training failed', error);
       alert('ML training failed. Ensure the target column is spelled correctly and exists.');
@@ -111,6 +124,27 @@ export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetect
           <div className="ml-section">
             <div className="section-title" style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', padding: 0 }}>SUPERVISED — PREDICTIVE MODELING</div>
             <p className="helper-text" style={{ marginBottom: '1rem' }}>Enter the column name you want the model to predict. The engine automatically detects Classification vs Regression based on cardinality.</p>
+
+            {workspace.prediction_context && workspace.investigation && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                padding: '0.5rem 0.85rem',
+                borderRadius: '6px',
+                marginBottom: '1rem',
+                fontSize: '0.8rem',
+                color: 'var(--text-primary)'
+              }}>
+                <Brain size={15} className="text-accent" />
+                <span>
+                  <strong>Contextual Mode:</strong> Inherited from investigation on <em>{workspace.investigation.subject}</em>
+                  {workspace.investigation.selected_dimensions?.length > 0 && ` across (${workspace.investigation.selected_dimensions.join(', ')})`}. Target pre-filled.
+                </span>
+              </div>
+            )}
             
             <div className="ml-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center', maxWidth: '600px' }}>
               <input 

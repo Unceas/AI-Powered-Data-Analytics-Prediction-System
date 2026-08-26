@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Sparkles, AlertCircle, Download } from 'lucide-react';
+import { useWorkspace } from '../../context/WorkspaceContext';
 import api from '../../utils/api';
 import { 
   BarChart, 
@@ -20,6 +21,7 @@ interface AnalyticsProps {
 }
 
 export function Analytics({ activeDataset, onAnalyzed, onGenerateReport }: AnalyticsProps) {
+  const { workspace } = useWorkspace();
   const [isLoading, setIsLoading] = useState(false);
   const [quickInsight, setQuickInsight] = useState<string | null>(null);
   const [typedQuickInsight, setTypedQuickInsight] = useState('');
@@ -76,37 +78,75 @@ export function Analytics({ activeDataset, onAnalyzed, onGenerateReport }: Analy
   const renderCorrelationMatrix = (matrix: any) => {
     if (!matrix) return null;
     const cols = Object.keys(matrix);
+    const invCols = workspace.investigation?.related_columns || [];
+    const invSubject = workspace.investigation?.subject;
+
     return (
       <div className="correlation-heatmap" style={{ overflowX: 'auto', marginTop: '1rem', paddingBottom: '1rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
           <thead>
             <tr>
               <th style={{ padding: '0.75rem', textAlign: 'left', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Feature</th>
-              {cols.map(c => <th key={c} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{c.substring(0,10)}</th>)}
+              {cols.map(c => {
+                const isInvestigated = c === invSubject || invCols.includes(c);
+                return (
+                  <th key={c} style={{ 
+                    padding: '0.75rem', 
+                    background: isInvestigated ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.01)', 
+                    borderBottom: '1px solid var(--border-color)', 
+                    whiteSpace: 'nowrap', 
+                    color: isInvestigated ? 'var(--accent-color)' : 'var(--text-primary)',
+                    fontWeight: isInvestigated ? 800 : 'normal'
+                  }}>
+                    {c.substring(0,10)}
+                    {isInvestigated && ' ★'}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
-            {cols.map(row => (
-              <tr key={row}>
-                <td style={{ padding: '0.5rem', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>{row}</td>
-                {cols.map(col => {
-                  const val = matrix[row][col];
-                  if (val === null || val === undefined) return <td key={col} style={{ border: '1px solid var(--border-color)' }}>-</td>;
-                  const absVal = Math.abs(val);
-                  
-                  // Muted blue/red colors matching dark mode
-                  const bgColor = val > 0 
-                    ? `rgba(244, 63, 94, ${absVal * 0.4})` 
-                    : `rgba(6, 182, 212, ${absVal * 0.4})`;
-                  
-                  return (
-                    <td key={col} style={{ backgroundColor: bgColor, border: '1px solid var(--border-color)', padding: '0.5rem', color: 'var(--text-primary)', fontWeight: absVal > 0.5 ? 'bold' : 'normal' }}>
-                      {val.toFixed(2)}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {cols.map(row => {
+              const isRowInvestigated = row === invSubject || invCols.includes(row);
+              return (
+                <tr key={row} style={{ background: isRowInvestigated ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }}>
+                  <td style={{ 
+                    padding: '0.5rem', 
+                    textAlign: 'left', 
+                    fontWeight: 'bold', 
+                    borderRight: '1px solid var(--border-color)', 
+                    color: isRowInvestigated ? 'var(--accent-color)' : 'var(--text-primary)' 
+                  }}>
+                    {row}
+                    {isRowInvestigated && ' ★'}
+                  </td>
+                  {cols.map(col => {
+                    const val = matrix[row][col];
+                    if (val === null || val === undefined) return <td key={col} style={{ border: '1px solid var(--border-color)' }}>-</td>;
+                    const absVal = Math.abs(val);
+                    
+                    // Muted blue/red colors matching dark mode
+                    const bgColor = val > 0 
+                      ? `rgba(244, 63, 94, ${absVal * 0.4})` 
+                      : `rgba(6, 182, 212, ${absVal * 0.4})`;
+                    
+                    const isCellInvestigated = isRowInvestigated || col === invSubject || invCols.includes(col);
+
+                    return (
+                      <td key={col} style={{ 
+                        backgroundColor: bgColor, 
+                        border: isCellInvestigated ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--border-color)', 
+                        padding: '0.5rem', 
+                        color: 'var(--text-primary)', 
+                        fontWeight: absVal > 0.5 ? 'bold' : 'normal' 
+                      }}>
+                        {val.toFixed(2)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

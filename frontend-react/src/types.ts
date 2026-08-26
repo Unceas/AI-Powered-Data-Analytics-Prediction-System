@@ -177,3 +177,50 @@ export interface ReportPayload {
   executive_summary: string;
   created_at: string;
 }
+
+export interface WorkspaceInvestigation {
+  active: boolean;
+  investigation_id?: string;
+  source_insight_id?: string;
+  subject?: string;
+  selected_dimensions: string[];
+  filters: Record<string, any>;
+  related_columns: string[];
+  drill_down_path: string[];
+  summary?: string;
+  suggested_target?: string;
+}
+
+export interface WorkspacePredictionContext {
+  target: string | null;
+  relevant_columns: string[];
+  evidence_ids: string[];
+  investigation_id?: string;
+  inherited_from?: string;
+}
+
+export interface WorkspaceState {
+  dataset_id: string | null;
+  dataset_name: string | null;
+  analysis_id: string | null;
+  active_insight_id: string | null;
+  active_evidence_ids: string[];
+  investigation: WorkspaceInvestigation | null;
+  prediction_context: WorkspacePredictionContext | null;
+  conversation_context: {
+    active_subject?: string;
+    active_dimensions: string[];
+  };
+}
+
+export interface WorkspaceContextValue {
+  workspace: WorkspaceState;
+  setInvestigationFromInsight: (insight: Insight, dataset: Dataset) => void;
+  setPredictionFromInvestigation: (target: string, relevantColumns?: string[], evidenceIds?: string[]) => void;
+  selectDimension: (dimension: string) => void;
+  removeDimension: (dimension: string) => void;
+  clearInvestigation: () => void;
+  resetWorkspaceOnDatasetChange: (newDatasetId: string | null, newDatasetName: string | null) => void;
+  setActiveInsightId: (insightId: string | null) => void;
+}
+

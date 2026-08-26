@@ -28,6 +28,7 @@ import {
   ReferenceLine
 } from 'recharts';
 import { BrandIcon } from './BrandIcon';
+import { useWorkspace } from '../context/WorkspaceContext';
 import './Dashboard.css';
 
 interface DashboardProps {
@@ -40,6 +41,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate, onLoadSampleDataset, onGenerateReport }: DashboardProps) {
+  const { setInvestigationFromInsight, selectDimension, setPredictionFromInvestigation } = useWorkspace();
   const [activeChartTab, setActiveChartTab] = useState<'confidence' | 'weights' | 'anomalies' | 'correlation' | 'distribution'>('confidence');
   const [highlightedFeature, setHighlightedFeature] = useState<string | null>(null);
   const [highlightedAnomaly, setHighlightedAnomaly] = useState<boolean>(false);
@@ -1013,13 +1015,19 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                               style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const inv = activeDataset.activeInvestigation || activeDataset.investigations?.[0] || {
-                                  primary_feature: insight.driver || 'Feature',
-                                  drill_down_path: [insight.driver || 'Feature', 'Segment', 'Time'],
-                                  relevant_dimensions: [
-                                    { dimension: 'Segment', dimension_type: 'segment', distinct_count: 4, sample_values: ['Enterprise', 'SMB'], rationale: 'Segment variance' }
-                                  ],
-                                  summary: `Investigation drill-down for ${insight.driver || 'finding'}.`
+                                setInvestigationFromInsight(insight, activeDataset);
+                                const inv = {
+                                  primary_feature: insight.driver || (insight.related_columns && insight.related_columns[0]) || 'Feature',
+                                  drill_down_path: [insight.driver || 'Feature', ...(activeDataset.understanding?.column_profiles?.filter((p: any) => p.inferred_type === 'categorical' || p.inferred_type === 'temporal').map((p: any) => p.name).slice(0, 2) || ['Segment'])],
+                                  relevant_dimensions: activeDataset.understanding?.column_profiles?.filter((p: any) => p.inferred_type === 'categorical' || p.inferred_type === 'temporal').map((p: any) => ({
+                                    dimension: p.name,
+                                    dimension_type: p.inferred_type,
+                                    distinct_count: p.unique_count || 3,
+                                    sample_values: p.sample_values || [],
+                                    rationale: `Grouped variance across ${p.name}`
+                                  })) || [],
+                                  summary: insight.why_it_matters || insight.finding || `Investigation drill-down for ${insight.driver || 'finding'}.`,
+                                  suggested_prediction_target: insight.actionable_investigation_target || activeDataset.understanding?.candidate_targets?.[0] || insight.driver
                                 };
                                 setActiveInvestigationModal(inv);
                               }}
@@ -1523,13 +1531,29 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
             {activeInvestigationModal.relevant_dimensions && activeInvestigationModal.relevant_dimensions.length > 0 && (
               <div style={{ marginBottom: '1.25rem' }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
-                  Grounded Dataset Dimensions:
+                  Grounded Dataset Dimensions (Click to Add to Investigation):
                 </span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
                   {activeInvestigationModal.relevant_dimensions.map((dim: any, i: number) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-color)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                    <div 
+                      key={i} 
+                      onClick={() => selectDimension(dim.dimension)}
+                      style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        background: 'var(--bg-color)', 
+                        padding: '0.5rem 0.75rem', 
+                        borderRadius: '6px', 
+                        border: '1px solid var(--border-color)', 
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.15s ease'
+                      }}
+                      title={`Click to include ${dim.dimension} in workspace drill-down`}
+                    >
                       <div>
-                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{dim.dimension}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>+ {dim.dimension}</span>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>({dim.dimension_type})</span>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{dim.rationale}</div>
                       </div>
@@ -1543,12 +1567,21 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
             )}
 
             {/* Modal Actions */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', flexWrap: 'wrap' }}>
               <button 
                 className="btn-secondary btn-sm"
                 onClick={() => setActiveInvestigationModal(null)}
               >
                 Close
+              </button>
+              <button 
+                className="btn-secondary btn-sm"
+                onClick={() => {
+                  setActiveInvestigationModal(null);
+                  onNavigate('ai-chat');
+                }}
+              >
+                Ask InsightGrid →
               </button>
               <button 
                 className="btn-secondary btn-sm"
@@ -1562,6 +1595,8 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
               <button 
                 className="btn-primary btn-sm"
                 onClick={() => {
+                  const targetToUse = activeInvestigationModal.suggested_prediction_target || activeInvestigationModal.primary_feature;
+                  setPredictionFromInvestigation(targetToUse, [activeInvestigationModal.primary_feature]);
                   setActiveInvestigationModal(null);
                   onNavigate('ml-workbench');
                 }}

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Hero } from './components/Hero';
 import { DataManager } from './components/DataManager';
@@ -14,6 +14,8 @@ import html2canvas from 'html2canvas';
 import { IntelligenceReport } from './components/IntelligenceReport';
 import { LandingExperience } from './components/LandingExperience';
 import { BrandIcon } from './components/BrandIcon';
+import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
+import { WorkspaceContextBanner } from './components/WorkspaceContextBanner';
 import './App.css';
 
 import type { Dataset } from './types';
@@ -26,7 +28,7 @@ const getTimestamp = () => {
   return `[${h}:${m}:${s}]`;
 };
 
-function App() {
+function AppContent() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
@@ -54,6 +56,12 @@ function App() {
   });
 
   const activeDataset = datasets.find(d => d.id === activeDatasetId);
+  const { resetWorkspaceOnDatasetChange } = useWorkspace();
+
+  // Synchronize root workspace context with dataset selection
+  useEffect(() => {
+    resetWorkspaceOnDatasetChange(activeDatasetId, activeDataset?.name || null);
+  }, [activeDatasetId, activeDataset?.name, resetWorkspaceOnDatasetChange]);
 
   const generateReport = async () => {
     if (!activeDataset) return;
@@ -535,6 +543,7 @@ function App() {
       
       <main className="main-content">
         <Hero activeDataset={activeDataset} isGeneratingReport={isGeneratingReport} />
+        <WorkspaceContextBanner onNavigate={setCurrentView} />
         
         {currentView === 'dashboard' && (
           <Dashboard 
@@ -616,4 +625,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <WorkspaceProvider>
+      <AppContent />
+    </WorkspaceProvider>
+  );
+}
