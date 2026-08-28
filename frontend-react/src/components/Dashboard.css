@@ -2968,3 +2968,194 @@
   line-height: 1;
   margin: 0.1rem 0;
 }
+
+/* ==========================================================================
+   InsightGrid V1.4 — Proactive Discovery Section
+   ========================================================================== */
+
+.proactive-discovery-section {
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.proactive-discovery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.proactive-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.proactive-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent-color);
+  text-transform: uppercase;
+}
+
+.proactive-main-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.proactive-discovery-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--accent-light);
+  color: var(--accent-color);
+  border: 1px solid var(--accent-border);
+  letter-spacing: 0.05em;
+}
+
+.proactive-findings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.proactive-finding-card {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.proactive-finding-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.35);
+}
+
+.finding-card-top-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.finding-number {
+  font-size: 0.85rem;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  color: var(--accent-color);
+  background: var(--accent-light);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-border);
+}
+
+.finding-category-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.finding-priority-reason-pill {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  background: rgba(59, 130, 246, 0.08);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.finding-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.finding-summary {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  flex-grow: 1;
+}
+
+.finding-investigate-by-row {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.investigate-by-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.candidate-dimensions-list {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.candidate-dim-tag {
+  background: var(--bg-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.candidate-dim-tag:hover {
+  background: var(--accent-light);
+  color: var(--accent-color);
+  border-color: var(--accent-border);
+}
+
+.finding-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.proactive-investigate-btn {
+  font-size: 0.78rem !important;
+  padding: 0.4rem 0.85rem !important;
+  font-weight: 600 !important;
+}

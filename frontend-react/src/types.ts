@@ -74,6 +74,8 @@ export interface Insight {
   actionable_investigation_target?: string;
   evidence_ids?: string[];
   evidence_items?: EvidenceItem[];
+  investigation_candidates?: string[];
+  reason_for_priority?: string;
   evidence?: {
     feature_importance?: number;
     correlation?: number;

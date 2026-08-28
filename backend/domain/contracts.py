@@ -98,6 +98,8 @@ class InsightItem(BaseModel):
     related_columns: List[str] = Field(default_factory=list)
     recommended_next_step: str
     actionable_investigation_target: Optional[str] = None
+    investigation_candidates: List[str] = Field(default_factory=list)
+    reason_for_priority: Optional[str] = None
 
 
 class InsightListResponse(BaseModel):

@@ -866,15 +866,129 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
         </div>
       </div>
 
-      {/* Third Row: AI Insights Panel */}
+      {/* InsightGrid V1.4: Proactive Discovery Engine */}
+      {activeDataset.status.isInsightsGenerated && insightsList.length > 0 && (() => {
+        const keyFindings = insightsList.filter((ins: any) => ins.is_key_finding);
+        const displayProactive = keyFindings.length > 0 ? keyFindings.slice(0, 5) : insightsList.slice(0, 3);
+
+        return (
+          <div className="proactive-discovery-section animate-fade-in">
+            <div className="proactive-discovery-header">
+              <div className="proactive-title-group">
+                <span className="proactive-eyebrow">INSIGHTGRID FOUND</span>
+                <h3 className="proactive-main-title">
+                  {displayProactive.length} {displayProactive.length === 1 ? 'thing' : 'things'} worth investigating first
+                </h3>
+              </div>
+              <span className="proactive-discovery-badge">PROACTIVE DISCOVERY</span>
+            </div>
+
+            <div className="proactive-findings-grid">
+              {displayProactive.map((finding: any, idx: number) => {
+                const numStr = (idx + 1).toString().padStart(2, '0');
+                const candidateDims = (finding.investigation_candidates && finding.investigation_candidates.length > 0)
+                  ? finding.investigation_candidates
+                  : (activeDataset.understanding?.column_profiles?.filter((p: any) => (p.inferred_type === 'categorical' || p.inferred_type === 'temporal') && p.name !== finding.driver).map((p: any) => p.name).slice(0, 3) || ['Segment']);
+
+                const priorityReason = finding.reason_for_priority || finding.priority_reasons?.[0] || 'High statistical significance';
+
+                return (
+                  <div key={finding.insight_id || idx} className="proactive-finding-card">
+                    <div className="finding-card-top-row">
+                      <span className="finding-number">{numStr}</span>
+                      <span className="finding-category-pill">{finding.category}</span>
+                      <span className="finding-priority-reason-pill" title={priorityReason}>
+                        {priorityReason}
+                      </span>
+                    </div>
+
+                    <h4 className="finding-title">{finding.title || finding.finding}</h4>
+                    <p className="finding-summary">{finding.summary || finding.impact || finding.why_it_matters}</p>
+
+                    {candidateDims.length > 0 && (
+                      <div className="finding-investigate-by-row">
+                        <span className="investigate-by-label">Investigate by:</span>
+                        <div className="candidate-dimensions-list">
+                          {candidateDims.map((dim: string, dIdx: number) => (
+                            <button
+                              key={dIdx}
+                              className="candidate-dim-tag"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInvestigationFromInsight(finding, activeDataset);
+                                selectDimension(dim);
+                                const inv = {
+                                  primary_feature: finding.driver || (finding.related_columns && finding.related_columns[0]) || 'Feature',
+                                  drill_down_path: [finding.driver || 'Feature', dim],
+                                  relevant_dimensions: candidateDims.map((dimName: string) => {
+                                    const prof = activeDataset.understanding?.column_profiles?.find((p: any) => p.name === dimName);
+                                    return {
+                                      dimension: dimName,
+                                      dimension_type: prof?.inferred_type || 'categorical',
+                                      distinct_count: prof?.unique_count || 3,
+                                      sample_values: prof?.sample_values || [],
+                                      rationale: `Grouped variance across ${dimName}`
+                                    };
+                                  }),
+                                  summary: finding.why_it_matters || finding.summary || finding.finding,
+                                  suggested_prediction_target: finding.actionable_investigation_target || activeDataset.understanding?.candidate_targets?.[0] || finding.driver
+                                };
+                                setActiveInvestigationModal(inv);
+                              }}
+                              title={`Drill down ${finding.driver || 'finding'} by ${dim}`}
+                            >
+                              → {dim}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="finding-card-actions">
+                      <button
+                        className="btn-primary btn-sm proactive-investigate-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInvestigationFromInsight(finding, activeDataset);
+                          const inv = {
+                            primary_feature: finding.driver || (finding.related_columns && finding.related_columns[0]) || 'Feature',
+                            drill_down_path: [finding.driver || 'Feature', ...candidateDims.slice(0, 2)],
+                            relevant_dimensions: candidateDims.map((dimName: string) => {
+                              const prof = activeDataset.understanding?.column_profiles?.find((p: any) => p.name === dimName);
+                              return {
+                                dimension: dimName,
+                                dimension_type: prof?.inferred_type || 'categorical',
+                                distinct_count: prof?.unique_count || 3,
+                                sample_values: prof?.sample_values || [],
+                                rationale: `Grouped variance across ${dimName}`
+                              };
+                            }),
+                            summary: finding.why_it_matters || finding.summary || finding.finding,
+                            suggested_prediction_target: finding.actionable_investigation_target || activeDataset.understanding?.candidate_targets?.[0] || finding.driver
+                          };
+                          setActiveInvestigationModal(inv);
+                        }}
+                      >
+                        🔍 Investigate →
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Third Row: All Operational Findings & Explainability Console */}
       <div className="dataset-intelligence-summary-workspace card">
         <div className="panel-header-row">
           <div className="panel-title-group">
             <Sparkles size={16} className="text-accent active-glow" />
-            <h3>Traceable AI Insights & Explainability Console</h3>
+            <h3>All Operational Findings & Evidence Console</h3>
           </div>
           <span className="summary-badge highlight-badge">
-            {insightsList.length} Operational Findings
+            {insightsList.length} Total Findings
           </span>
         </div>
         

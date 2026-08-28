@@ -258,7 +258,10 @@ function AppContent() {
         analysis_data: {
           ...analyzeRes.data,
           ml_result: predictRes.data,
-          anomaly_result: anomalyRes.data
+          anomaly_result: anomalyRes.data,
+          column_profiles: understandRes.data?.column_profiles,
+          understanding: understandRes.data,
+          target_column: targetCol
         },
         context: "Synthesize concise, grounded findings directly from the verified analytical evidence.",
         dataset_name: file.name
