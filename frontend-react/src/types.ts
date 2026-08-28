@@ -94,6 +94,23 @@ export interface InvestigationDimension {
   rationale: string;
 }
 
+export interface InvestigationNode {
+  node_id: string;
+  investigation_id: string;
+  type: 'finding' | 'dimension' | 'observation' | 'evidence';
+  label: string;
+  value?: any;
+  related_columns?: string[];
+  evidence_ids?: string[];
+  parent_node_id?: string | null;
+  depth: number;
+  available_next_dimensions?: string[];
+  description?: string;
+  metric_name?: string;
+  metric_value?: any;
+  is_terminal?: boolean;
+}
+
 export interface InvestigationContext {
   investigation_id: string;
   insight_id?: string;
@@ -106,6 +123,9 @@ export interface InvestigationContext {
   supporting_evidence_ids: string[];
   summary: string;
   suggested_prediction_target?: string;
+  nodes?: InvestigationNode[];
+  root_node_id?: string;
+  active_node_id?: string;
 }
 
 export interface DecisionBrief {
@@ -191,6 +211,11 @@ export interface WorkspaceInvestigation {
   drill_down_path: string[];
   summary?: string;
   suggested_target?: string;
+  nodes?: InvestigationNode[];
+  root_node_id?: string;
+  active_node_id?: string;
+  available_next_dimensions?: string[];
+  is_terminal?: boolean;
 }
 
 export interface WorkspacePredictionContext {
@@ -221,6 +246,7 @@ export interface WorkspaceContextValue {
   setPredictionFromInvestigation: (target: string, relevantColumns?: string[], evidenceIds?: string[]) => void;
   selectDimension: (dimension: string) => void;
   removeDimension: (dimension: string) => void;
+  applyInvestigationStepResponse: (stepResponse: any, dimension: string) => void;
   clearInvestigation: () => void;
   resetWorkspaceOnDatasetChange: (newDatasetId: string | null, newDatasetName: string | null) => void;
   setActiveInsightId: (insightId: string | null) => void;

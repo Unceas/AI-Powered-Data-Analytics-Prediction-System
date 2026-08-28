@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   FileSpreadsheet,
@@ -29,6 +29,7 @@ import {
 } from 'recharts';
 import { BrandIcon } from './BrandIcon';
 import { useWorkspace } from '../context/WorkspaceContext';
+import api from '../utils/api';
 import './Dashboard.css';
 
 interface DashboardProps {
@@ -41,7 +42,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate, onLoadSampleDataset, onGenerateReport }: DashboardProps) {
-  const { setInvestigationFromInsight, selectDimension, setPredictionFromInvestigation } = useWorkspace();
+  const { setInvestigationFromInsight, selectDimension, setPredictionFromInvestigation, applyInvestigationStepResponse } = useWorkspace();
   const [activeChartTab, setActiveChartTab] = useState<'confidence' | 'weights' | 'anomalies' | 'correlation' | 'distribution'>('confidence');
   const [highlightedFeature, setHighlightedFeature] = useState<string | null>(null);
   const [highlightedAnomaly, setHighlightedAnomaly] = useState<boolean>(false);
@@ -50,6 +51,40 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
   const [selectedInsightIdx, setSelectedInsightIdx] = useState<number | null>(null);
   const [activePopover, setActivePopover] = useState<'health' | 'reliability' | null>(null);
   const [activeInvestigationModal, setActiveInvestigationModal] = useState<any | null>(null);
+  const [isDecomposing, setIsDecomposing] = useState<boolean>(false);
+
+  const handleDecomposeStep = async (dimension: string) => {
+    if (!activeInvestigationModal) return;
+    setIsDecomposing(true);
+    try {
+      const payload = {
+        dataset_id: activeDataset.id,
+        analysis_id: activeDataset.analyticsData ? `an-${activeDataset.id.slice(0, 8)}` : 'an-1',
+        investigation_id: activeInvestigationModal.investigation_id || `inv-${activeDataset.id.slice(0, 6)}`,
+        dimension: dimension,
+        parent_node_id: activeInvestigationModal.active_node_id || activeInvestigationModal.root_node_id,
+        current_nodes: activeInvestigationModal.nodes || [],
+        understanding: activeDataset.understanding,
+        analytics_data: activeDataset.analyticsData,
+        evidence_items: activeDataset.evidence || []
+      };
+      const res = await api.post('/investigate-step', payload);
+      if (res.data?.status === 'success' || res.data?.new_nodes) {
+        applyInvestigationStepResponse(res.data, dimension);
+        setActiveInvestigationModal((prev: any) => ({
+          ...prev,
+          nodes: res.data.all_nodes,
+          available_next_dimensions: res.data.available_next_dimensions,
+          is_terminal: res.data.is_terminal,
+          supporting_evidence_ids: Array.from(new Set([...(prev.supporting_evidence_ids || []), ...(res.data.supporting_evidence_ids || [])]))
+        }));
+      }
+    } catch (err) {
+      console.error('Error in progressive decomposition step:', err);
+    } finally {
+      setIsDecomposing(false);
+    }
+  };
 
   const insightsList = activeDataset?.insights || [];
   const decisionBrief = activeDataset?.decisionBrief;
@@ -1568,7 +1603,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
         </div>
       </div>
 
-      {/* Contextual Investigation Modal (InsightGrid V1.2) */}
+      {/* Contextual Investigation Modal: Progressive Decomposition Chain (InsightGrid V1.4 Iteration 2) */}
       {activeInvestigationModal && (
         <div style={{
           position: 'fixed',
@@ -1576,8 +1611,8 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(4px)',
+          backgroundColor: 'rgba(0,0,0,0.65)',
+          backdropFilter: 'blur(5px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1585,19 +1620,22 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           padding: '1rem'
         }}>
           <div className="card animate-fade-in" style={{
-            maxWidth: '640px',
+            maxWidth: '680px',
             width: '100%',
             background: 'var(--card-bg)',
             border: '1px solid var(--border-color)',
-            borderRadius: '12px',
+            borderRadius: '14px',
             padding: '1.5rem',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+            boxShadow: '0 25px 35px -5px rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '90vh'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Search size={18} className="text-accent" />
                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
-                  Investigation Workspace: {activeInvestigationModal.primary_feature}
+                  Investigation: {activeInvestigationModal.primary_feature}
                 </h3>
               </div>
               <button 
@@ -1608,77 +1646,104 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
               </button>
             </div>
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
               {activeInvestigationModal.summary}
             </p>
 
-            {/* Drill-down Path Visualization */}
-            {activeInvestigationModal.drill_down_path && activeInvestigationModal.drill_down_path.length > 0 && (
-              <div style={{ background: 'var(--bg-color)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
-                  Recommended Drill-Down Path:
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
-                  {activeInvestigationModal.drill_down_path.map((node: string, i: number) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ 
-                        fontSize: '0.8rem', 
-                        fontWeight: 700, 
-                        background: i === 0 ? 'var(--accent-light)' : 'rgba(59,130,246,0.1)', 
-                        color: i === 0 ? 'var(--accent-color)' : '#3b82f6',
-                        padding: '3px 8px', 
-                        borderRadius: '4px',
-                        border: i === 0 ? '1px solid var(--accent-border)' : '1px solid rgba(59,130,246,0.2)'
-                      }}>
-                        {node}
-                      </span>
-                      {i < activeInvestigationModal.drill_down_path.length - 1 && (
-                        <ArrowRight size={12} style={{ color: 'var(--text-secondary)' }} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Step-by-Step Progressive Decomposition Chain */}
+            <div className="progressive-decomposition-container">
+              {(() => {
+                const nodes = activeInvestigationModal.nodes && activeInvestigationModal.nodes.length > 0
+                  ? activeInvestigationModal.nodes
+                  : [
+                      {
+                        node_id: 'node-root-fallback',
+                        type: 'finding',
+                        label: activeInvestigationModal.primary_feature,
+                        description: activeInvestigationModal.summary,
+                        available_next_dimensions: activeInvestigationModal.relevant_dimensions?.map((d: any) => d.dimension) || []
+                      }
+                    ];
 
-            {/* Available Dimensions */}
-            {activeInvestigationModal.relevant_dimensions && activeInvestigationModal.relevant_dimensions.length > 0 && (
-              <div style={{ marginBottom: '1.25rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
-                  Grounded Dataset Dimensions (Click to Add to Investigation):
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
-                  {activeInvestigationModal.relevant_dimensions.map((dim: any, i: number) => (
-                    <div 
-                      key={i} 
-                      onClick={() => selectDimension(dim.dimension)}
-                      style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        background: 'var(--bg-color)', 
-                        padding: '0.5rem 0.75rem', 
-                        borderRadius: '6px', 
-                        border: '1px solid var(--border-color)', 
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.15s ease'
-                      }}
-                      title={`Click to include ${dim.dimension} in workspace drill-down`}
-                    >
-                      <div>
-                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>+ {dim.dimension}</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>({dim.dimension_type})</span>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{dim.rationale}</div>
+                return nodes.map((node: any, nIdx: number) => {
+                  const nodeType = node.type || 'finding';
+                  let typeClass = 'decomp-node-finding';
+                  let typeLabel = 'Finding (Root)';
+                  
+                  if (nodeType === 'dimension') {
+                    typeClass = 'decomp-node-dimension';
+                    typeLabel = 'Dimension';
+                  } else if (nodeType === 'observation') {
+                    typeClass = 'decomp-node-observation';
+                    typeLabel = 'Observation';
+                  } else if (nodeType === 'evidence') {
+                    typeClass = 'decomp-node-evidence';
+                    typeLabel = 'Verified Evidence';
+                  }
+
+                  return (
+                    <React.Fragment key={node.node_id || nIdx}>
+                      {nIdx > 0 && <div className="decomp-node-arrow">↓</div>}
+                      <div className={`decomp-chain-node ${typeClass}`}>
+                        <div className="decomp-node-header">
+                          <span className="decomp-node-tag">{typeLabel}</span>
+                          {node.metric_name && (
+                            <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
+                              {node.metric_name}: <strong className="text-accent">{String(node.metric_value)}</strong>
+                            </span>
+                          )}
+                        </div>
+                        <h5 className="decomp-node-title">{node.label}</h5>
+                        {node.description && <p className="decomp-node-desc">{node.description}</p>}
+                        {node.evidence_ids && node.evidence_ids.length > 0 && nodeType === 'evidence' && (
+                          <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
+                            {node.evidence_ids.map((evId: string, evIdx: number) => (
+                              <span key={evIdx} style={{ fontSize: '0.68rem', fontWeight: 700, background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6', padding: '1px 6px', borderRadius: '3px' }}>
+                                {evId}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', background: 'var(--accent-light)', padding: '2px 6px', borderRadius: '4px' }}>
-                        {dim.distinct_count} groups
-                      </span>
+                    </React.Fragment>
+                  );
+                });
+              })()}
+
+              {/* WHY? Progressive Decomposition Trigger Bar */}
+              {(() => {
+                const nextDims = activeInvestigationModal.available_next_dimensions || 
+                  activeInvestigationModal.relevant_dimensions?.filter((d: any) => !(activeInvestigationModal.drill_down_path || []).includes(d.dimension)).map((d: any) => d.dimension) || [];
+
+                if (activeInvestigationModal.is_terminal || nextDims.length === 0) {
+                  return (
+                    <div className="decomp-terminal-badge" style={{ marginTop: '0.5rem' }}>
+                      ✓ Analytical Lineage Complete — Supported by verified evidence
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  );
+                }
+
+                return (
+                  <div className="decomp-next-dimensions-bar">
+                    <span className="decomp-next-title">WHY? Break down further by:</span>
+                    <div className="decomp-chips-row">
+                      {nextDims.map((dim: string, dIdx: number) => (
+                        <button
+                          key={dIdx}
+                          className="decomp-dim-chip"
+                          disabled={isDecomposing}
+                          onClick={() => handleDecomposeStep(dim)}
+                          title={`Progressively decompose investigation by ${dim}`}
+                        >
+                          + {dim}
+                        </button>
+                      ))}
+                      {isDecomposing && <span style={{ fontSize: '0.75rem', color: 'var(--accent-color)' }}>Calculating grounded metrics...</span>}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
 
             {/* Modal Actions */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', flexWrap: 'wrap' }}>

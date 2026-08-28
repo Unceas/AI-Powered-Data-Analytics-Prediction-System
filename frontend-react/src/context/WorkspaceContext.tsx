@@ -71,22 +71,42 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     }
 
-    // Default select up to 2 initial dimensions
-    const initialSelectedDims = validDimensions.slice(0, 2);
-    const drillDown = [subject, ...initialSelectedDims];
     const evidenceIds = insight.evidence_ids || (insight.evidence_items ? insight.evidence_items.map(e => e.evidence_id) : []);
+
+    const invId = `inv-${Date.now().toString(36)}`;
+    const rootNodeId = `node-root-${Date.now().toString(36)}`;
+    const initialAvailableDims = validDimensions.slice(0, 4);
+
+    const rootNode: import('../types').InvestigationNode = {
+      node_id: rootNodeId,
+      investigation_id: invId,
+      type: 'finding',
+      label: insight.title || insight.finding || `Investigation: ${subject}`,
+      value: insight.summary || insight.impact || `Grounded finding on ${subject}`,
+      related_columns: relatedCols,
+      evidence_ids: evidenceIds,
+      parent_node_id: null,
+      depth: 0,
+      available_next_dimensions: initialAvailableDims,
+      description: insight.why_it_matters || insight.finding
+    };
 
     const newInvestigation: WorkspaceInvestigation = {
       active: true,
-      investigation_id: `inv-${Date.now().toString(36)}`,
+      investigation_id: invId,
       source_insight_id: insight.insight_id,
       subject: subject,
-      selected_dimensions: initialSelectedDims,
+      selected_dimensions: [],
       filters: {},
       related_columns: relatedCols,
-      drill_down_path: drillDown,
+      drill_down_path: [subject],
       summary: insight.why_it_matters || insight.finding || `Investigation on ${subject}`,
-      suggested_target: insight.actionable_investigation_target || dataset.understanding?.candidate_targets?.[0] || subject
+      suggested_target: insight.actionable_investigation_target || dataset.understanding?.candidate_targets?.[0] || subject,
+      nodes: [rootNode],
+      root_node_id: rootNodeId,
+      active_node_id: rootNodeId,
+      available_next_dimensions: initialAvailableDims,
+      is_terminal: false
     };
 
     const newPredictionContext: WorkspacePredictionContext = {
@@ -108,9 +128,45 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       prediction_context: newPredictionContext,
       conversation_context: {
         active_subject: subject,
-        active_dimensions: initialSelectedDims
+        active_dimensions: []
       }
     }));
+  }, []);
+
+  const applyInvestigationStepResponse = useCallback((stepResponse: any, dimension: string) => {
+    setWorkspace(prev => {
+      if (!prev.investigation) return prev;
+
+      const currentSelected = prev.investigation.selected_dimensions || [];
+      const updatedSelected = currentSelected.includes(dimension) ? currentSelected : [...currentSelected, dimension];
+      const updatedDrillDown = [prev.investigation.subject || 'Subject', ...updatedSelected];
+
+      const newNodes = Array.isArray(stepResponse?.all_nodes) ? stepResponse.all_nodes : (prev.investigation.nodes || []);
+      const activeNode = newNodes.length > 0 ? newNodes[newNodes.length - 1] : undefined;
+      const nextDims = Array.isArray(stepResponse?.available_next_dimensions) ? stepResponse.available_next_dimensions : [];
+      const isTerminal = Boolean(stepResponse?.is_terminal || nextDims.length === 0);
+
+      const supportingEvIds = Array.isArray(stepResponse?.supporting_evidence_ids) ? stepResponse.supporting_evidence_ids : [];
+      const mergedEvIds = Array.from(new Set([...prev.active_evidence_ids, ...supportingEvIds]));
+
+      return {
+        ...prev,
+        active_evidence_ids: mergedEvIds,
+        investigation: {
+          ...prev.investigation,
+          selected_dimensions: updatedSelected,
+          drill_down_path: updatedDrillDown,
+          nodes: newNodes,
+          active_node_id: activeNode?.node_id || prev.investigation.active_node_id,
+          available_next_dimensions: nextDims,
+          is_terminal: isTerminal
+        },
+        conversation_context: {
+          ...prev.conversation_context,
+          active_dimensions: updatedSelected
+        }
+      };
+    });
   }, []);
 
   const setPredictionFromInvestigation = useCallback((target: string, relevantColumns?: string[], evidenceIds?: string[]) => {
@@ -197,6 +253,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setPredictionFromInvestigation,
         selectDimension,
         removeDimension,
+        applyInvestigationStepResponse,
         clearInvestigation,
         resetWorkspaceOnDatasetChange,
         setActiveInsightId

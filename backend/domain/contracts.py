@@ -118,6 +118,23 @@ class InvestigationDimension(BaseModel):
     rationale: str
 
 
+class InvestigationNode(BaseModel):
+    node_id: str
+    investigation_id: str
+    type: Literal["finding", "dimension", "observation", "evidence"]
+    label: str
+    value: Optional[Any] = None
+    related_columns: List[str] = Field(default_factory=list)
+    evidence_ids: List[str] = Field(default_factory=list)
+    parent_node_id: Optional[str] = None
+    depth: int = 0
+    available_next_dimensions: List[str] = Field(default_factory=list)
+    description: Optional[str] = None
+    metric_name: Optional[str] = None
+    metric_value: Optional[Any] = None
+    is_terminal: bool = False
+
+
 class InvestigationContext(BaseModel):
     investigation_id: str
     insight_id: Optional[str] = None
@@ -130,12 +147,39 @@ class InvestigationContext(BaseModel):
     supporting_evidence_ids: List[str] = Field(default_factory=list)
     summary: str
     suggested_prediction_target: Optional[str] = None
+    nodes: List[InvestigationNode] = Field(default_factory=list)
+    root_node_id: Optional[str] = None
+    active_node_id: Optional[str] = None
 
 
 class InvestigationResponse(BaseModel):
     status: str
     message: str
     investigation: InvestigationContext
+
+
+class InvestigationStepRequest(BaseModel):
+    dataset_id: str
+    analysis_id: str
+    investigation_id: str
+    dimension: str
+    parent_node_id: Optional[str] = None
+    current_nodes: List[InvestigationNode] = Field(default_factory=list)
+    understanding: Optional[Dict[str, Any]] = None
+    analytics_data: Optional[Dict[str, Any]] = None
+    evidence_items: Optional[List[EvidenceItem]] = None
+    source_insight: Optional[InsightItem] = None
+
+
+class InvestigationStepResponse(BaseModel):
+    status: str
+    message: str
+    investigation_id: str
+    new_nodes: List[InvestigationNode]
+    all_nodes: List[InvestigationNode]
+    available_next_dimensions: List[str] = Field(default_factory=list)
+    supporting_evidence_ids: List[str] = Field(default_factory=list)
+    is_terminal: bool = False
 
 
 class DecisionBrief(BaseModel):

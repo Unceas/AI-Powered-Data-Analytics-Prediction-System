@@ -13,6 +13,15 @@ from backend.ai.insight_generator import generate_natural_language_insights
 import json
 from json import JSONDecodeError
 import numpy as np
+from backend.domain.contracts import (
+    InvestigationStepRequest,
+    InvestigationStepResponse,
+    InvestigationResponse,
+    InvestigationContext,
+    InvestigationNode,
+    InsightItem,
+    EvidenceItem
+)
 
 router = APIRouter()
 
@@ -279,7 +288,8 @@ async def investigate_insight_endpoint(payload: dict = Body(...)):
         insight=insight,
         understanding=understanding,
         evidence_items=evidence_items,
-        target_col=target_col
+        target_col=target_col,
+        analytics_data=analytics_data
     )
 
     return {
@@ -287,6 +297,24 @@ async def investigate_insight_endpoint(payload: dict = Body(...)):
         "message": "Investigation context derived successfully",
         "investigation": inv_context.model_dump()
     }
+
+@router.post("/investigate-step", response_model=InvestigationStepResponse)
+async def investigate_step_endpoint(payload: InvestigationStepRequest = Body(...)):
+    """Decompose investigation by one deterministic step along a chosen dataset dimension."""
+    from backend.analytics.investigation import decompose_investigation_step
+
+    return decompose_investigation_step(
+        dataset_id=payload.dataset_id,
+        analysis_id=payload.analysis_id,
+        investigation_id=payload.investigation_id,
+        dimension=payload.dimension,
+        parent_node_id=payload.parent_node_id,
+        current_nodes=payload.current_nodes,
+        understanding=payload.understanding,
+        analytics_data=payload.analytics_data,
+        evidence_items=payload.evidence_items,
+        source_insight=payload.source_insight
+    )
 
 @router.post("/generate-decision-brief")
 async def generate_decision_brief_endpoint(payload: dict = Body(...)):
