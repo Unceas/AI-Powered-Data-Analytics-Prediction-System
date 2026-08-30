@@ -1,303 +1,161 @@
-# InsightGrid — AI-Powered Data Analytics & Prediction System
+# InsightGrid — Evidence-Driven Data Analytics & Analytical Reasoning System
 
-![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688.svg)
-![React](https://img.shields.io/badge/React-Frontend-61DAFB.svg)
-![ML](https://img.shields.io/badge/Machine%20Learning-Enabled-orange.svg)
-![Status](https://img.shields.io/badge/Project-Active-brightgreen)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18%20%7C%20TypeScript-61DAFB.svg)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-Bundler-646CFF.svg)](https://vitejs.dev/)
+[![Tests](https://img.shields.io/badge/Pytest-61%2F61%20Passing%20(100%25)-brightgreen.svg)]()
+[![Status](https://img.shields.io/badge/Version-V1.4.2%20(Proactive%20Lineage)-blueviolet.svg)]()
 
-An AI-powered analytics platform designed for intelligent dataset processing, predictive modeling, anomaly detection, and automated insight generation using modern ML pipelines and LLM-powered interpretation systems.
-
-InsightGrid combines scalable backend services, machine learning workflows, and AI-generated analytical reasoning into a unified full-stack data intelligence platform.
-
----
-
-## Engineering Motivation
-
-Modern analytics workflows often require multiple disconnected tools for preprocessing, statistical analysis, predictive modeling, anomaly detection, and insight generation.
-
-InsightGrid was designed to unify these capabilities into a modular AI-powered analytics system capable of transforming raw datasets into structured, interpretable intelligence pipelines.
-
-The platform focuses on:
-- scalable backend architecture
-- automated preprocessing workflows
-- intelligent ML orchestration
-- AI-assisted dataset interpretation
-- extensible analytics infrastructure
+InsightGrid is an **evidence-backed analytical reasoning operating system** designed to transform raw tabular data into structured, traceable intelligence. Moving far beyond static dashboards or hallucinated AI summaries, InsightGrid enforces **mathematically verified evidence**, **calibrated predictive validation**, and **interactive progressive decomposition chains** (**Finding $\to$ Dimension $\to$ Observation $\to$ Evidence**).
 
 ---
 
-## Core Features
+## 🌟 Key Highlights & Architectural Flow
 
-- **Action-Centric Hero Workspace**: Clean landing dashboard featuring guided entry points, quick sessions launch, and recent telemetry metadata.
-- **Automated Dataset Ingestion Pipeline**: Full support for CSV & Excel spreadsheets.
-- **Intelligent Preprocessing & ML Orchestration**: Configurable missing value imputations, variable scaling, and feature encoding.
-- **3x3 Dataset Intelligence Overview Grid**: Displays 9 real-time metrics including Dimensions, Missing Value ratios, Model Accuracy, Anomalies, and Report readiness.
-- **Side-by-Side Split Workspace Layout**: Monitor ML progress traces alongside streaming console logs in real time.
-- **Executive Intelligence Report Engine**: PDF business report generator compiling dataset statistics, feature attributions, correlation heatmaps, and outlier summaries.
-- **Traceable AI Explanation Layer**: Conversational Insight Engine (powered by LLaMA 3.1 & Groq API) linking natural-language reasoning nodes directly to dataset components.
-- **Unified Accordion System Configuration**: Accordion-style preferences (Theme toggling, font sizing, density spacing, default algorithms, AI detail limits) synchronized with LocalStorage.
-
----
-
-## Operational Architecture & State Machine
-
-InsightGrid behaves as an **Operational Intelligence Console** rather than a static SaaS dashboard. Its real-time telemetry is governed by a strict, state-driven orchestration engine.
-
-### Pipeline Orchestration States
-The pipeline transitions through the following sequential states during dataset processing:
-1. **`IDLE`**: Standing by, awaiting data ingestion. Infrastructure is pre-initialized and ready.
-2. **`INITIALIZING`**: Acknowledges uploaded file context, extracts basic metadata.
-3. **`VALIDATING`**: Performs structural scans, schema verification, and null rate computations.
-4. **`PROCESSING`**: Triggers automated feature engineering, imputations, and normalization scaling.
-5. **`ANALYZING`**: Maps statistical dimensions, builds attribution matrices, and calculates correlation arrays.
-6. **`RUNNING INFERENCE`**: Fits estimators (Random Forest Classifier + Isolation Forest outliers) and computes metrics.
-7. **`SYNTHESIZING INSIGHTS`**: Connects LLaMA-3 context vectors via Groq API to formulate natural language intelligence.
-8. **`COMPLETE`**: Finalized state. Displays full canvas visuals, interactive anchors, and enables executive report exports.
-
-### Live Telemetry Streaming
-- **Execution Trace Logs**: High-frequency streaming output of pipeline event actions (e.g. standardizing variables, converging nodes, OOB accuracy settlements) rendered line-by-line with fine-grained millisecond timestamps.
-- **System Heartbeat**: Active pulse telemetry indicating browser-to-runtime endpoint synchronization.
-
-### Explainable AI (XAI) & Interactive Linking
-- **Attribution Mapping**: Displays feature importance weights (Gini impurity decreases) directly tied to specific variables.
-- **Anomaly Pulse Vectors**: Pulse indicators pinpointing Isolation Forest outlier markers deviating > 2.1σ.
-- **Contextual Inspection**: Highlight overlays on the analytics canvas allowing users to trace reasoning nodes directly to prediction vectors.
-
----
-
-## System Architecture
-
-```bash
-Frontend (React + Vite)
-        │
-        │ REST APIs / JSON
-        ▼
-Backend (FastAPI)
-        │
-        ├── Data Processing Pipeline
-        ├── Analytics Engine
-        ├── ML Prediction Layer
-        ├── Anomaly Detection
-        └── AI Insight Generation (Groq API)
+```
+Dataset Ingestion
+       │
+       ▼
+Data Understanding & Profiling (Types, Cardinality, Skewness, Candidate Targets)
+       │
+       ▼
+Statistical Analytics (Pearson Correlations, Distribution Moments, Isolation Forest Outliers)
+       │
+       ▼
+Deterministic Evidence Layer (Immutable EvidenceItems with Units, Provenance & Scope)
+       │
+       ▼
+Prediction Engine V1.1 (Stratified Holdout, Calibrated Reliability Scores & Driver Attribution)
+       │
+       ▼
+Proactive Discovery Engine V1.4.1 (Multi-Factor Deterministic Ranking & Top 3–5 Key Findings)
+       │
+       ▼
+Why? Progressive Decomposition Chains V1.4.2 (Interactive Finding → Dimension → Observation → Evidence)
+       │
+       ▼
+Persistent Analytical Workspace (Single Source of Truth Across Tabs & Handoffs)
 ```
 
 ---
 
-## Technical Stack
+## 🚀 Version Evolution Summary
 
-| Layer | Technologies |
-|------|---------------|
-| Frontend | React, Vite, TypeScript |
-| Backend | FastAPI, Python |
-| ML & Analytics | Scikit-learn, Pandas, NumPy |
-| AI Layer | Groq API, LLaMA 3.1 |
-| Deployment | Vercel, Render, Railway |
+| Version | Milestone | Key Capabilities |
+|---|---|---|
+| **V1.0** | **Analytics & Preprocessing** | Automated missing value imputation, scaling, Random Forest fitting, Isolation Forest anomaly screening, PDF business reports. |
+| **V1.1** | **Calibrated Prediction Engine** | Stratified 80/20 holdout evaluations, zero synthetic metrics, calibrated reliability scoring ($0-100$), multi-factor driver attribution. |
+| **V1.2** | **Analytical Intelligence & Decision Layer** | Immutable `EvidenceItem` extraction with statistical units and provenance, deterministic insight scoring, 6-part executive `DecisionBrief`, grounded context derivation. |
+| **V1.3** | **Persistent Analytical Workspace** | Centralized `WorkspaceContext` state management, universal 1-click "Why?" buttons, cross-tab continuity (Understand $\leftrightarrow$ Analyze $\leftrightarrow$ Predict $\leftrightarrow$ Investigate $\leftrightarrow$ Ask Copilot), safe root invalidation. |
+| **V1.4.1** | **Proactive Discovery Engine** | Deterministic multi-factor scoring (Magnitude, Severity, Target Relevance, Corroboration), diversity deduplication ($-15.0$ redundant penalty), top 3–5 Key Findings showcase (`INSIGHTGRID FOUND: X things worth investigating first`). |
+| **V1.4.2** | **Why? Progressive Decomposition Chains** | `InvestigationNode` lineage trees ($Finding \to Dimension \to Observation \to Evidence$), strict Investigation Integrity Rules (measurements derived exclusively from verified aggregates), live `POST /investigate-step` interactive drill-down. |
+
+👉 For full version details and design decisions, see [**docs/VERSION_HISTORY.md**](docs/VERSION_HISTORY.md).  
+👉 For complete architectural contracts and pipeline specifications, see [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md).
 
 ---
 
-## Local Development
+## 🔒 Investigation Integrity Rules
 
-### Prerequisites
+InsightGrid adheres to strict principles to ensure every claim is real and verifiable:
 
+1. **Measurable Verification**: Every observation contains an exact measurable statistic (`cohort_record_count`, `mean_distribution`, `pearson_r`).
+2. **Column Provenance**: Every observation identifies the dataset column(s) used.
+3. **Reproducibility**: Every observation is reproducible from underlying analytical aggregates (`categorical_summaries`, `distributions`, `correlation_matrix`, or `evidence_items`).
+4. **Sample Values Restriction**: `ColumnProfile.sample_values` are only used for validating column existence, NEVER as evidence for an analytical claim.
+5. **No Fabricated Causality**: Correlation is never described as causation ("shows the largest observed concentration", "observed linear relationship").
+6. **Graceful Insufficiency Handling**: If analytical data is missing for a requested dimension, returns `"No supported decomposition available"` rather than inventing numbers.
+7. **No Fabricated IDs**: Evidence IDs and node IDs are strictly generated and tracked by the backend.
+8. **Backend Single Source of Truth**: The React UI renders strictly what the backend calculates.
+
+---
+
+## 💻 Tech Stack
+
+- **Backend**: Python 3.11+, FastAPI, Pydantic V2, NumPy, Pandas, Scikit-learn, Requests, Pytest.
+- **Frontend**: React 18, Vite, TypeScript, Lucide Icons, Recharts, Context API.
+- **AI & Natural Language**: Groq API, LLaMA 3.1 8B Instant (for grounded Q&A over verified evidence).
+
+---
+
+## ⚡ Quickstart & Local Setup
+
+### 1. Prerequisites
 - Python 3.11+
-- Node.js 18+
-- Groq API Key
+- Node.js 18+ & npm
 
-### Backend Setup
-
+### 2. Backend Setup
 ```bash
-git clone https://github.com/YOUR_USERNAME/insightgrid.git
-cd insightgrid
+# Clone the repository
+git clone https://github.com/Unceas/AI-Powered-Data-Analytics-Prediction-System.git
+cd AI-Powered-Data-Analytics-Prediction-System
 
+# Create and activate virtual environment
 python -m venv venv
 
-# Windows
-venv\Scripts\activate
+# Windows PowerShell:
+.\venv\Scripts\Activate.ps1
+# Linux / macOS:
+# source venv/bin/activate
 
-# Linux / macOS
-source venv/bin/activate
-
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### Configure Environment
-
-```bash
+# Configure environment variables
 cp .env.example .env
+# Edit .env and add your GROQ_API_KEY (optional for LLM grounding; deterministic engine works 100% offline)
+
+# Start backend server
+uvicorn backend.main:app --reload --port 8000
 ```
 
-Add your:
-
-```env
-GROQ_API_KEY=your_api_key
-```
-
-### Start Backend Server
-
-```bash
-uvicorn backend.main:app --reload
-```
-
-API:
-```bash
-http://localhost:8000
-```
-
-Swagger Docs:
-```bash
-http://localhost:8000/docs
-```
-
-### Frontend Setup
-
+### 3. Frontend Setup
 ```bash
 cd frontend-react
 npm install
 npm run dev
 ```
-
-Dashboard:
-```bash
-http://localhost:5173
-```
+Open **`http://localhost:5173`** in your browser to access the workspace.
 
 ---
 
-## Deployment
+## 🧪 Automated Testing & Verification
 
-### Frontend → Vercel
+InsightGrid features an extensive automated test suite verifying data ingestion, statistical calculations, ML holdout validation, evidence provenance, workspace persistence, and progressive decomposition:
 
 ```bash
-Build Command:
+# Run backend pytest suite (61 tests)
+python -m pytest
+
+# Run frontend build and type checks
+cd frontend-react
 npm run build
-
-Output Directory:
-dist
-```
-
-Environment Variable:
-
-```env
-VITE_API_URL=https://your-backend.onrender.com/api
-```
-
-### Backend → Render
-
-```bash
-Build Command:
-pip install -r requirements.txt
-```
-
-```bash
-Start Command:
-uvicorn backend.main:app --host 0.0.0.0 --port $PORT
-```
-
-Environment Variables:
-
-```env
-GROQ_API_KEY=your_groq_api_key
-APP_CORS_ORIGINS=https://your-app.vercel.app
-```
-
-### Backend → Railway
-
-Railway automatically detects the included:
-
-```bash
-Procfile
-```
-
-Add the same environment variables used for Render deployment.
-
----
-
-## API Integration Flow
-
-| Direction | Data Flow |
-|-----------|-----------|
-| Frontend → Backend | Dataset uploads, analytics requests, preprocessing configurations |
-| Backend → Frontend | Predictions, processed data, AI-generated insights |
-| Communication Format | JSON over REST APIs |
-
----
-
-## Supported Upload Formats
-
-| Format | Processing Handler |
-|--------|-------------------|
-| `.csv` | `pandas.read_csv()` |
-| `.xlsx` / `.xls` | `pandas.read_excel()` |
-
----
-
-## Project Structure
-
-```bash
-├── backend/
-│   ├── main.py
-│   ├── api/routes.py
-│   ├── ingestion/
-│   ├── processing/
-│   ├── analytics/
-│   ├── ml/
-│   └── ai/
-│
-├── frontend-react/
-│   ├── src/
-│   ├── vercel.json
-│   └── package.json
-│
-├── requirements.txt
-├── Procfile
-├── render.yaml
-├── runtime.txt
-└── .env.example
 ```
 
 ---
 
-## Core Engineering Concepts
+## 📡 API Overview
 
-- Modular backend architecture
-- ML inference orchestration
-- Automated preprocessing pipelines
-- Statistical analytics systems
-- LLM-powered insight generation
-- Full-stack API integration
-- AI-assisted business intelligence
-- Scalable analytics infrastructure
-
----
-
-## Production Roadmap
-
-- Async task execution with worker queues
-- Redis caching for repeated analytics queries
-- PostgreSQL integration for persistent storage
-- Distributed ML processing pipelines
-- Cloud object storage integration (S3)
-- Real-time analytics streaming
-- Multi-user dataset management
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/upload-csv` | Ingests CSV dataset and returns structural metadata |
+| `POST` | `/understand-csv` | Computes column profiles, cardinality, and quality details |
+| `POST` | `/process-data` | Imputes missing values, normalizes, and encodes variables |
+| `POST` | `/analyze-dataframe` | Computes correlations, distribution moments, and outliers |
+| `POST` | `/extract-evidence` | Extracts deterministic, immutable `EvidenceItem` objects |
+| `POST` | `/predict-csv` | Trains estimators on 80/20 holdout with calibrated reliability scoring |
+| `POST` | `/generate-insights` | Synthesizes prioritized, deduplicated `InsightItem` findings |
+| `POST` | `/investigate-insight` | Initializes `InvestigationContext` and root finding node |
+| `POST` | `/investigate-step` | Progressively decomposes an investigation along a selected dimension |
+| `POST` | `/generate-decision-brief` | Synthesizes 6-part executive `DecisionBrief` |
+| `POST` | `/ask-insightgrid` | Evidence-grounded conversational Q&A |
+| `POST` | `/generate-report` | Compiles comprehensive executive PDF intelligence report |
 
 ---
 
-## Future Vision
+## 👥 Author & License
 
-InsightGrid is being designed as a scalable AI-assisted analytics infrastructure capable of evolving into a fully autonomous business intelligence and predictive analytics platform.
-
-The long-term goal is to combine:
-- intelligent data pipelines
-- aumated ML
-- AI-driven interpretation
-- scalable backend orchestration
-- Direct pdf takeaway redy to be used in real world presentations.
-
-into a unified analytics operating system.
-
----
-
-## Author
-
-Ayush Kushwaha
+- **Author**: Ayush Kushwaha
+- **Repository**: [https://github.com/Unceas/AI-Powered-Data-Analytics-Prediction-System](https://github.com/Unceas/AI-Powered-Data-Analytics-Prediction-System)
+- **License**: MIT License
