@@ -247,3 +247,81 @@ def test_multi_step_progressive_decomposition_and_evidence_termination():
     assert len(step2_res.all_nodes) >= 4
     assert any(n.type == "evidence" for n in step2_res.all_nodes)
     assert "ev-india-drop" in step2_res.supporting_evidence_ids
+
+
+def test_non_causal_language_in_observations():
+    """Verify that observations use associative and observational language, never claiming unsupported causality."""
+    understanding = {
+        "column_profiles": [
+            {"name": "promo_code", "inferred_type": "categorical", "unique_count": 3}
+        ],
+        "row_count": 200
+    }
+
+    analytics_data = {
+        "categorical_summaries": {
+            "promo_code": {"DISCOUNT50": 120, "SUMMER": 80}
+        }
+    }
+
+    res = decompose_investigation_step(
+        dataset_id="ds-1",
+        analysis_id="an-1",
+        investigation_id="inv-promo",
+        dimension="promo_code",
+        understanding=understanding,
+        analytics_data=analytics_data
+    )
+
+    obs_desc = res.new_nodes[1].description.lower()
+    # Check for non-causal terminology
+    assert "caused" not in obs_desc
+    assert "led to" not in obs_desc
+    assert "is responsible for" not in obs_desc
+    assert any(w in obs_desc for w in ["accounts for", "concentration", "observed", "distribution", "relationship"])
+
+
+def test_investigation_context_serialization():
+    """Verify that the investigation context with InvestigationNodes serializes and deserializes cleanly."""
+    node1 = InvestigationNode(
+        node_id="n-1",
+        investigation_id="inv-ser",
+        type="finding",
+        label="Root Finding",
+        value=14.2,
+        related_columns=["revenue"],
+        evidence_ids=["ev-1"]
+    )
+    node2 = InvestigationNode(
+        node_id="n-2",
+        investigation_id="inv-ser",
+        type="dimension",
+        label="Break down by region",
+        value="region",
+        parent_node_id="n-1",
+        depth=1
+    )
+
+    ctx = InvestigationContext(
+        investigation_id="inv-ser",
+        dataset_id="ds-ser",
+        analysis_id="an-ser",
+        primary_feature="revenue",
+        summary="Investigation summary",
+        nodes=[node1, node2],
+        root_node_id="n-1",
+        active_node_id="n-2"
+    )
+
+    dumped = ctx.model_dump()
+    assert dumped["investigation_id"] == "inv-ser"
+    assert len(dumped["nodes"]) == 2
+    assert dumped["nodes"][0]["type"] == "finding"
+    assert dumped["nodes"][1]["type"] == "dimension"
+
+    reloaded = InvestigationContext.model_validate(dumped)
+    assert reloaded.investigation_id == ctx.investigation_id
+    assert len(reloaded.nodes) == 2
+    assert reloaded.nodes[0].node_id == "n-1"
+    assert reloaded.nodes[1].type == "dimension"
+
