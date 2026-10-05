@@ -24,6 +24,9 @@ V1.4 (Iteration 1): Proactive Discovery Engine
   ▼
 V1.4 (Iteration 2): Why? Progressive Decomposition Chains
   │  InvestigationNode Lineage (Finding → Dimension → Observation → Evidence), Investigation Integrity Rules
+  ▼
+V1.4.4.1: Deterministic Evidence Graph
+  │  Inter-Evidence Relationship Layer (Supports, Corroborates, Contradicts, Derived-From, Related-To)
 ```
 
 ---
@@ -125,3 +128,30 @@ V1.4 (Iteration 2): Why? Progressive Decomposition Chains
   9. Naturally terminates with verified `EvidenceItem` references.
 - **Backend as Analytical Source of Truth**:
   - React frontend renders strictly what the backend proves, maintaining full state persistence in `WorkspaceContext`.
+
+---
+
+### 🔹 InsightGrid V1.4.4.1 — Deterministic Evidence Graph
+*Elevating evidence from isolated attachments into an interconnected, deterministic analytical graph.*
+
+- **Graph Layer Architecture**:
+  - Evolved system flow: `DATA → UNDERSTANDING → ANALYSIS → EVIDENCE → EVIDENCE RELATIONSHIPS → FINDINGS / INVESTIGATION / COPILOT`.
+  - Zero LLM inferences or hallucinations: relationships are strictly computed from analytical aggregates, schema definitions, and statistical facts.
+- **Strict Relationship Taxonomy**:
+  - `supports`: Directed relationship where an evidence item provides statistical grounding or evidentiary foundation for another (e.g. distribution moments supporting anomaly detection).
+  - `corroborates`: Symmetric relationship where two evidence items substantiate the same finding or demonstrate compatible statistical patterns across identical features.
+  - `contradicts`: Conservative mathematical inconsistency detection (e.g. opposing correlation signs with both $|r| \ge 0.35$, or conflicting missingness claims on the same column).
+  - `derived_from`: Directed derivation where one evidence item is analytically derived from another (e.g. model feature driver attribution derived from bivariate correlation).
+  - `related_to`: Symmetric relationship connecting evidence items that share one or more verified dataset columns.
+- **Determinism & Integrity Guarantees**:
+  - Stable, reproducible relationship IDs computed via SHA-256 hashes of dataset, analysis, canonical entity IDs, and relationship types.
+  - Canonical symmetric normalization: unordered pairs strictly enforced with `source_evidence_id < target_evidence_id`.
+  - Zero duplicate edges: only the highest-priority relationship is retained per pair (`contradicts` > `corroborates` / `derived_from` / `supports` > `related_to`).
+  - Strict dataset and analysis isolation: evidence items from different datasets or analysis runs are never cross-linked.
+  - Self-relationships strictly prohibited (`source_evidence_id != target_evidence_id`).
+- **Comprehensive System Integration**:
+  - Backend API: `POST /evidence-graph` endpoint returning verified `EvidenceGraphResponse`, and updated `POST /extract-evidence` attaching graph relationships.
+  - Investigation Workspace: Progressive decomposition lineage trees and investigation contexts display relevant inter-evidence relationships.
+  - Copilot Grounded Q&A: `POST /ask-insightgrid` injects verified evidence relationships to contextualize answers and declare evidence boundaries.
+  - Frontend UI: Color-coded relationship badges (`[Corroborates]`, `[Supports]`, `[Contradicts]`, `[Derived From]`, `[Related To]`) with verified rationales.
+  - Test Suite: 23 dedicated unit and integration tests in `tests/test_v1_4_4_1_evidence_graph.py` (84/84 tests passing overall).

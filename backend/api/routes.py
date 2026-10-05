@@ -20,7 +20,11 @@ from backend.domain.contracts import (
     InvestigationContext,
     InvestigationNode,
     InsightItem,
-    EvidenceItem
+    EvidenceItem,
+    EvidenceRelationship,
+    EvidenceGraph,
+    EvidenceGraphResponse,
+    EvidenceGraphRequest
 )
 
 router = APIRouter()
@@ -229,6 +233,8 @@ async def generate_insights(request: AIInsightRequest = Body(...)):
 async def extract_evidence_endpoint(payload: dict = Body(...)):
     """Extract deterministic, structured Evidence items from analysis artifacts."""
     from backend.analytics.evidence import extract_evidence
+    from backend.analytics.evidence_graph import build_evidence_graph
+
     dataset_id = payload.get("dataset_id", "")
     analysis_id = payload.get("analysis_id", "")
     understanding = payload.get("understanding")
@@ -245,26 +251,86 @@ async def extract_evidence_endpoint(payload: dict = Body(...)):
         ml_result=ml_result
     )
 
+    graph = build_evidence_graph(
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        evidence_items=evidence_items,
+        analytics_data=analytics_data
+    )
+
     return {
         "status": "success",
         "message": "Evidence extracted successfully",
         "dataset_id": dataset_id,
         "analysis_id": analysis_id,
         "total_evidence_count": len(evidence_items),
-        "evidence": [e.model_dump() for e in evidence_items]
+        "evidence": [e.model_dump() for e in evidence_items],
+        "relationships": [r.model_dump() for r in graph.relationships]
     }
+
+@router.post("/evidence-graph", response_model=EvidenceGraphResponse)
+async def evidence_graph_endpoint(payload: dict = Body(...)):
+    """Build deterministic Evidence Graph connecting evidence items via verified relationships."""
+    from backend.analytics.evidence_graph import build_evidence_graph
+    from backend.domain.contracts import EvidenceItem, InsightItem, EvidenceGraphResponse
+
+    dataset_id = payload.get("dataset_id", "")
+    analysis_id = payload.get("analysis_id", "")
+    raw_evidence = payload.get("evidence_items", [])
+    raw_insights = payload.get("insights", [])
+    analytics_data = payload.get("analytics_data")
+
+    evidence_items = []
+    for item in raw_evidence:
+        if isinstance(item, dict):
+            try:
+                evidence_items.append(EvidenceItem(**item))
+            except Exception:
+                pass
+        elif isinstance(item, EvidenceItem):
+            evidence_items.append(item)
+
+    insights = []
+    for ins in raw_insights:
+        if isinstance(ins, dict):
+            try:
+                insights.append(InsightItem(**ins))
+            except Exception:
+                pass
+        elif isinstance(ins, InsightItem):
+            insights.append(ins)
+
+    graph = build_evidence_graph(
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        evidence_items=evidence_items,
+        insights=insights,
+        analytics_data=analytics_data
+    )
+
+    return EvidenceGraphResponse(
+        status="success",
+        message="Evidence graph built successfully",
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        total_evidence_count=len(graph.evidence),
+        total_relationship_count=len(graph.relationships),
+        graph=graph
+    )
 
 @router.post("/investigate-insight")
 async def investigate_insight_endpoint(payload: dict = Body(...)):
     """Derive deterministic investigation dimensions and drill-down paths for an insight."""
     from backend.analytics.investigation import derive_investigation_context
-    from backend.domain.contracts import InsightItem, EvidenceItem
+    from backend.domain.contracts import InsightItem, EvidenceItem, EvidenceRelationship
 
     dataset_id = payload.get("dataset_id", "")
     analysis_id = payload.get("analysis_id", "")
     understanding = payload.get("understanding")
+    analytics_data = payload.get("analytics_data")
     raw_insight = payload.get("insight")
     raw_evidence = payload.get("evidence_items", [])
+    raw_rel = payload.get("evidence_relationships", [])
     target_col = payload.get("target_column")
 
     insight = None
@@ -282,6 +348,14 @@ async def investigate_insight_endpoint(payload: dict = Body(...)):
             except Exception:
                 pass
 
+    evidence_relationships = []
+    for rel in raw_rel:
+        if isinstance(rel, dict):
+            try:
+                evidence_relationships.append(EvidenceRelationship(**rel))
+            except Exception:
+                pass
+
     inv_context = derive_investigation_context(
         dataset_id=dataset_id,
         analysis_id=analysis_id,
@@ -289,7 +363,8 @@ async def investigate_insight_endpoint(payload: dict = Body(...)):
         understanding=understanding,
         evidence_items=evidence_items,
         target_col=target_col,
-        analytics_data=analytics_data
+        analytics_data=analytics_data,
+        evidence_relationships=evidence_relationships if evidence_relationships else None
     )
 
     return {
@@ -378,12 +453,21 @@ async def ask_insightgrid_endpoint(payload: dict = Body(...)):
     raw_evidence = payload.get("evidence_items", [])
     raw_context = payload.get("context")
     history = payload.get("history")
+    raw_rel = payload.get("evidence_relationships", [])
     
     evidence_items = []
     for item in raw_evidence:
         if isinstance(item, dict):
             try:
                 evidence_items.append(EvidenceItem(**item))
+            except Exception:
+                pass
+
+    evidence_relationships = []
+    for rel in raw_rel:
+        if isinstance(rel, dict):
+            try:
+                evidence_relationships.append(EvidenceRelationship(**rel))
             except Exception:
                 pass
 
@@ -399,6 +483,7 @@ async def ask_insightgrid_endpoint(payload: dict = Body(...)):
         dataset_name=dataset_name,
         evidence_items=evidence_items,
         context=context,
-        history=history
+        history=history,
+        evidence_relationships=evidence_relationships if evidence_relationships else None
     )
     return result.model_dump()

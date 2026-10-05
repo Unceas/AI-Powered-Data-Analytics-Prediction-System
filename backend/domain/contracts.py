@@ -71,6 +71,43 @@ class EvidenceItem(BaseModel):
     technical_details: Optional[Dict[str, Any]] = None
 
 
+class EvidenceRelationship(BaseModel):
+    relationship_id: str
+    dataset_id: str
+    analysis_id: str
+    source_evidence_id: str
+    target_evidence_id: str
+    relationship_type: Literal["supports", "corroborates", "contradicts", "related_to", "derived_from"]
+    rationale: str
+    confidence: Literal["high", "medium", "low"] = "medium"
+    related_columns: List[str] = Field(default_factory=list)
+    created_from: Literal[
+        "shared_finding",
+        "shared_metric",
+        "shared_columns",
+        "compatible_pattern",
+        "conflicting_pattern",
+        "derivation_chain"
+    ]
+
+
+class EvidenceGraph(BaseModel):
+    dataset_id: str
+    analysis_id: str
+    evidence: List[EvidenceItem] = Field(default_factory=list)
+    relationships: List[EvidenceRelationship] = Field(default_factory=list)
+
+
+class EvidenceGraphResponse(BaseModel):
+    status: str
+    message: str
+    dataset_id: str
+    analysis_id: str
+    total_evidence_count: int
+    total_relationship_count: int
+    graph: EvidenceGraph
+
+
 class EvidenceResponse(BaseModel):
     status: str
     message: str
@@ -78,6 +115,7 @@ class EvidenceResponse(BaseModel):
     dataset_id: str
     total_evidence_count: int
     evidence: List[EvidenceItem]
+    relationships: Optional[List[EvidenceRelationship]] = None
 
 
 class InsightItem(BaseModel):
@@ -108,6 +146,14 @@ class InsightListResponse(BaseModel):
     analysis_id: str
     dataset_id: str
     insights: List[InsightItem]
+
+
+class EvidenceGraphRequest(BaseModel):
+    dataset_id: str
+    analysis_id: str
+    evidence_items: Optional[List[EvidenceItem]] = None
+    insights: Optional[List[InsightItem]] = None
+    analytics_data: Optional[Dict[str, Any]] = None
 
 
 class InvestigationDimension(BaseModel):
@@ -150,6 +196,7 @@ class InvestigationContext(BaseModel):
     nodes: List[InvestigationNode] = Field(default_factory=list)
     root_node_id: Optional[str] = None
     active_node_id: Optional[str] = None
+    evidence_relationships: List[EvidenceRelationship] = Field(default_factory=list)
 
 
 class InvestigationResponse(BaseModel):
@@ -213,6 +260,7 @@ class AnalyticalContext(BaseModel):
     previous_subject: Optional[str] = None
     investigation: Optional[Dict[str, Any]] = None
     active_evidence_ids: List[str] = Field(default_factory=list)
+    evidence_relationships: List[EvidenceRelationship] = Field(default_factory=list)
     conversation_history: List[Dict[str, str]] = Field(default_factory=list)
 
 
@@ -221,6 +269,7 @@ class AskInsightGridRequest(BaseModel):
     dataset_id: str
     analysis_id: Optional[str] = None
     evidence_items: Optional[List[EvidenceItem]] = None
+    evidence_relationships: Optional[List[EvidenceRelationship]] = None
     dataset_name: Optional[str] = None
     context: Optional[AnalyticalContext] = None
     history: Optional[List[Dict[str, str]]] = None
@@ -247,5 +296,6 @@ class ReportPayload(BaseModel):
     investigations: List[InvestigationContext] = Field(default_factory=list)
     prediction: Optional[Dict[str, Any]] = None
     evidence: List[EvidenceItem] = Field(default_factory=list)
+    evidence_relationships: List[EvidenceRelationship] = Field(default_factory=list)
     executive_summary: str
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

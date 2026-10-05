@@ -80,7 +80,37 @@ class EvidenceItem(BaseModel):
     technical_details: Dict[str, Any] = Field(default_factory=dict)
 ```
 
-### 2. `InsightItem`
+### 2. `EvidenceRelationship` & `EvidenceGraph` (V1.4.4.1)
+A deterministic analytical layer where verified evidence items maintain verified relationships with one another.
+```python
+class EvidenceRelationship(BaseModel):
+    relationship_id: str
+    dataset_id: str
+    analysis_id: str
+    source_evidence_id: str
+    target_evidence_id: str
+    relationship_type: Literal["supports", "corroborates", "contradicts", "related_to", "derived_from"]
+    rationale: str
+    confidence: Literal["high", "medium", "low"] = "medium"
+    related_columns: List[str] = Field(default_factory=list)
+    created_from: Literal[
+        "shared_finding",
+        "shared_metric",
+        "shared_columns",
+        "compatible_pattern",
+        "conflicting_pattern",
+        "derivation_chain"
+    ]
+
+
+class EvidenceGraph(BaseModel):
+    dataset_id: str
+    analysis_id: str
+    evidence: List[EvidenceItem] = Field(default_factory=list)
+    relationships: List[EvidenceRelationship] = Field(default_factory=list)
+```
+
+### 3. `InsightItem`
 A prioritized analytical finding derived directly from supporting `EvidenceItem` IDs.
 ```python
 class InsightItem(BaseModel):
@@ -170,7 +200,8 @@ To guarantee that InsightGrid never fabricates data or claims unsupported conclu
 | `POST` | `/understand-csv` | Computes column profiles, cardinality, candidate targets, and health score |
 | `POST` | `/process-data` | Executes missing value imputation, scaling, and categorical encoding |
 | `POST` | `/analyze-dataframe` | Computes correlations, distribution moments, and multivariate outliers |
-| `POST` | `/extract-evidence` | Extracts deterministic, immutable `EvidenceItem` objects |
+| `POST` | `/extract-evidence` | Extracts deterministic, immutable `EvidenceItem` objects and graph relationships |
+| `POST` | `/evidence-graph` | Constructs deterministic `EvidenceGraph` connecting verified evidence items via analytical relationships |
 | `POST` | `/predict-csv` | Trains estimators on 80/20 holdout with calibrated reliability scoring |
 | `POST` | `/generate-insights` | Synthesizes prioritized, deduplicated `InsightItem` findings |
 | `POST` | `/investigate-insight` | Initializes `InvestigationContext` and root finding node |

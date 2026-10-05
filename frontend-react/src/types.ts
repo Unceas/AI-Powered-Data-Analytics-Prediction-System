@@ -51,6 +51,36 @@ export interface EvidenceItem {
   technical_details?: Record<string, any>;
 }
 
+export interface EvidenceRelationship {
+  relationship_id: string;
+  dataset_id: string;
+  analysis_id: string;
+  source_evidence_id: string;
+  target_evidence_id: string;
+  relationship_type: 'supports' | 'corroborates' | 'contradicts' | 'related_to' | 'derived_from';
+  rationale: string;
+  confidence: 'high' | 'medium' | 'low';
+  related_columns: string[];
+  created_from: 'shared_finding' | 'shared_metric' | 'shared_columns' | 'compatible_pattern' | 'conflicting_pattern' | 'derivation_chain';
+}
+
+export interface EvidenceGraph {
+  dataset_id: string;
+  analysis_id: string;
+  evidence: EvidenceItem[];
+  relationships: EvidenceRelationship[];
+}
+
+export interface EvidenceGraphResponse {
+  status: string;
+  message: string;
+  dataset_id: string;
+  analysis_id: string;
+  total_evidence_count: number;
+  total_relationship_count: number;
+  graph: EvidenceGraph;
+}
+
 export interface Insight {
   insight_id?: string;
   analysis_id?: string;
@@ -126,6 +156,7 @@ export interface InvestigationContext {
   nodes?: InvestigationNode[];
   root_node_id?: string;
   active_node_id?: string;
+  evidence_relationships?: EvidenceRelationship[];
 }
 
 export interface DecisionBrief {
@@ -152,6 +183,7 @@ export interface AnalyticalContext {
   active_dimensions: string[];
   previous_subject?: string;
   conversation_history?: Array<{ role: string; content: string }>;
+  evidence_relationships?: EvidenceRelationship[];
 }
 
 export interface Dataset {
@@ -180,6 +212,8 @@ export interface Dataset {
   logs: DatasetLog[];
   insights?: Insight[];
   evidence?: EvidenceItem[];
+  evidence_relationships?: EvidenceRelationship[];
+  evidenceGraph?: EvidenceGraph;
   decisionBrief?: DecisionBrief;
   investigations?: InvestigationContext[];
   activeInvestigation?: InvestigationContext;
@@ -196,6 +230,7 @@ export interface ReportPayload {
   investigations?: InvestigationContext[];
   prediction?: any;
   evidence: EvidenceItem[];
+  evidence_relationships?: EvidenceRelationship[];
   executive_summary: string;
   created_at: string;
 }
@@ -216,6 +251,7 @@ export interface WorkspaceInvestigation {
   active_node_id?: string;
   available_next_dimensions?: string[];
   is_terminal?: boolean;
+  evidence_relationships?: EvidenceRelationship[];
 }
 
 export interface WorkspacePredictionContext {
@@ -234,6 +270,7 @@ export interface WorkspaceState {
   active_evidence_ids: string[];
   investigation: WorkspaceInvestigation | null;
   prediction_context: WorkspacePredictionContext | null;
+  evidence_relationships?: EvidenceRelationship[];
   conversation_context: {
     active_subject?: string;
     active_dimensions: string[];

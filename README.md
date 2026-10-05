@@ -4,8 +4,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18%20%7C%20TypeScript-61DAFB.svg)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-Bundler-646CFF.svg)](https://vitejs.dev/)
-[![Tests](https://img.shields.io/badge/Pytest-61%2F61%20Passing%20(100%25)-brightgreen.svg)]()
-[![Status](https://img.shields.io/badge/Version-V1.4.2%20(Proactive%20Lineage)-blueviolet.svg)]()
+[![Tests](https://img.shields.io/badge/Pytest-84%2F84%20Passing%20(100%25)-brightgreen.svg)]()
+[![Status](https://img.shields.io/badge/Version-V1.4.4.1%20(Evidence%20Graph)-blueviolet.svg)]()
 
 InsightGrid is an **evidence-backed analytical reasoning operating system** designed to transform raw tabular data into structured, traceable intelligence. Moving far beyond static dashboards or hallucinated AI summaries, InsightGrid enforces **mathematically verified evidence**, **calibrated predictive validation**, and **interactive progressive decomposition chains** (**Finding $\to$ Dimension $\to$ Observation $\to$ Evidence**).
 
@@ -26,6 +26,9 @@ Statistical Analytics (Pearson Correlations, Distribution Moments, Isolation For
 Deterministic Evidence Layer (Immutable EvidenceItems with Units, Provenance & Scope)
        │
        ▼
+Evidence Graph Layer V1.4.4.1 (Deterministic Inter-Evidence Relationships: Supports, Corroborates, Contradicts, Derived-From)
+       │
+       ▼
 Prediction Engine V1.1 (Stratified Holdout, Calibrated Reliability Scores & Driver Attribution)
        │
        ▼
@@ -35,7 +38,7 @@ Proactive Discovery Engine V1.4.1 (Multi-Factor Deterministic Ranking & Top 3–
 Why? Progressive Decomposition Chains V1.4.2 (Interactive Finding → Dimension → Observation → Evidence)
        │
        ▼
-Persistent Analytical Workspace (Single Source of Truth Across Tabs & Handoffs)
+Persistent Analytical Workspace (Single Source of Truth Across Tabs, Investigation & Copilot)
 ```
 
 ---
@@ -50,6 +53,7 @@ Persistent Analytical Workspace (Single Source of Truth Across Tabs & Handoffs)
 | **V1.3** | **Persistent Analytical Workspace** | Centralized `WorkspaceContext` state management, universal 1-click "Why?" buttons, cross-tab continuity (Understand $\leftrightarrow$ Analyze $\leftrightarrow$ Predict $\leftrightarrow$ Investigate $\leftrightarrow$ Ask Copilot), safe root invalidation. |
 | **V1.4.1** | **Proactive Discovery Engine** | Deterministic multi-factor scoring (Magnitude, Severity, Target Relevance, Corroboration), diversity deduplication ($-15.0$ redundant penalty), top 3–5 Key Findings showcase (`INSIGHTGRID FOUND: X things worth investigating first`). |
 | **V1.4.2** | **Why? Progressive Decomposition Chains** | `InvestigationNode` lineage trees ($Finding \to Dimension \to Observation \to Evidence$), strict Investigation Integrity Rules (measurements derived exclusively from verified aggregates), live `POST /investigate-step` interactive drill-down. |
+| **V1.4.4.1** | **Deterministic Evidence Graph** | Inter-evidence relationship layer (`supports`, `corroborates`, `contradicts`, `derived_from`, `related_to`), strict contradiction detection, deterministic SHA-256 graph construction, `POST /evidence-graph` API, Investigation & Copilot integration. |
 
 👉 For full version details and design decisions, see [**docs/VERSION_HISTORY.md**](docs/VERSION_HISTORY.md).  
 👉 For complete architectural contracts and pipeline specifications, see [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md).

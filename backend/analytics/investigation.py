@@ -3,6 +3,7 @@ from typing import Dict, Any, List, Optional
 from backend.domain.contracts import (
     InsightItem,
     EvidenceItem,
+    EvidenceRelationship,
     InvestigationContext,
     InvestigationDimension,
     InvestigationNode,
@@ -18,7 +19,8 @@ def derive_investigation_context(
     understanding: Optional[Dict[str, Any]] = None,
     evidence_items: Optional[List[EvidenceItem]] = None,
     target_col: Optional[str] = None,
-    analytics_data: Optional[Dict[str, Any]] = None
+    analytics_data: Optional[Dict[str, Any]] = None,
+    evidence_relationships: Optional[List[EvidenceRelationship]] = None
 ) -> InvestigationContext:
     """
     Deterministically derives a contextual investigation workspace and initializes
@@ -137,6 +139,19 @@ def derive_investigation_context(
         description=insight.why_it_matters if insight else summary_text
     )
 
+    if evidence_relationships is None and evidence_items:
+        from backend.analytics.evidence_graph import build_evidence_graph
+        graph = build_evidence_graph(
+            dataset_id=dataset_id,
+            analysis_id=analysis_id,
+            evidence_items=evidence_items,
+            insights=[insight] if insight else None,
+            analytics_data=analytics_data
+        )
+        evidence_relationships = graph.relationships
+    elif evidence_relationships is None:
+        evidence_relationships = []
+
     return InvestigationContext(
         investigation_id=inv_id,
         insight_id=insight.insight_id if insight else None,
@@ -151,7 +166,8 @@ def derive_investigation_context(
         suggested_prediction_target=suggested_target,
         nodes=[root_node],
         root_node_id=root_node_id,
-        active_node_id=root_node_id
+        active_node_id=root_node_id,
+        evidence_relationships=evidence_relationships
     )
 
 

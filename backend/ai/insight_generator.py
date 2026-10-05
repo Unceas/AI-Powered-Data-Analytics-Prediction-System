@@ -5,6 +5,7 @@ import uuid
 from typing import Dict, Any, List, Optional
 from backend.domain.contracts import (
     EvidenceItem,
+    EvidenceRelationship,
     InsightItem,
     GroundedAnswerResponse,
     AnalyticalContext
@@ -333,7 +334,8 @@ def answer_question_grounded_in_evidence(
     dataset_name: str,
     evidence_items: List[EvidenceItem],
     context: Optional[AnalyticalContext] = None,
-    history: Optional[List[Dict[str, str]]] = None
+    history: Optional[List[Dict[str, str]]] = None,
+    evidence_relationships: Optional[List[EvidenceRelationship]] = None
 ) -> GroundedAnswerResponse:
     """
     Answers user questions strictly grounded in observed EvidenceItem objects and
@@ -413,6 +415,17 @@ def answer_question_grounded_in_evidence(
     if not resolved_subject and matched_evidence:
         resolved_subject = matched_evidence[0].related_columns[0] if matched_evidence[0].related_columns else matched_evidence[0].title
 
+    if evidence_relationships is None and context and context.evidence_relationships:
+        evidence_relationships = context.evidence_relationships
+
+    rel_bullets = []
+    if evidence_relationships:
+        ref_set = set(referenced_ids)
+        for r in evidence_relationships:
+            if r.source_evidence_id in ref_set and r.target_evidence_id in ref_set:
+                rel_title = r.relationship_type.replace('_', ' ').title()
+                rel_bullets.append(f"- **[{rel_title}]** {r.rationale}")
+
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         # Deterministic grounded fallback response
@@ -423,11 +436,13 @@ def answer_question_grounded_in_evidence(
             )
 
         context_note = f"\n*Context continuity: Resolved query with analytical subject '{resolved_subject}'.*\n" if resolved_subject else ""
+        rel_section = ("\n\n**Inter-Evidence Analytical Relationships:**\n" + "\n".join(rel_bullets)) if rel_bullets else ""
         answer_text = (
             f"### Evidence Summary for '{dataset_name}'\n\n"
             f"{context_note}"
             f"Based on the verified analytical evidence extracted from the dataset:\n\n"
-            + "\n".join(bullet_points) + "\n\n"
+            + "\n".join(bullet_points)
+            + rel_section + "\n\n"
             "**Recommended Investigation:** Use the linked features in Analysis & Patterns to inspect these distributions further."
         )
 
@@ -458,6 +473,8 @@ def answer_question_grounded_in_evidence(
                 f"Metric: {e.metric_name}={e.metric_value} {e.unit or ''} | Strength: {e.strength} | Source: {e.source}{provenance_str} | Columns: {', '.join(e.related_columns)}"
             )
         evidence_str = "\n".join(evidence_context)
+        if rel_bullets:
+            evidence_str += "\n\nVerified Inter-Evidence Relationships:\n" + "\n".join(rel_bullets)
 
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -519,11 +536,15 @@ def answer_question_grounded_in_evidence(
     has_high = any(e.strength == "High" for e in matched_evidence)
     fallback_confidence = "High" if (len(matched_evidence) >= 2 or has_high) else "Medium"
 
+    fallback_text = f"### Verified Evidence Findings\n\n" + "\n".join(bullet_points)
+    if rel_bullets:
+        fallback_text += "\n\n**Inter-Evidence Relationships:**\n" + "\n".join(rel_bullets)
+
     return GroundedAnswerResponse(
         status="success",
         message="Answer generated from deterministic evidence fallback",
         question=question,
-        answer=f"### Verified Evidence Findings\n\n" + "\n".join(bullet_points),
+        answer=fallback_text,
         referenced_evidence_ids=referenced_ids,
         confidence=fallback_confidence,
         resolved_subject=resolved_subject,

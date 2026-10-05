@@ -999,7 +999,8 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                               };
                             }),
                             summary: finding.why_it_matters || finding.summary || finding.finding,
-                            suggested_prediction_target: finding.actionable_investigation_target || activeDataset.understanding?.candidate_targets?.[0] || finding.driver
+                            suggested_prediction_target: finding.actionable_investigation_target || activeDataset.understanding?.candidate_targets?.[0] || finding.driver,
+                            evidence_relationships: activeDataset.evidence_relationships || []
                           };
                           setActiveInvestigationModal(inv);
                         }}
@@ -1300,6 +1301,59 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                           <span>Locate Evidence Chart</span>
                         </button>
                       </div>
+
+                      {/* Evidence Graph Relationships */}
+                      {(() => {
+                        const insEvIds = selectedInsight.evidence_ids || (selectedInsight.evidence_items ? selectedInsight.evidence_items.map((e: any) => e.evidence_id) : []);
+                        const rels = (activeDataset.evidence_relationships || []).filter((r: any) => 
+                          insEvIds.length === 0 || insEvIds.includes(r.source_evidence_id) || insEvIds.includes(r.target_evidence_id)
+                        );
+                        if (rels.length === 0) return null;
+
+                        const typeBadgeStyle: Record<string, { bg: string; color: string; border: string }> = {
+                          corroborates: { bg: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' },
+                          supports: { bg: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' },
+                          contradicts: { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' },
+                          derived_from: { bg: 'rgba(168, 85, 247, 0.15)', color: '#a855f7', border: 'rgba(168, 85, 247, 0.3)' },
+                          related_to: { bg: 'rgba(100, 116, 139, 0.15)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.3)' }
+                        };
+
+                        return (
+                          <div className="insight-evidence-relationships" style={{ marginTop: '0.75rem', padding: '0.6rem 0.8rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                              <span style={{ fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>
+                                Evidence Graph Relationships
+                              </span>
+                              <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>Verified Analytical Layer</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                              {rels.slice(0, 3).map((rel: any, idx: number) => {
+                                const style = typeBadgeStyle[rel.relationship_type] || typeBadgeStyle.related_to;
+                                return (
+                                  <div key={rel.relationship_id || idx} style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'flex-start', gap: '0.4rem', lineHeight: '1.35' }}>
+                                    <span style={{ 
+                                      fontSize: '0.6rem', 
+                                      fontWeight: 700, 
+                                      padding: '1px 5px', 
+                                      borderRadius: '3px', 
+                                      backgroundColor: style.bg, 
+                                      color: style.color, 
+                                      border: `1px solid ${style.border}`,
+                                      whiteSpace: 'nowrap',
+                                      textTransform: 'uppercase'
+                                    }}>
+                                      {rel.relationship_type.replace('_', ' ')}
+                                    </span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>
+                                      {rel.rationale}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       <div className="operational-recommendation-panel">
                         <h5 className="section-title">Recommended Remediation Action</h5>
@@ -1744,6 +1798,56 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                 );
               })()}
             </div>
+
+            {/* Verified Evidence Relationships */}
+            {(() => {
+              const rels = activeInvestigationModal.evidence_relationships || activeDataset.evidence_relationships || [];
+              if (!rels || rels.length === 0) return null;
+              
+              const typeBadgeStyle: Record<string, { bg: string; color: string; border: string }> = {
+                corroborates: { bg: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' },
+                supports: { bg: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' },
+                contradicts: { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' },
+                derived_from: { bg: 'rgba(168, 85, 247, 0.15)', color: '#a855f7', border: 'rgba(168, 85, 247, 0.3)' },
+                related_to: { bg: 'rgba(100, 116, 139, 0.15)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.3)' }
+              };
+
+              return (
+                <div className="evidence-relationships-container" style={{ marginTop: '0.85rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)', maxHeight: '140px', overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.45rem' }}>
+                    <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                      Verified Evidence Relationships ({rels.length})
+                    </span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Deterministic Graph</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    {rels.map((rel: any, rIdx: number) => {
+                      const style = typeBadgeStyle[rel.relationship_type] || typeBadgeStyle.related_to;
+                      return (
+                        <div key={rel.relationship_id || rIdx} style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', lineHeight: '1.35' }}>
+                          <span style={{ 
+                            fontSize: '0.62rem', 
+                            fontWeight: 700, 
+                            padding: '1px 5px', 
+                            borderRadius: '4px', 
+                            backgroundColor: style.bg, 
+                            color: style.color, 
+                            border: `1px solid ${style.border}`,
+                            whiteSpace: 'nowrap',
+                            textTransform: 'uppercase'
+                          }}>
+                            {rel.relationship_type.replace('_', ' ')}
+                          </span>
+                          <span style={{ color: 'var(--text-secondary)' }}>
+                            {rel.rationale}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Modal Actions */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', flexWrap: 'wrap' }}>

@@ -252,7 +252,8 @@ function AppContent() {
       });
 
       const evidenceItems = evidenceRes.data.evidence || [];
-      addLog(id, `Extracted ${evidenceItems.length} verified evidence items.`);
+      const evidenceRelationships = evidenceRes.data.relationships || [];
+      addLog(id, `Extracted ${evidenceItems.length} verified evidence items and ${evidenceRelationships.length} relationships.`);
 
       const insightsRes = await api.post('/generate-insights', {
         analysis_data: {
@@ -277,6 +278,7 @@ function AppContent() {
         understanding: understandRes.data,
         insight: insightList[0] || null,
         evidence_items: evidenceItems,
+        evidence_relationships: evidenceRelationships,
         target_column: targetCol
       });
 
@@ -301,6 +303,7 @@ function AppContent() {
         { isInsightsGenerated: true },
         { 
           evidence: evidenceItems,
+          evidence_relationships: evidenceRelationships,
           insights: insightList,
           decisionBrief: decisionBrief,
           investigations: invContext ? [invContext] : [],
