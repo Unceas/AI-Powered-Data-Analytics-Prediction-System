@@ -16,17 +16,43 @@ def rank_and_prioritize_insights(
     insights: List[InsightItem],
     target_col: Optional[str] = None,
     quality_score: int = 100,
-    column_profiles: Optional[List[Dict[str, Any]]] = None
+    column_profiles: Optional[List[Dict[str, Any]]] = None,
+    relationships: Optional[List[EvidenceRelationship]] = None,
+    understanding: Optional[Dict[str, Any]] = None
 ) -> List[InsightItem]:
     """
     Deterministically ranks and prioritizes insights using statistical strength,
     severity, category weights, target relevance, anomaly magnitude, supporting evidence counts,
-    and diversity deduplication.
+    evidence confidence adjustment, and diversity deduplication.
     Derives grounded investigation candidate dimensions strictly from dataset column profiles.
     Surfaces the top 3-5 high-value findings as Key Findings with clear reasons for priority.
     """
     if not insights:
         return []
+
+    from backend.analytics.evidence_strength import (
+        batch_evaluate_evidence_strengths,
+        evaluate_finding_confidence
+    )
+
+    if understanding and not column_profiles:
+        column_profiles = understanding.get("column_profiles")
+
+    # Collect all unique evidence items
+    all_evidence: List[EvidenceItem] = []
+    seen_ev = set()
+    for ins in insights:
+        for ev in ins.evidence_items:
+            if ev.evidence_id not in seen_ev:
+                seen_ev.add(ev.evidence_id)
+                all_evidence.append(ev)
+
+    evidence_strengths = batch_evaluate_evidence_strengths(
+        evidence_items=all_evidence,
+        relationships=relationships,
+        understanding=understanding,
+        target_col=target_col
+    )
 
     # Identify candidate dimensions from actual column profiles (categorical/temporal)
     valid_dimension_candidates: List[str] = []
@@ -59,7 +85,7 @@ def rank_and_prioritize_insights(
 
         # 2. Severity
         sev_weights = {
-            "Critical": 35.0,
+            "Critical": 40.0,
             "High": 25.0,
             "Medium": 15.0,
             "Low": 5.0
@@ -112,6 +138,34 @@ def rank_and_prioritize_insights(
         else:
             primary_reason = "Observed statistical pattern across dataset"
 
+        # Evaluate Finding Confidence deterministically
+        (
+            finding_conf,
+            conf_reason,
+            supp_ids,
+            contra_ids,
+            conf_suggestions
+        ) = evaluate_finding_confidence(
+            insight=ins,
+            evidence_strengths=evidence_strengths,
+            relationships=relationships,
+            understanding=understanding
+        )
+
+        # Confidence adjustments to Priority Score:
+        # High (+10), Medium (0), Low (-10), Conflicting (-15)
+        if finding_conf == "high":
+            score += 10.0
+            reasons.append("High evidentiary confidence (+10)")
+        elif finding_conf == "low":
+            score -= 10.0
+            reasons.append("Limited evidentiary confidence penalty (-10)")
+        elif finding_conf == "conflicting":
+            score -= 15.0
+            reasons.append("Conflicting analytical evidence penalty (-15)")
+
+        score = max(5.0, score)
+
         # Derive candidate investigation dimensions for this finding strictly from dataset dimensions
         finding_excluded_cols = set(ins.related_columns + ([ins.actionable_investigation_target] if ins.actionable_investigation_target else []))
         investigation_candidates = [dim for dim in valid_dimension_candidates if dim not in finding_excluded_cols][:3]
@@ -124,6 +178,14 @@ def rank_and_prioritize_insights(
         else:
             priority_level = "Low"
 
+        # Update evidence items with evaluated evidence strengths
+        updated_evidence_items = []
+        for ev in ins.evidence_items:
+            if ev.evidence_id in evidence_strengths:
+                updated_evidence_items.append(ev.model_copy(update={"evidence_strength": evidence_strengths[ev.evidence_id]}))
+            else:
+                updated_evidence_items.append(ev)
+
         # Construct updated InsightItem
         ranked_ins = ins.model_copy(update={
             "priority": priority_level,
@@ -131,7 +193,13 @@ def rank_and_prioritize_insights(
             "priority_reasons": reasons if reasons else [primary_reason],
             "reason_for_priority": primary_reason,
             "investigation_candidates": investigation_candidates,
-            "is_key_finding": False
+            "is_key_finding": False,
+            "evidence_items": updated_evidence_items,
+            "finding_confidence": finding_conf,
+            "confidence_reason": conf_reason,
+            "supporting_evidence_ids": supp_ids,
+            "contradicting_evidence_ids": contra_ids,
+            "confidence_improvement_suggestions": conf_suggestions
         })
         ranked_candidates.append(ranked_ins)
 
@@ -164,7 +232,9 @@ def generate_grounded_insights_from_evidence(
     analysis_id: str = "",
     dataset_id: str = "",
     target_col: Optional[str] = None,
-    column_profiles: Optional[List[Dict[str, Any]]] = None
+    column_profiles: Optional[List[Dict[str, Any]]] = None,
+    relationships: Optional[List[EvidenceRelationship]] = None,
+    understanding: Optional[Dict[str, Any]] = None
 ) -> List[InsightItem]:
     """
     Generates structured, evidence-backed Insight objects referencing immutable EvidenceItem IDs.
@@ -325,7 +395,9 @@ def generate_grounded_insights_from_evidence(
     return rank_and_prioritize_insights(
         insights, 
         target_col=target_col, 
-        column_profiles=column_profiles
+        column_profiles=column_profiles,
+        relationships=relationships,
+        understanding=understanding
     )
 
 
@@ -431,11 +503,17 @@ def answer_question_grounded_in_evidence(
         # Deterministic grounded fallback response
         bullet_points = []
         for e in matched_evidence:
+            strength_desc = f", Strength: {e.evidence_strength.strength.title()} ({e.evidence_strength.score})" if e.evidence_strength else f", Strength: {e.strength}"
             bullet_points.append(
-                f"- **{e.title}**: {e.description} *(Source: {e.source}, Metric: {e.metric_name} = {e.metric_value} {e.unit or ''}, Strength: {e.strength})*"
+                f"- **{e.title}**: {e.description} *(Source: {e.source}, Metric: {e.metric_name} = {e.metric_value} {e.unit or ''}{strength_desc})*"
             )
 
-        context_note = f"\n*Context continuity: Resolved query with analytical subject '{resolved_subject}'.*\n" if resolved_subject else ""
+        context_note = ""
+        if context and context.active_finding_confidence:
+            conf_reason_str = f" — {context.active_confidence_reason}" if context.active_confidence_reason else ""
+            context_note += f"\n*Active Finding Confidence: {context.active_finding_confidence.title()}{conf_reason_str}*\n"
+        if resolved_subject:
+            context_note += f"\n*Context continuity: Resolved query with analytical subject '{resolved_subject}'.*\n"
         rel_section = ("\n\n**Inter-Evidence Analytical Relationships:**\n" + "\n".join(rel_bullets)) if rel_bullets else ""
         answer_text = (
             f"### Evidence Summary for '{dataset_name}'\n\n"
@@ -446,7 +524,7 @@ def answer_question_grounded_in_evidence(
             "**Recommended Investigation:** Use the linked features in Analysis & Patterns to inspect these distributions further."
         )
 
-        has_high_evidence = any(e.strength == "High" for e in matched_evidence)
+        has_high_evidence = any(e.strength == "High" or (e.evidence_strength and e.evidence_strength.strength == "strong") for e in matched_evidence)
         confidence_val = "High" if (len(matched_evidence) >= 2 or has_high_evidence) else "Medium"
 
         return GroundedAnswerResponse(
@@ -586,10 +664,10 @@ def generate_natural_language_insights(analysis_data, context="", dataset_name="
         except Exception:
             pass
 
-    from backend.analytics.evidence import extract_evidence
+    understanding_data = analysis_data.get("understanding") if isinstance(analysis_data, dict) else None
     col_profiles = analysis_data.get("column_profiles") if isinstance(analysis_data, dict) else None
-    if not col_profiles and isinstance(analysis_data, dict) and "understanding" in analysis_data:
-        col_profiles = analysis_data["understanding"].get("column_profiles")
+    if not col_profiles and understanding_data:
+        col_profiles = understanding_data.get("column_profiles")
 
     evidence = extract_evidence(
         dataset_id="ds-legacy",
@@ -598,10 +676,21 @@ def generate_natural_language_insights(analysis_data, context="", dataset_name="
         anomaly_result=analysis_data.get("anomaly_result") if isinstance(analysis_data, dict) else None,
         ml_result=analysis_data.get("ml_result") if isinstance(analysis_data, dict) else None
     )
+
+    from backend.analytics.evidence_graph import build_evidence_graph
+    graph = build_evidence_graph(
+        dataset_id="ds-legacy",
+        analysis_id="an-legacy",
+        evidence_items=evidence,
+        analytics_data=analysis_data if isinstance(analysis_data, dict) else {}
+    )
+
     insights = generate_grounded_insights_from_evidence(
         evidence, 
         dataset_name=dataset_name,
-        column_profiles=col_profiles
+        column_profiles=col_profiles,
+        relationships=graph.relationships,
+        understanding=understanding_data
     )
     # Return serializable dict array matching legacy Insight interface
     legacy_list = []
@@ -621,6 +710,11 @@ def generate_natural_language_insights(analysis_data, context="", dataset_name="
             "reason_for_priority": ins.reason_for_priority,
             "investigation_candidates": ins.investigation_candidates,
             "is_key_finding": ins.is_key_finding,
+            "finding_confidence": ins.finding_confidence,
+            "confidence_reason": ins.confidence_reason,
+            "supporting_evidence_ids": ins.supporting_evidence_ids,
+            "contradicting_evidence_ids": ins.contradicting_evidence_ids,
+            "confidence_improvement_suggestions": ins.confidence_improvement_suggestions,
             "source": ins.evidence_items[0].source if ins.evidence_items else "InsightGrid Engine",
             "driver": ins.actionable_investigation_target or (ins.related_columns[0] if ins.related_columns else "general"),
             "severity": ins.severity,

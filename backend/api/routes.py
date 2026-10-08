@@ -24,7 +24,9 @@ from backend.domain.contracts import (
     EvidenceRelationship,
     EvidenceGraph,
     EvidenceGraphResponse,
-    EvidenceGraphRequest
+    EvidenceGraphRequest,
+    EvidenceStrengthRequest,
+    EvidenceStrengthResponse
 )
 
 router = APIRouter()
@@ -258,6 +260,16 @@ async def extract_evidence_endpoint(payload: dict = Body(...)):
         analytics_data=analytics_data
     )
 
+    from backend.analytics.evidence_strength import batch_evaluate_evidence_strengths
+    strengths = batch_evaluate_evidence_strengths(
+        evidence_items=evidence_items,
+        relationships=graph.relationships,
+        understanding=understanding
+    )
+    for e in evidence_items:
+        if e.evidence_id in strengths:
+            e.evidence_strength = strengths[e.evidence_id]
+
     return {
         "status": "success",
         "message": "Evidence extracted successfully",
@@ -267,6 +279,54 @@ async def extract_evidence_endpoint(payload: dict = Body(...)):
         "evidence": [e.model_dump() for e in evidence_items],
         "relationships": [r.model_dump() for r in graph.relationships]
     }
+
+@router.post("/evidence-strength", response_model=EvidenceStrengthResponse)
+async def evidence_strength_endpoint(payload: dict = Body(...)):
+    """Evaluate deterministic Evidence Strength for evidence items."""
+    from backend.analytics.evidence_strength import batch_evaluate_evidence_strengths
+
+    dataset_id = payload.get("dataset_id", "")
+    analysis_id = payload.get("analysis_id", "")
+    raw_evidence = payload.get("evidence_items", [])
+    raw_rel = payload.get("relationships", [])
+    understanding = payload.get("understanding")
+    target_column = payload.get("target_column")
+
+    evidence_items = []
+    for item in raw_evidence:
+        if isinstance(item, dict):
+            try:
+                evidence_items.append(EvidenceItem(**item))
+            except Exception:
+                pass
+        elif isinstance(item, EvidenceItem):
+            evidence_items.append(item)
+
+    relationships = []
+    for rel in raw_rel:
+        if isinstance(rel, dict):
+            try:
+                relationships.append(EvidenceRelationship(**rel))
+            except Exception:
+                pass
+        elif isinstance(rel, EvidenceRelationship):
+            relationships.append(rel)
+
+    strengths = batch_evaluate_evidence_strengths(
+        evidence_items=evidence_items,
+        relationships=relationships if relationships else None,
+        understanding=understanding,
+        target_col=target_column
+    )
+
+    return EvidenceStrengthResponse(
+        status="success",
+        message="Evidence strength evaluated successfully",
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        total_evidence_count=len(evidence_items),
+        strengths=strengths
+    )
 
 @router.post("/evidence-graph", response_model=EvidenceGraphResponse)
 async def evidence_graph_endpoint(payload: dict = Body(...)):

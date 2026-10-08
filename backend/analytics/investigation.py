@@ -152,6 +152,60 @@ def derive_investigation_context(
     elif evidence_relationships is None:
         evidence_relationships = []
 
+    # Evaluate finding confidence and contradicting evidence IDs
+    finding_confidence = None
+    confidence_reason = None
+    contradicting_ids: List[str] = []
+
+    if insight and insight.finding_confidence:
+        finding_confidence = insight.finding_confidence
+        confidence_reason = insight.confidence_reason
+        contradicting_ids = insight.contradicting_evidence_ids
+    elif evidence_items:
+        from backend.analytics.evidence_strength import (
+            batch_evaluate_evidence_strengths,
+            evaluate_finding_confidence
+        )
+        strengths = batch_evaluate_evidence_strengths(
+            evidence_items=evidence_items,
+            relationships=evidence_relationships,
+            understanding=understanding,
+            target_col=suggested_target
+        )
+        if insight:
+            (
+                finding_confidence,
+                confidence_reason,
+                _,
+                contradicting_ids,
+                _
+            ) = evaluate_finding_confidence(
+                insight=insight,
+                evidence_strengths=strengths,
+                relationships=evidence_relationships,
+                understanding=understanding
+            )
+        else:
+            contra_set = set()
+            if evidence_relationships:
+                supp_set = set(supporting_ev_ids)
+                for r in evidence_relationships:
+                    if r.relationship_type == "contradicts":
+                        if r.source_evidence_id in supp_set and r.target_evidence_id not in supp_set:
+                            contra_set.add(r.target_evidence_id)
+                        elif r.target_evidence_id in supp_set and r.source_evidence_id not in supp_set:
+                            contra_set.add(r.source_evidence_id)
+            contradicting_ids = sorted(list(contra_set))
+            if contradicting_ids:
+                finding_confidence = "conflicting"
+                confidence_reason = "Evidence indicates conflicting patterns on shared features."
+            elif any(strengths.get(eid) and strengths[eid].strength == "strong" for eid in supporting_ev_ids):
+                finding_confidence = "high"
+                confidence_reason = "Supported by strong analytical evidence."
+            else:
+                finding_confidence = "medium"
+                confidence_reason = "Supported by baseline analytical observations."
+
     return InvestigationContext(
         investigation_id=inv_id,
         insight_id=insight.insight_id if insight else None,
@@ -167,7 +221,10 @@ def derive_investigation_context(
         nodes=[root_node],
         root_node_id=root_node_id,
         active_node_id=root_node_id,
-        evidence_relationships=evidence_relationships
+        evidence_relationships=evidence_relationships,
+        finding_confidence=finding_confidence,
+        confidence_reason=confidence_reason,
+        contradicting_evidence_ids=contradicting_ids
     )
 
 

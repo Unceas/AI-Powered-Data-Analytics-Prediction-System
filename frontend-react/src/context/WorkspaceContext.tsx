@@ -106,7 +106,10 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       root_node_id: rootNodeId,
       active_node_id: rootNodeId,
       available_next_dimensions: initialAvailableDims,
-      is_terminal: false
+      is_terminal: false,
+      finding_confidence: insight.finding_confidence,
+      confidence_reason: insight.confidence_reason,
+      contradicting_evidence_ids: insight.contradicting_evidence_ids
     };
 
     const newPredictionContext: WorkspacePredictionContext = {

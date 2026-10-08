@@ -54,6 +54,7 @@ Persistent Analytical Workspace (Single Source of Truth Across Tabs, Investigati
 | **V1.4.1** | **Proactive Discovery Engine** | Deterministic multi-factor scoring (Magnitude, Severity, Target Relevance, Corroboration), diversity deduplication ($-15.0$ redundant penalty), top 3–5 Key Findings showcase (`INSIGHTGRID FOUND: X things worth investigating first`). |
 | **V1.4.2** | **Why? Progressive Decomposition Chains** | `InvestigationNode` lineage trees ($Finding \to Dimension \to Observation \to Evidence$), strict Investigation Integrity Rules (measurements derived exclusively from verified aggregates), live `POST /investigate-step` interactive drill-down. |
 | **V1.4.4.1** | **Deterministic Evidence Graph** | Inter-evidence relationship layer (`supports`, `corroborates`, `contradicts`, `derived_from`, `related_to`), strict contradiction detection, deterministic SHA-256 graph construction, `POST /evidence-graph` API, Investigation & Copilot integration. |
+| **V1.4.4.2** | **Evidence Strength & Finding Confidence Layer** | Deterministic evidence strength scoring ($0-100$ heuristic), finding confidence (`high`, `medium`, `low`, `conflicting`), anti-double-counting of derivation lineages, contradiction primacy, schema-grounded next steps, `POST /evidence-strength` API. |
 
 👉 For full version details and design decisions, see [**docs/VERSION_HISTORY.md**](docs/VERSION_HISTORY.md).  
 👉 For complete architectural contracts and pipeline specifications, see [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md).

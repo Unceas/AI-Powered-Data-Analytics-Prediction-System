@@ -49,6 +49,18 @@ export interface EvidenceItem {
   provenance?: Record<string, any>;
   metadata?: Record<string, any>;
   technical_details?: Record<string, any>;
+  evidence_strength?: EvidenceStrength;
+}
+
+export interface EvidenceStrength {
+  evidence_id: string;
+  strength: 'strong' | 'moderate' | 'limited' | 'conflicting';
+  score: number;
+  supporting_factors: string[];
+  limiting_factors: string[];
+  relationship_count: number;
+  corroboration_count: number;
+  contradiction_count: number;
 }
 
 export interface EvidenceRelationship {
@@ -81,6 +93,15 @@ export interface EvidenceGraphResponse {
   graph: EvidenceGraph;
 }
 
+export interface EvidenceStrengthResponse {
+  status: string;
+  message: string;
+  dataset_id: string;
+  analysis_id: string;
+  total_evidence_count: number;
+  strengths: Record<string, EvidenceStrength>;
+}
+
 export interface Insight {
   insight_id?: string;
   analysis_id?: string;
@@ -96,6 +117,11 @@ export interface Insight {
   priority_score?: number;
   priority_reasons?: string[];
   is_key_finding?: boolean;
+  finding_confidence?: 'high' | 'medium' | 'low' | 'conflicting';
+  confidence_reason?: string;
+  supporting_evidence_ids?: string[];
+  contradicting_evidence_ids?: string[];
+  confidence_improvement_suggestions?: string[];
   source: string;
   driver?: string;
   severity: 'Critical' | 'High' | 'Medium' | 'Low';
@@ -157,6 +183,9 @@ export interface InvestigationContext {
   root_node_id?: string;
   active_node_id?: string;
   evidence_relationships?: EvidenceRelationship[];
+  finding_confidence?: 'high' | 'medium' | 'low' | 'conflicting';
+  confidence_reason?: string;
+  contradicting_evidence_ids?: string[];
 }
 
 export interface DecisionBrief {
@@ -252,6 +281,9 @@ export interface WorkspaceInvestigation {
   available_next_dimensions?: string[];
   is_terminal?: boolean;
   evidence_relationships?: EvidenceRelationship[];
+  finding_confidence?: 'high' | 'medium' | 'low' | 'conflicting';
+  confidence_reason?: string;
+  contradicting_evidence_ids?: string[];
 }
 
 export interface WorkspacePredictionContext {

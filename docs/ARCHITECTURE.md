@@ -24,9 +24,10 @@ Raw CSV / Excel Dataset
    • Isolation Forest Outlier Diagnostics (> 2.1σ)
            │
            ▼
-4. Deterministic Evidence Layer (/extract-evidence)
+4. Deterministic Evidence & Relationship Layer (/extract-evidence, /evidence-graph)
    • Immutable EvidenceItems with Provenance, Physical Units & Scope
-   • Zero LLM Modification Allowed
+   • Verified Evidence Relationships (supports, corroborates, contradicts, derived_from, related_to)
+   • Evidence Strength Engine (/evidence-strength: strong, moderate, limited, conflicting)
            │
            ▼
 5. Calibrated Prediction Engine V1.1 (/predict-csv)
@@ -34,8 +35,11 @@ Raw CSV / Excel Dataset
    • Calibrated Reliability Scores & Driver Attribution
            │
            ▼
-6. Proactive Discovery & Insight Prioritization (/generate-insights)
+6. Proactive Discovery & Finding Confidence Layer (/generate-insights)
    • Multi-Factor Deterministic Ranking (Magnitude, Severity, Target Relevance)
+   • Deterministic Finding Confidence (high, medium, low, conflicting) & Primacy of Contradiction
+   • Anti-Double-Counting Lineage Partitioning (derivation chains treated as 1 signal)
+   • Schema-Grounded Confidence Improvement Suggestions (Zero Hallucinated Features)
    • Diversity Deduplication (Penalizes Overlapping Categories/Features)
    • Grounded Investigation Candidates from Actual Column Profiles
            │
@@ -110,8 +114,22 @@ class EvidenceGraph(BaseModel):
     relationships: List[EvidenceRelationship] = Field(default_factory=list)
 ```
 
-### 3. `InsightItem`
-A prioritized analytical finding derived directly from supporting `EvidenceItem` IDs.
+### 3. `EvidenceStrength` (V1.4.4.2)
+A deterministic heuristic evaluation of the statistical quality and graph corroboration of an individual `EvidenceItem`.
+```python
+class EvidenceStrength(BaseModel):
+    evidence_id: str
+    strength: Literal["strong", "moderate", "limited", "conflicting"]
+    score: float  # Bounded 0.0 - 100.0 internal heuristic score (NOT probability)
+    supporting_factors: List[str] = Field(default_factory=list)
+    limiting_factors: List[str] = Field(default_factory=list)
+    relationship_count: int = 0
+    corroboration_count: int = 0
+    contradiction_count: int = 0
+```
+
+### 4. `InsightItem`
+A prioritized analytical finding derived directly from supporting `EvidenceItem` IDs and validated by deterministic finding confidence.
 ```python
 class InsightItem(BaseModel):
     insight_id: str
@@ -127,6 +145,11 @@ class InsightItem(BaseModel):
     priority_reasons: List[str] = Field(default_factory=list)
     reason_for_priority: Optional[str] = None
     is_key_finding: bool = False
+    finding_confidence: Literal["high", "medium", "low", "conflicting"] = "medium"
+    confidence_reason: Optional[str] = None
+    supporting_evidence_ids: List[str] = Field(default_factory=list)
+    contradicting_evidence_ids: List[str] = Field(default_factory=list)
+    confidence_improvement_suggestions: List[str] = Field(default_factory=list)
     evidence_ids: List[str] = Field(default_factory=list)
     evidence_items: List[EvidenceItem] = Field(default_factory=list)
     related_columns: List[str] = Field(default_factory=list)
@@ -135,7 +158,7 @@ class InsightItem(BaseModel):
     actionable_investigation_target: Optional[str] = None
 ```
 
-### 3. `InvestigationNode`
+### 5. `InvestigationNode`
 A single node in a progressive decomposition chain communicating analytical lineage.
 ```python
 class InvestigationNode(BaseModel):

@@ -51,6 +51,17 @@ class AnalysisSummary(BaseModel):
     created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
 
+class EvidenceStrength(BaseModel):
+    evidence_id: str
+    strength: Literal["strong", "moderate", "limited", "conflicting"]
+    score: float  # Bounded 0.0 - 100.0 internal deterministic heuristic score (NOT probability)
+    supporting_factors: List[str] = Field(default_factory=list)
+    limiting_factors: List[str] = Field(default_factory=list)
+    relationship_count: int = 0
+    corroboration_count: int = 0
+    contradiction_count: int = 0
+
+
 class EvidenceItem(BaseModel):
     evidence_id: str
     analysis_id: str
@@ -69,6 +80,7 @@ class EvidenceItem(BaseModel):
     provenance: Optional[Dict[str, Any]] = None
     metadata: Optional[Dict[str, Any]] = None
     technical_details: Optional[Dict[str, Any]] = None
+    evidence_strength: Optional[EvidenceStrength] = None
 
 
 class EvidenceRelationship(BaseModel):
@@ -138,6 +150,11 @@ class InsightItem(BaseModel):
     actionable_investigation_target: Optional[str] = None
     investigation_candidates: List[str] = Field(default_factory=list)
     reason_for_priority: Optional[str] = None
+    finding_confidence: Literal["high", "medium", "low", "conflicting"] = "medium"
+    confidence_reason: Optional[str] = None
+    supporting_evidence_ids: List[str] = Field(default_factory=list)
+    contradicting_evidence_ids: List[str] = Field(default_factory=list)
+    confidence_improvement_suggestions: List[str] = Field(default_factory=list)
 
 
 class InsightListResponse(BaseModel):
@@ -154,6 +171,24 @@ class EvidenceGraphRequest(BaseModel):
     evidence_items: Optional[List[EvidenceItem]] = None
     insights: Optional[List[InsightItem]] = None
     analytics_data: Optional[Dict[str, Any]] = None
+
+
+class EvidenceStrengthRequest(BaseModel):
+    dataset_id: str
+    analysis_id: str
+    evidence_items: Optional[List[EvidenceItem]] = None
+    relationships: Optional[List[EvidenceRelationship]] = None
+    understanding: Optional[Dict[str, Any]] = None
+    target_column: Optional[str] = None
+
+
+class EvidenceStrengthResponse(BaseModel):
+    status: str
+    message: str
+    dataset_id: str
+    analysis_id: str
+    total_evidence_count: int
+    strengths: Dict[str, EvidenceStrength]
 
 
 class InvestigationDimension(BaseModel):
@@ -197,6 +232,9 @@ class InvestigationContext(BaseModel):
     root_node_id: Optional[str] = None
     active_node_id: Optional[str] = None
     evidence_relationships: List[EvidenceRelationship] = Field(default_factory=list)
+    finding_confidence: Optional[Literal["high", "medium", "low", "conflicting"]] = None
+    confidence_reason: Optional[str] = None
+    contradicting_evidence_ids: List[str] = Field(default_factory=list)
 
 
 class InvestigationResponse(BaseModel):
@@ -261,6 +299,8 @@ class AnalyticalContext(BaseModel):
     investigation: Optional[Dict[str, Any]] = None
     active_evidence_ids: List[str] = Field(default_factory=list)
     evidence_relationships: List[EvidenceRelationship] = Field(default_factory=list)
+    active_finding_confidence: Optional[str] = None
+    active_confidence_reason: Optional[str] = None
     conversation_history: List[Dict[str, str]] = Field(default_factory=list)
 
 

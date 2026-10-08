@@ -27,6 +27,9 @@ V1.4 (Iteration 2): Why? Progressive Decomposition Chains
   ▼
 V1.4.4.1: Deterministic Evidence Graph
   │  Inter-Evidence Relationship Layer (Supports, Corroborates, Contradicts, Derived-From, Related-To)
+  ▼
+V1.4.4.2: Evidence Strength & Finding Confidence Layer
+  │  EvidenceStrength Engine, Anti-Double-Counting Lineages, Deterministic Finding Confidence, Schema-Grounded Suggestions
 ```
 
 ---
@@ -153,5 +156,44 @@ V1.4.4.1: Deterministic Evidence Graph
   - Backend API: `POST /evidence-graph` endpoint returning verified `EvidenceGraphResponse`, and updated `POST /extract-evidence` attaching graph relationships.
   - Investigation Workspace: Progressive decomposition lineage trees and investigation contexts display relevant inter-evidence relationships.
   - Copilot Grounded Q&A: `POST /ask-insightgrid` injects verified evidence relationships to contextualize answers and declare evidence boundaries.
-  - Frontend UI: Color-coded relationship badges (`[Corroborates]`, `[Supports]`, `[Contradicts]`, `[Derived From]`, `[Related To]`) with verified rationales.
   - Test Suite: 23 dedicated unit and integration tests in `tests/test_v1_4_4_1_evidence_graph.py` (84/84 tests passing overall).
+
+---
+
+### 🔹 InsightGrid V1.4.4.2 — Evidence Strength and Finding Confidence Layer
+*Distinguishing between what to investigate (Priority) and how strongly a finding is analytically substantiated (Confidence).*
+
+- **Architectural Separation of Concerns**:
+  - **Priority ("What should I look at?")**: Driven by business impact, severity, category weights, anomaly volume, and target relevance.
+  - **Finding Confidence ("How strongly is this supported?")**: Deterministic interpretation of verified evidence quality, independent signals, contradiction absence, sample size, and data completeness.
+  - Zero LLM generation or calibrated ML probability: confidence is computed deterministically from verified analytical aggregates.
+- **`EvidenceStrength` Heuristic Engine (`backend/analytics/evidence_strength.py`)**:
+  - Scores each `EvidenceItem` ($0.0 - 100.0$ bounded heuristic):
+    - Base statistical strength: `High` (+45), `Medium` (+28), `Low` (+10).
+    - Category metric magnitudes: Pearson $|r| \ge 0.65$ (+12), anomaly clusters $\ge 20$ (+10), predictive driver importance $\ge 0.25$ (+12), distribution skew $\ge 1.5$ (+8).
+    - Sample size power: $N \ge 200$ (+15), $N < 50$ ($-15$ penalty).
+    - Data completeness: Feature missingness $\ge 20\%$ ($-15$ penalty), zero nulls with high quality (+8).
+    - Target relevance: Direct connection to candidate prediction target (+10).
+    - Verified graph relationships: Independent corroboration (+10 up to +20 max), verified contradictions ($-35$ penalty, forces strength to `conflicting`).
+  - Classifies into four distinct levels: `strong` ($\ge 65$), `moderate` ($\ge 35$), `limited` ($< 35$), `conflicting` (verified contradictions).
+- **Anti-Double-Counting Lineages**:
+  - Derivation chains connected via `derived_from` (e.g. predictive driver derived from correlation) are grouped into a single lineage and cannot be counted as multiple independent corroborating signals.
+- **Finding Confidence Evaluation**:
+  - Levels: `high`, `medium`, `low`, `conflicting`.
+  - Contradiction Primacy: Any verified `contradicts` relationship connected to supporting evidence immediately forces finding confidence to `conflicting`.
+  - Transparent deterministic rationales explaining exact evidentiary status.
+- **Schema-Grounded Confidence Improvement Suggestions**:
+  - Deterministically proposes next analytical steps strictly using real columns from `DataUnderstanding` (`column_profiles`, `temporal_columns`):
+    - Chronological intervals across verified temporal columns.
+    - Cross-segmentation tests across verified categorical/cohort columns.
+    - Missingness resolution on features with elevated null percentages.
+    - Zero hallucinated columns or metrics.
+- **Balanced Priority Adjustments**:
+  - Smooth adjustments (+10 for `high`, 0 for `medium`, -10 for `low`, -15 for `conflicting`) without allowing confidence to suppress critical severity alerts (critical severity anomalies retain High priority for urgent investigation).
+- **Comprehensive Workspace & System Integration**:
+  - Backend API: `POST /evidence-strength` endpoint returning `EvidenceStrengthResponse`, and embedded strengths in `POST /extract-evidence` and `POST /generate-insights`.
+  - Investigation Workspace: Investigation Context embeds finding confidence, confidence rationale, and contradiction warnings.
+  - Copilot Grounded Q&A: Injects active finding confidence and detailed evidence strength into responses.
+  - React Frontend: Status badges (`[HIGH CONFIDENCE]`, `[CONFLICTING]`, etc.), evidence signal counts, and "Next to verify" guidance chips.
+  - Test Suite: 26 dedicated unit and integration tests in `tests/test_v1_4_4_2_evidence_strength.py` (110/110 tests passing overall, 0 frontend build errors).
+

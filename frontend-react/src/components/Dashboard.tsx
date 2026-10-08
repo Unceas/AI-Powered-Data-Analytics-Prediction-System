@@ -932,6 +932,29 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                     <div className="finding-card-top-row">
                       <span className="finding-number">{numStr}</span>
                       <span className="finding-category-pill">{finding.category}</span>
+                      {finding.finding_confidence && (
+                        <span style={{
+                          fontSize: '0.62rem',
+                          fontWeight: 800,
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          textTransform: 'uppercase',
+                          background: finding.finding_confidence === 'high' ? 'rgba(34, 197, 94, 0.15)'
+                            : finding.finding_confidence === 'conflicting' ? 'rgba(239, 68, 68, 0.2)'
+                            : finding.finding_confidence === 'low' ? 'rgba(234, 179, 8, 0.15)'
+                            : 'rgba(59, 130, 246, 0.15)',
+                          color: finding.finding_confidence === 'high' ? '#22c55e'
+                            : finding.finding_confidence === 'conflicting' ? '#ef4444'
+                            : finding.finding_confidence === 'low' ? '#eab308'
+                            : '#3b82f6',
+                          border: finding.finding_confidence === 'high' ? '1px solid rgba(34, 197, 94, 0.3)'
+                            : finding.finding_confidence === 'conflicting' ? '1px solid rgba(239, 68, 68, 0.4)'
+                            : finding.finding_confidence === 'low' ? '1px solid rgba(234, 179, 8, 0.3)'
+                            : '1px solid rgba(59, 130, 246, 0.3)'
+                        }} title={finding.confidence_reason || `${finding.finding_confidence} finding confidence`}>
+                          {finding.finding_confidence}
+                        </span>
+                      )}
                       <span className="finding-priority-reason-pill" title={priorityReason}>
                         {priorityReason}
                       </span>
@@ -939,6 +962,13 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
 
                     <h4 className="finding-title">{finding.title || finding.finding}</h4>
                     <p className="finding-summary">{finding.summary || finding.impact || finding.why_it_matters}</p>
+
+                    {finding.confidence_reason && (
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Confidence:</span>
+                        <span>{finding.confidence_reason}</span>
+                      </div>
+                    )}
 
                     {candidateDims.length > 0 && (
                       <div className="finding-investigate-by-row">
@@ -1107,11 +1137,34 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                           onClick={() => handleInsightClick(insight, globalIdx)}
                         >
                           <div className="insight-card-header-row">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                               <span className="insight-category-tag">{insight.category}</span>
                               {insight.is_key_finding && (
                                 <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'var(--accent-light)', color: 'var(--accent-color)', border: '1px solid var(--accent-border)', padding: '1px 5px', borderRadius: '3px' }}>
                                   ★ KEY FINDING
+                                </span>
+                              )}
+                              {insight.finding_confidence && (
+                                <span style={{
+                                  fontSize: '0.62rem',
+                                  fontWeight: 800,
+                                  padding: '1px 6px',
+                                  borderRadius: '3px',
+                                  textTransform: 'uppercase',
+                                  background: insight.finding_confidence === 'high' ? 'rgba(34, 197, 94, 0.15)'
+                                    : insight.finding_confidence === 'conflicting' ? 'rgba(239, 68, 68, 0.2)'
+                                    : insight.finding_confidence === 'low' ? 'rgba(234, 179, 8, 0.15)'
+                                    : 'rgba(59, 130, 246, 0.15)',
+                                  color: insight.finding_confidence === 'high' ? '#22c55e'
+                                    : insight.finding_confidence === 'conflicting' ? '#ef4444'
+                                    : insight.finding_confidence === 'low' ? '#eab308'
+                                    : '#3b82f6',
+                                  border: insight.finding_confidence === 'high' ? '1px solid rgba(34, 197, 94, 0.3)'
+                                    : insight.finding_confidence === 'conflicting' ? '1px solid rgba(239, 68, 68, 0.4)'
+                                    : insight.finding_confidence === 'low' ? '1px solid rgba(234, 179, 8, 0.3)'
+                                    : '1px solid rgba(59, 130, 246, 0.3)'
+                                }} title={insight.confidence_reason || `${insight.finding_confidence} finding confidence`}>
+                                  {insight.finding_confidence}
                                 </span>
                               )}
                               {insight.priority && !insight.is_key_finding && (
@@ -1137,17 +1190,38 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                           <div className="insight-card-metadata">
                             <div className="meta-item">
                               <span className="lbl">Strength:</span>
-                              <span className="val text-accent">{insight.evidence_items?.[0]?.strength || 'Verified'}</span>
+                              <span className="val text-accent">
+                                {insight.evidence_items?.[0]?.evidence_strength?.strength?.toUpperCase() || insight.evidence_items?.[0]?.strength || 'Verified'}
+                              </span>
                             </div>
                             <div className="meta-item">
-                              <span className="lbl">Source:</span>
-                              <span className="val">{insight.source}</span>
+                              <span className="lbl">Evidence:</span>
+                              <span className="val">
+                                {insight.supporting_evidence_ids?.length || insight.evidence_ids?.length || 1} signal{(insight.supporting_evidence_ids?.length || insight.evidence_ids?.length || 1) > 1 ? 's' : ''}
+                                {insight.contradicting_evidence_ids && insight.contradicting_evidence_ids.length > 0 && (
+                                  <span style={{ color: '#ef4444', marginLeft: '4px', fontWeight: 700 }}>
+                                    (⚠ {insight.contradicting_evidence_ids.length} contra)
+                                  </span>
+                                )}
+                              </span>
                             </div>
                             <div className="meta-item">
                               <span className="lbl">Driver:</span>
                               <span className="val code-val">{insight.driver}</span>
                             </div>
                           </div>
+
+                          {insight.confidence_reason && (
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', background: 'var(--bg-color)', padding: '0.35rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-color)', margin: '0.4rem 0' }}>
+                              <span style={{ fontWeight: 700 }}>Confidence Assessment: </span>{insight.confidence_reason}
+                            </div>
+                          )}
+
+                          {insight.confidence_improvement_suggestions && insight.confidence_improvement_suggestions.length > 0 && (
+                            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', margin: '0.2rem 0 0.4rem 0' }}>
+                              <span style={{ fontWeight: 600 }}>💡 Next to verify: </span>{insight.confidence_improvement_suggestions[0]}
+                            </div>
+                          )}
 
                           {insight.priority_reasons && insight.priority_reasons.length > 0 && (
                             <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', background: 'var(--bg-color)', padding: '0.35rem 0.6rem', borderRadius: '4px', border: '1px solid var(--border-color)', margin: '0.4rem 0' }}>
@@ -1703,6 +1777,43 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
               {activeInvestigationModal.summary}
             </p>
+
+            {/* Finding Confidence Banner */}
+            {activeInvestigationModal.finding_confidence && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.45rem 0.75rem',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                marginBottom: '0.85rem',
+                background: activeInvestigationModal.finding_confidence === 'high' ? 'rgba(34, 197, 94, 0.1)'
+                  : activeInvestigationModal.finding_confidence === 'conflicting' ? 'rgba(239, 68, 68, 0.15)'
+                  : activeInvestigationModal.finding_confidence === 'low' ? 'rgba(234, 179, 8, 0.12)'
+                  : 'rgba(59, 130, 246, 0.1)',
+                border: activeInvestigationModal.finding_confidence === 'high' ? '1px solid rgba(34, 197, 94, 0.3)'
+                  : activeInvestigationModal.finding_confidence === 'conflicting' ? '1px solid rgba(239, 68, 68, 0.4)'
+                  : activeInvestigationModal.finding_confidence === 'low' ? '1px solid rgba(234, 179, 8, 0.3)'
+                  : '1px solid rgba(59, 130, 246, 0.3)',
+                color: activeInvestigationModal.finding_confidence === 'high' ? '#22c55e'
+                  : activeInvestigationModal.finding_confidence === 'conflicting' ? '#ef4444'
+                  : activeInvestigationModal.finding_confidence === 'low' ? '#eab308'
+                  : '#3b82f6'
+              }}>
+                <span style={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  [{activeInvestigationModal.finding_confidence} CONFIDENCE]
+                </span>
+                <span style={{ color: 'var(--text-secondary)', flex: 1 }}>
+                  {activeInvestigationModal.confidence_reason || 'Evaluated across verified analytical signals'}
+                </span>
+                {activeInvestigationModal.contradicting_evidence_ids && activeInvestigationModal.contradicting_evidence_ids.length > 0 && (
+                  <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                    ⚠️ {activeInvestigationModal.contradicting_evidence_ids.length} Contradiction{activeInvestigationModal.contradicting_evidence_ids.length > 1 ? 's' : ''} Flagged
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Step-by-Step Progressive Decomposition Chain */}
             <div className="progressive-decomposition-container">
