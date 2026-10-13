@@ -230,5 +230,30 @@ To guarantee that InsightGrid never fabricates data or claims unsupported conclu
 | `POST` | `/investigate-insight` | Initializes `InvestigationContext` and root finding node |
 | `POST` | `/investigate-step` | Progressively decomposes an investigation along a selected dimension |
 | `POST` | `/generate-decision-brief` | Synthesizes 6-part executive `DecisionBrief` |
-| `POST` | `/ask-insightgrid` | Evidence-grounded conversational Q&A with conversational memory |
+| `POST` | `/ask-insightgrid` | Evidence-Aware Copilot answering 7 core analytical questions grounded in verified evidence |
 | `POST` | `/generate-report` | Compiles comprehensive executive PDF intelligence report |
+
+---
+
+## 🤖 Evidence-Aware Copilot Architecture (`backend/ai/copilot.py`)
+
+V1.4.4.3 extends the Copilot into an **Evidence-Aware Copilot** that deterministically bridges verified analytical facts to natural language explanations.
+
+### Analytical Core Principle
+> **The backend establishes analytical facts; the LLM strictly explains those facts.**
+
+### Supported Analytical Intents
+1. **Explanation / Importance (`explanation`)**: Contextualizes why a finding matters and its severity.
+2. **Evidence Breakdown (`evidence`)**: Details verified supporting evidence, physical units, and analytical strength.
+3. **Contradiction Verification (`contradiction`)**: Highlights verified contradictory evidence or provides the qualified absence declaration:
+   > *"No verified contradictory evidence was found in the available analytical evidence for this finding. (Note: This indicates the absence of detected contradictions within currently observed data, not universal proof)."*
+4. **Finding Confidence (`confidence`)**: Explains qualitative finding confidence (`high`, `medium`, `low`, `conflicting`) with exact evidentiary reasons without fabricating percentages.
+5. **Investigation Summary (`summary`)**: Synthesizes current progress, active decomposition nodes, and evidence counts.
+6. **Next Steps (`next_step`)**: Recommends allowlisted dimensions from the active decomposition node; detects terminal decomposition states.
+7. **Additional Analysis (`additional_analysis`)**: Proposes schema-grounded verification procedures (temporal stability, cohort segmentation, outlier auditing).
+
+### Security, Isolation & Anti-Hallucination
+- **Dataset & Analysis Isolation**: Rejects foreign datasets, foreign analysis runs, and inconsistent nodes via `validate_copilot_request`.
+- **Anti-Hallucination Post-Processor (`sanitize_llm_references`)**: Intercepts generated text to purge any unverified evidence IDs or node IDs.
+- **Allowlisted Actions**: Actions (`investigate_dimension`, `view_evidence`, `return_to_investigation`) are strictly validated against context state.
+

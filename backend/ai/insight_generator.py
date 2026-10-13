@@ -411,223 +411,25 @@ def answer_question_grounded_in_evidence(
 ) -> GroundedAnswerResponse:
     """
     Answers user questions strictly grounded in observed EvidenceItem objects and
-    retains analytical conversation context across follow-ups.
-    If the available evidence is insufficient to answer the question, it explicitly reports data boundaries.
+    retains analytical conversation context across follow-ups via Evidence-Aware Copilot.
     """
-    q_lower = question.lower()
-    resolved_subject = None
+    from backend.ai.copilot import answer_evidence_aware_copilot
+    from backend.domain.contracts import AskInsightGridRequest
 
-    # Context Resolution: Check if this is a follow-up inquiry referencing previous subject or active investigation
-    combined_query = q_lower
-    if context:
-        inv_subj = None
-        if context.investigation and isinstance(context.investigation, dict):
-            inv_subj = context.investigation.get("subject")
-        target_subj = context.previous_subject or inv_subj or context.active_target
+    dataset_id = context.dataset_id if context else (evidence_items[0].dataset_id if evidence_items else "default_dataset")
+    analysis_id = context.analysis_id if context else (evidence_items[0].analysis_id if evidence_items else None)
 
-        if target_subj:
-            # If user asks about a dimension or follow-up question, combine with target subject
-            if any(pronoun in q_lower for pronoun in ["what about", "how about", "why", "who", "where", "which", "that", "predict", "dimension", "trend", "cause"]):
-                combined_query = f"{target_subj} {' '.join(context.active_dimensions)} {q_lower}"
-                resolved_subject = target_subj
-
-    # Filter matching evidence
-    matched_evidence = []
-    for ev in evidence_items:
-        # Check direct mentions of category, related columns, or metric name
-        matches_query = (
-            ev.category.lower() in combined_query
-            or any(col.lower() in combined_query for col in ev.related_columns)
-            or (context and any(dim.lower() in [c.lower() for c in ev.related_columns] for dim in context.active_dimensions))
-            or ev.metric_name.lower() in combined_query
-            or ev.title.lower() in combined_query
-        )
-        if matches_query:
-            matched_evidence.append(ev)
-
-    # Check for specific column mentions in question
-    explicit_col_match = any(
-        any(col.lower() in q_lower for col in ev.related_columns)
-        for ev in evidence_items
-    )
-
-    # Check if the user query is asking for something completely outside dataset scope
-    is_unsupported_query = (
-        len(evidence_items) > 0
-        and any(kw in q_lower for kw in ["competitor", "market share", "external", "forecast 2030", "ceo", "stock price", "untracked"])
-    )
-
-    if is_unsupported_query:
-        available_topics = ", ".join(sorted(list({f"'{c}'" for e in evidence_items for c in e.related_columns})))
-        return GroundedAnswerResponse(
-            status="success",
-            message="Evidence boundary declared",
-            question=question,
-            answer=(
-                f"### Evidence Limitation Notice\n\n"
-                f"The available dataset evidence for **{dataset_name}** does not establish or track information regarding this specific query.\n\n"
-                f"**Verified evidence in this session is grounded in:** {available_topics if available_topics else 'the uploaded dataset features'}.\n\n"
-                f"Please ask questions related to the verified feature correlations, multivariate outliers, or model prediction drivers."
-            ),
-            referenced_evidence_ids=[],
-            confidence="Low",
-            resolved_subject=resolved_subject,
-            suggested_followups=[
-                "What features exhibit the highest predictive influence?",
-                "Are there strong correlations between continuous variables?",
-                "What statistical outliers were flagged in the dataset?"
-            ]
-        )
-
-    if not matched_evidence:
-        # Include top prioritized evidence
-        matched_evidence = evidence_items[:4]
-
-    referenced_ids = [e.evidence_id for e in matched_evidence]
-    if not resolved_subject and matched_evidence:
-        resolved_subject = matched_evidence[0].related_columns[0] if matched_evidence[0].related_columns else matched_evidence[0].title
-
-    if evidence_relationships is None and context and context.evidence_relationships:
-        evidence_relationships = context.evidence_relationships
-
-    rel_bullets = []
-    if evidence_relationships:
-        ref_set = set(referenced_ids)
-        for r in evidence_relationships:
-            if r.source_evidence_id in ref_set and r.target_evidence_id in ref_set:
-                rel_title = r.relationship_type.replace('_', ' ').title()
-                rel_bullets.append(f"- **[{rel_title}]** {r.rationale}")
-
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        # Deterministic grounded fallback response
-        bullet_points = []
-        for e in matched_evidence:
-            strength_desc = f", Strength: {e.evidence_strength.strength.title()} ({e.evidence_strength.score})" if e.evidence_strength else f", Strength: {e.strength}"
-            bullet_points.append(
-                f"- **{e.title}**: {e.description} *(Source: {e.source}, Metric: {e.metric_name} = {e.metric_value} {e.unit or ''}{strength_desc})*"
-            )
-
-        context_note = ""
-        if context and context.active_finding_confidence:
-            conf_reason_str = f" — {context.active_confidence_reason}" if context.active_confidence_reason else ""
-            context_note += f"\n*Active Finding Confidence: {context.active_finding_confidence.title()}{conf_reason_str}*\n"
-        if resolved_subject:
-            context_note += f"\n*Context continuity: Resolved query with analytical subject '{resolved_subject}'.*\n"
-        rel_section = ("\n\n**Inter-Evidence Analytical Relationships:**\n" + "\n".join(rel_bullets)) if rel_bullets else ""
-        answer_text = (
-            f"### Evidence Summary for '{dataset_name}'\n\n"
-            f"{context_note}"
-            f"Based on the verified analytical evidence extracted from the dataset:\n\n"
-            + "\n".join(bullet_points)
-            + rel_section + "\n\n"
-            "**Recommended Investigation:** Use the linked features in Analysis & Patterns to inspect these distributions further."
-        )
-
-        has_high_evidence = any(e.strength == "High" or (e.evidence_strength and e.evidence_strength.strength == "strong") for e in matched_evidence)
-        confidence_val = "High" if (len(matched_evidence) >= 2 or has_high_evidence) else "Medium"
-
-        return GroundedAnswerResponse(
-            status="success",
-            message="Answer generated from deterministic evidence",
-            question=question,
-            answer=answer_text,
-            referenced_evidence_ids=referenced_ids,
-            confidence=confidence_val,
-            resolved_subject=resolved_subject,
-            suggested_followups=[
-                "Which features exhibit the highest predictive influence?",
-                "What statistical outliers were flagged in the dataset?",
-                "What drill-down path is recommended for investigation?"
-            ]
-        )
-
-    try:
-        evidence_context = []
-        for e in matched_evidence:
-            provenance_str = f" [Method: {e.provenance.get('method')}]" if e.provenance else ""
-            evidence_context.append(
-                f"[Evidence ID: {e.evidence_id}] Category: {e.category} | Title: {e.title} | Details: {e.description} | "
-                f"Metric: {e.metric_name}={e.metric_value} {e.unit or ''} | Strength: {e.strength} | Source: {e.source}{provenance_str} | Columns: {', '.join(e.related_columns)}"
-            )
-        evidence_str = "\n".join(evidence_context)
-        if rel_bullets:
-            evidence_str += "\n\nVerified Inter-Evidence Relationships:\n" + "\n".join(rel_bullets)
-
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-
-        history_context = ""
-        if history:
-            history_context = "\nRecent Conversation History:\n" + "\n".join([f"{h.get('role', 'user')}: {h.get('content', '')}" for h in history[-3:]])
-
-        payload = {
-            "model": "llama-3.1-8b-instant",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are InsightGrid Intelligence Assistant. Answer the user's question concisely, professionally, and strictly ground your explanation in the provided verified evidence. "
-                        "Do not guess, fabricate, or extrapolate uncomputed dataset facts. If the evidence does not contain the answer, politely state what analytical evidence is available. "
-                        "Maintain context continuity with previous analytical subjects if this is a follow-up question. Always use clear Markdown formatting."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"Dataset: {dataset_name}\n"
-                        f"{history_context}\n"
-                        f"Active Analytical Context: {resolved_subject or 'General'}\n"
-                        f"User Question: {question}\n\n"
-                        f"Verified Analytical Evidence:\n{evidence_str}"
-                    )
-                }
-            ],
-            "temperature": 0.2,
-            "max_tokens": 800
-        }
-
-        resp = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=20)
-        if resp.status_code == 200:
-            content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-            return GroundedAnswerResponse(
-                status="success",
-                message="Answer generated from LLM grounded in evidence",
-                question=question,
-                answer=content,
-                referenced_evidence_ids=referenced_ids,
-                confidence="High",
-                resolved_subject=resolved_subject,
-                suggested_followups=[
-                    "What are the key influencing factors?",
-                    "Where are the largest outliers located?",
-                    "What next steps are recommended?"
-                ]
-            )
-    except Exception:
-        pass
-
-    # Fallback to deterministic if API request fails
-    bullet_points = [f"- **{e.title}**: {e.description}" for e in matched_evidence]
-    has_high = any(e.strength == "High" for e in matched_evidence)
-    fallback_confidence = "High" if (len(matched_evidence) >= 2 or has_high) else "Medium"
-
-    fallback_text = f"### Verified Evidence Findings\n\n" + "\n".join(bullet_points)
-    if rel_bullets:
-        fallback_text += "\n\n**Inter-Evidence Relationships:**\n" + "\n".join(rel_bullets)
-
-    return GroundedAnswerResponse(
-        status="success",
-        message="Answer generated from deterministic evidence fallback",
+    req = AskInsightGridRequest(
         question=question,
-        answer=fallback_text,
-        referenced_evidence_ids=referenced_ids,
-        confidence=fallback_confidence,
-        resolved_subject=resolved_subject,
-        suggested_followups=["Explore feature distributions in Analysis & Patterns"]
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
+        dataset_name=dataset_name,
+        evidence_items=evidence_items,
+        evidence_relationships=evidence_relationships if evidence_relationships else (context.evidence_relationships if context else None),
+        context=context,
+        history=history
     )
+    return answer_evidence_aware_copilot(req)
 
 
 # Backward-compatible wrapper for legacy callers

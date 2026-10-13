@@ -304,6 +304,13 @@ class AnalyticalContext(BaseModel):
     conversation_history: List[Dict[str, str]] = Field(default_factory=list)
 
 
+class CopilotAction(BaseModel):
+    action_type: Literal["investigate_dimension", "view_evidence", "return_to_investigation", "none"] = "none"
+    target_id: Optional[str] = None
+    dimension: Optional[str] = None
+    label: Optional[str] = None
+
+
 class AskInsightGridRequest(BaseModel):
     question: str
     dataset_id: str
@@ -313,6 +320,10 @@ class AskInsightGridRequest(BaseModel):
     dataset_name: Optional[str] = None
     context: Optional[AnalyticalContext] = None
     history: Optional[List[Dict[str, str]]] = None
+    investigation_id: Optional[str] = None
+    active_node_id: Optional[str] = None
+    source_insight_id: Optional[str] = None
+    action: Optional[CopilotAction] = None
 
 
 class GroundedAnswerResponse(BaseModel):
@@ -324,6 +335,36 @@ class GroundedAnswerResponse(BaseModel):
     confidence: Literal["High", "Medium", "Low"] = "High"
     resolved_subject: Optional[str] = None
     suggested_followups: List[str] = Field(default_factory=list)
+    intent: Optional[str] = None
+    referenced_node_ids: List[str] = Field(default_factory=list)
+    supporting_evidence_ids: List[str] = Field(default_factory=list)
+    contradicting_evidence_ids: List[str] = Field(default_factory=list)
+    finding_confidence: Optional[Literal["high", "medium", "low", "conflicting"]] = None
+    confidence_reason: Optional[str] = None
+    suggested_next_dimensions: List[str] = Field(default_factory=list)
+    action: Optional[CopilotAction] = None
+
+
+class EvidenceAwareCopilotContext(BaseModel):
+    dataset_id: str
+    analysis_id: Optional[str] = None
+    dataset_name: Optional[str] = None
+    insight: Optional[InsightItem] = None
+    investigation: Optional[InvestigationContext] = None
+    active_node: Optional[InvestigationNode] = None
+    active_node_id: Optional[str] = None
+    selected_dimensions: List[str] = Field(default_factory=list)
+    available_next_dimensions: List[str] = Field(default_factory=list)
+    evidence_items: List[EvidenceItem] = Field(default_factory=list)
+    evidence_relationships: List[EvidenceRelationship] = Field(default_factory=list)
+    evidence_strengths: Dict[str, EvidenceStrength] = Field(default_factory=dict)
+    finding_confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
+    supporting_evidence_ids: List[str] = Field(default_factory=list)
+    contradicting_evidence_ids: List[str] = Field(default_factory=list)
+    limitations: List[str] = Field(default_factory=list)
+    is_terminal: bool = False
+    resolved_subject: Optional[str] = None
 
 
 class ReportPayload(BaseModel):

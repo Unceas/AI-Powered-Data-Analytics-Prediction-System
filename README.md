@@ -4,8 +4,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18%20%7C%20TypeScript-61DAFB.svg)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-Bundler-646CFF.svg)](https://vitejs.dev/)
-[![Tests](https://img.shields.io/badge/Pytest-84%2F84%20Passing%20(100%25)-brightgreen.svg)]()
-[![Status](https://img.shields.io/badge/Version-V1.4.4.1%20(Evidence%20Graph)-blueviolet.svg)]()
+[![Tests](https://img.shields.io/badge/Pytest-142%2F142%20Passing%20(100%25)-brightgreen.svg)]()
+[![Status](https://img.shields.io/badge/Version-V1.4.4.3%20(Evidence--Aware%20Copilot)-blueviolet.svg)]()
 
 InsightGrid is an **evidence-backed analytical reasoning operating system** designed to transform raw tabular data into structured, traceable intelligence. Moving far beyond static dashboards or hallucinated AI summaries, InsightGrid enforces **mathematically verified evidence**, **calibrated predictive validation**, and **interactive progressive decomposition chains** (**Finding $\to$ Dimension $\to$ Observation $\to$ Evidence**).
 
@@ -29,6 +29,9 @@ Deterministic Evidence Layer (Immutable EvidenceItems with Units, Provenance & S
 Evidence Graph Layer V1.4.4.1 (Deterministic Inter-Evidence Relationships: Supports, Corroborates, Contradicts, Derived-From)
        │
        ▼
+Evidence Strength & Finding Confidence V1.4.4.2 (Anti-Double-Counting Lineages, Deterministic Finding Confidence)
+       │
+       ▼
 Prediction Engine V1.1 (Stratified Holdout, Calibrated Reliability Scores & Driver Attribution)
        │
        ▼
@@ -36,6 +39,9 @@ Proactive Discovery Engine V1.4.1 (Multi-Factor Deterministic Ranking & Top 3–
        │
        ▼
 Why? Progressive Decomposition Chains V1.4.2 (Interactive Finding → Dimension → Observation → Evidence)
+       │
+       ▼
+Evidence-Aware Copilot V1.4.4.3 (Grounded Explanations for 7 Core Analytical Questions, Anti-Hallucination, Allowlisted Actions)
        │
        ▼
 Persistent Analytical Workspace (Single Source of Truth Across Tabs, Investigation & Copilot)
@@ -55,6 +61,7 @@ Persistent Analytical Workspace (Single Source of Truth Across Tabs, Investigati
 | **V1.4.2** | **Why? Progressive Decomposition Chains** | `InvestigationNode` lineage trees ($Finding \to Dimension \to Observation \to Evidence$), strict Investigation Integrity Rules (measurements derived exclusively from verified aggregates), live `POST /investigate-step` interactive drill-down. |
 | **V1.4.4.1** | **Deterministic Evidence Graph** | Inter-evidence relationship layer (`supports`, `corroborates`, `contradicts`, `derived_from`, `related_to`), strict contradiction detection, deterministic SHA-256 graph construction, `POST /evidence-graph` API, Investigation & Copilot integration. |
 | **V1.4.4.2** | **Evidence Strength & Finding Confidence Layer** | Deterministic evidence strength scoring ($0-100$ heuristic), finding confidence (`high`, `medium`, `low`, `conflicting`), anti-double-counting of derivation lineages, contradiction primacy, schema-grounded next steps, `POST /evidence-strength` API. |
+| **V1.4.4.3** | **Evidence-Aware Copilot** | Grounded explanations for 7 core questions, strict anti-hallucination sanitization, server-side isolation, allowlisted actions, interactive confidence & contradiction badges, `POST /ask-insightgrid` API. |
 
 👉 For full version details and design decisions, see [**docs/VERSION_HISTORY.md**](docs/VERSION_HISTORY.md).  
 👉 For complete architectural contracts and pipeline specifications, see [**docs/ARCHITECTURE.md**](docs/ARCHITECTURE.md).  

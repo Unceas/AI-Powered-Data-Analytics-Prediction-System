@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, FileText, ChevronRight, Brain, Bot, Download } from 'lucide-react';
+import { Send, FileText, ChevronRight, Brain, Bot, Download, ShieldCheck, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useWorkspace } from '../context/WorkspaceContext';
 import api from '../utils/api';
 import './AIChatPage.css';
-import type { Dataset } from '../types';
+import type { Dataset, CopilotAction } from '../types';
 
 interface AIChatPageProps {
   datasets: Dataset[];
@@ -20,10 +20,17 @@ interface ChatMessage {
     type: 'anomaly' | 'feature' | 'metrics';
     value: string;
   };
+  intent?: string;
+  findingConfidence?: 'high' | 'medium' | 'low' | 'conflicting';
+  confidenceReason?: string;
+  supportingEvidenceIds?: string[];
+  contradictingEvidenceIds?: string[];
+  suggestedNextDimensions?: string[];
+  action?: CopilotAction;
 }
 
 export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGenerateReport }: AIChatPageProps) {
-  const { workspace } = useWorkspace();
+  const { workspace, selectDimension } = useWorkspace();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -33,22 +40,13 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
 
   // Suggested quick prompts adapted to current workspace investigation
   const quickPrompts = workspace.investigation?.active ? [
-    { 
-      label: `🔍 Why did ${workspace.investigation.subject} change?`, 
-      text: `What underlying evidence and drivers explain the patterns observed in ${workspace.investigation.subject}?` 
-    },
-    { 
-      label: `📊 Breakdown by ${workspace.investigation.selected_dimensions[0] || 'dimension'}`, 
-      text: `How does ${workspace.investigation.subject} distribute across ${workspace.investigation.selected_dimensions[0] || 'segments'}?` 
-    },
-    { 
-      label: `🤖 Predict ${workspace.prediction_context?.target || workspace.investigation.subject}`, 
-      text: `What can we reasonably predict about ${workspace.prediction_context?.target || workspace.investigation.subject} based on verified evidence?` 
-    },
-    { 
-      label: `📈 Top Evidence`, 
-      text: `Summarize the strongest correlation and outlier evidence related to ${workspace.investigation.subject}.` 
-    }
+    { label: "💡 Why Important?", text: "Why is this finding important?" },
+    { label: "📊 Supporting Evidence", text: "What evidence supports this finding?" },
+    { label: "⚡ Any Contradictions?", text: "Is there evidence that contradicts it?" },
+    { label: "🛡️ Confidence Level", text: "How confident are we in this finding?" },
+    { label: "📝 Summarize Findings", text: "Summarize what we have found so far." },
+    { label: "🧭 What Next?", text: "What should I investigate next?" },
+    { label: "🔬 Strengthen Conclusion", text: "What additional analysis could strengthen this conclusion?" }
   ] : [
     { label: "📊 Summarize correlations", text: "What are the most notable feature correlations in this dataset?" },
     { label: "🔍 Explain anomalies", text: "Can you detail the anomaly detection results? What features are skewing the outliers?" },
@@ -115,7 +113,11 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
         question: text,
         dataset_id: activeDataset.id,
         dataset_name: activeDataset.name,
+        investigation_id: workspace.investigation?.investigation_id,
+        active_node_id: workspace.investigation?.active_node_id,
+        source_insight_id: workspace.investigation?.source_insight_id,
         evidence_items: activeDataset.evidence || [],
+        evidence_relationships: activeDataset.evidence_relationships || [],
         context: {
           dataset_id: activeDataset.id,
           dataset_name: activeDataset.name,
@@ -139,7 +141,14 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
         linkedElement: response.data.referenced_evidence_ids?.length > 0 ? {
           type: 'metrics',
           value: `Referenced Evidence: ${response.data.referenced_evidence_ids.join(', ')} (${response.data.confidence || 'High'} Confidence)`
-        } : undefined
+        } : undefined,
+        intent: response.data.intent,
+        findingConfidence: response.data.finding_confidence,
+        confidenceReason: response.data.confidence_reason,
+        supportingEvidenceIds: response.data.supporting_evidence_ids,
+        contradictingEvidenceIds: response.data.contradicting_evidence_ids,
+        suggestedNextDimensions: response.data.suggested_next_dimensions,
+        action: response.data.action
       }]);
     } catch (error) {
       console.error(error);
@@ -153,11 +162,20 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
     }
   };
 
+  const handleActionClick = (action: CopilotAction) => {
+    if (action.action_type === 'investigate_dimension' && action.dimension) {
+      selectDimension(action.dimension);
+      sendMessage(`How does ${workspace.investigation?.subject || 'the finding'} distribute across ${action.dimension}?`);
+    } else if (action.action_type === 'return_to_investigation') {
+      sendMessage("Summarize what we have found so far.");
+    }
+  };
+
   return (
     <div className="ai-chat-view animate-fade-in">
       <div className="view-header" style={{ marginBottom: '1.25rem' }}>
         <h2>Intelligence Studio</h2>
-        <p>Conversational LLM reasoning grounded in dataset parameters, model weights, and statistical vectors.</p>
+        <p>Conversational LLM reasoning grounded in dataset parameters, model weights, and verified evidence relationships.</p>
       </div>
 
       <div className="chat-page-layout">
@@ -196,6 +214,9 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
                 {workspace.investigation?.active && (
                   <li><span>Active Focus:</span> <strong className="text-accent">{workspace.investigation.subject}</strong></li>
                 )}
+                {workspace.investigation?.finding_confidence && (
+                  <li><span>Confidence:</span> <strong className="text-accent">{workspace.investigation.finding_confidence.toUpperCase()}</strong></li>
+                )}
               </ul>
             </div>
           )}
@@ -206,7 +227,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
           <div className="chat-header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div className="header-status" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Bot size={16} className="text-accent active-glow" />
-              <span>Intelligence Studio</span>
+              <span>Evidence-Aware Copilot</span>
               {workspace.investigation?.active && (
                 <span style={{ 
                   fontSize: '0.72rem', 
@@ -217,7 +238,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
                   borderRadius: '4px',
                   fontWeight: 600
                 }}>
-                  Exploring: {workspace.investigation.subject}
+                  Focus: {workspace.investigation.subject}
                 </span>
               )}
             </div>
@@ -244,7 +265,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
                   <span>Generate Report</span>
                 </button>
               )}
-              <span className="status-indicator-pill">INTELLIGENCE SYNTESIZER ACTIVE</span>
+              <span className="status-indicator-pill">VERIFIED EVIDENCE GROUNDED</span>
             </div>
           </div>
 
@@ -256,12 +277,74 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
                 </div>
                 <div className="message-content-wrapper">
                   <div className="message-meta">
-                    <span className="author">{msg.role === 'assistant' ? 'INSIGHT ENGINE' : 'YOU'}</span>
+                    <span className="author">{msg.role === 'assistant' ? 'INSIGHT COPILOT' : 'YOU'}</span>
                     <span className="time">{msg.timestamp}</span>
                   </div>
                   <div className="message-text">
                     {msg.content.split('\n').map((line, i) => <p key={i} style={{ marginBottom: '0.4rem' }}>{line}</p>)}
                   </div>
+
+                  {/* Evidence-Aware Metadata Badges */}
+                  {(msg.findingConfidence || (msg.contradictingEvidenceIds && msg.contradictingEvidenceIds.length > 0)) && (
+                    <div className="copilot-meta-row">
+                      {msg.findingConfidence && (
+                        <span className={`copilot-confidence-pill ${msg.findingConfidence}`}>
+                          <ShieldCheck size={12} />
+                          Confidence: {msg.findingConfidence}
+                        </span>
+                      )}
+                      {msg.contradictingEvidenceIds && msg.contradictingEvidenceIds.length > 0 && (
+                        <span className="copilot-contra-warning">
+                          <AlertTriangle size={12} />
+                          {msg.contradictingEvidenceIds.length} Contradictions Detected
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Supporting Evidence Chips */}
+                  {msg.supportingEvidenceIds && msg.supportingEvidenceIds.length > 0 && (
+                    <div className="copilot-evidence-chips">
+                      {msg.supportingEvidenceIds.slice(0, 4).map((eid, eIdx) => (
+                        <span key={eIdx} className="copilot-ev-chip" title="Verified Supporting Evidence">
+                          ✓ {eid}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Next Dimensions Suggestion Pills */}
+                  {msg.suggestedNextDimensions && msg.suggestedNextDimensions.length > 0 && (
+                    <div className="copilot-next-dims-row">
+                      <span className="copilot-next-dims-label">Available next dimensions:</span>
+                      {msg.suggestedNextDimensions.map((dim, dIdx) => (
+                        <button
+                          key={dIdx}
+                          className="copilot-dim-btn"
+                          onClick={() => {
+                            selectDimension(dim);
+                            sendMessage(`How does ${workspace.investigation?.subject || 'the finding'} distribute across ${dim}?`);
+                          }}
+                        >
+                          + {dim}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Allowlisted Action Button */}
+                  {msg.action && msg.action.action_type !== 'none' && (
+                    <div className="copilot-action-box">
+                      <button 
+                        className="copilot-action-btn"
+                        onClick={() => handleActionClick(msg.action!)}
+                      >
+                        <ArrowRight size={13} />
+                        <span>{msg.action.label || `Investigate ${msg.action.dimension || 'Next'}`}</span>
+                      </button>
+                    </div>
+                  )}
+
                   {msg.linkedElement && (
                     <div className="linked-reasoning-anchor">
                       <span>Reasoning path anchored to: </span>
@@ -278,7 +361,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
                 <div className="msg-avatar"><Bot size={14} /></div>
                 <div className="message-content-wrapper">
                   <div className="message-meta">
-                    <span className="author">INSIGHT ENGINE</span>
+                    <span className="author">INSIGHT COPILOT</span>
                   </div>
                   <div className="typing-loader">
                     <span></span><span></span><span></span>
@@ -290,7 +373,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
           </div>
 
           {/* Quick suggestions panel */}
-          {activeDataset && activeDataset.status.isProcessed && messages.length <= 1 && (
+          {activeDataset && activeDataset.status.isProcessed && (
             <div className="quick-suggestions-row">
               {quickPrompts.map((p, i) => (
                 <button 
@@ -309,7 +392,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
           <div className="chat-input-row">
             <input 
               type="text" 
-              placeholder={activeDataset ? "Ask Insight Engine to analyze metrics, weights, or outliers..." : "Select active dataset first..."}
+              placeholder={activeDataset ? "Ask Copilot: Why is this important? What evidence supports it?..." : "Select active dataset first..."}
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && sendMessage(inputValue)}

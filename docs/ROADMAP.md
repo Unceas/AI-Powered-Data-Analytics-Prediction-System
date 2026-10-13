@@ -412,11 +412,11 @@ Actual implementation/tests/commit: ______________________________
 
 ### V1.4.4.3 — Evidence-Aware Copilot
 
-**Status:** Planned next iteration; implementation directive not confirmed as executed.
+**Status:** Completed & Verified (142/142 backend tests passing, 0 frontend build errors).
 
 Goal: integrate the Evidence Graph and evidence-strength/confidence layer into the existing Copilot. This is an integration iteration, not a new chat architecture.
 
-Relevant context may include:
+Relevant context includes:
 - Current finding
 - Active investigation node and lineage
 - Supporting evidence
@@ -456,7 +456,7 @@ Verification:
 - Validated next-dimension suggestions/actions
 - Full backend test suite and frontend build
 
-Actual implementation/tests/commit: ______________________________
+Actual implementation/tests/commit: Implemented in `backend/ai/copilot.py`, `backend/domain/contracts.py`, `backend/api/routes.py`, `frontend-react/src/components/AIChatPage.tsx`. Verified with 32 dedicated unit/integration tests in `tests/test_v1_4_4_3_evidence_aware_copilot.py` (142/142 backend tests pass, frontend build clean).
 
 ## 11. V1.4.5 — Next product milestone
 

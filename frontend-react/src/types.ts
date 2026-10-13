@@ -215,6 +215,32 @@ export interface AnalyticalContext {
   evidence_relationships?: EvidenceRelationship[];
 }
 
+export interface CopilotAction {
+  action_type: 'investigate_dimension' | 'view_evidence' | 'return_to_investigation' | 'none';
+  target_id?: string;
+  dimension?: string;
+  label?: string;
+}
+
+export interface GroundedAnswerResponse {
+  status: string;
+  message: string;
+  question: string;
+  answer: string;
+  referenced_evidence_ids: string[];
+  confidence: 'High' | 'Medium' | 'Low';
+  resolved_subject?: string;
+  suggested_followups: string[];
+  intent?: string;
+  referenced_node_ids?: string[];
+  supporting_evidence_ids?: string[];
+  contradicting_evidence_ids?: string[];
+  finding_confidence?: 'high' | 'medium' | 'low' | 'conflicting';
+  confidence_reason?: string;
+  suggested_next_dimensions?: string[];
+  action?: CopilotAction;
+}
+
 export interface Dataset {
   id: string;
   name: string;

@@ -505,8 +505,16 @@ async def generate_decision_brief_endpoint(payload: dict = Body(...)):
 @router.post("/ask-insightgrid")
 async def ask_insightgrid_endpoint(payload: dict = Body(...)):
     """Answer user questions strictly grounded in observed Evidence items with conversational context continuity."""
-    from backend.ai.insight_generator import answer_question_grounded_in_evidence
-    from backend.domain.contracts import EvidenceItem, AnalyticalContext
+    from backend.ai.copilot import answer_evidence_aware_copilot
+    from backend.domain.contracts import (
+        AskInsightGridRequest,
+        EvidenceItem,
+        EvidenceRelationship,
+        AnalyticalContext,
+        CopilotAction,
+        InsightItem,
+        InvestigationContext
+    )
 
     question = payload.get("question", "")
     dataset_name = payload.get("dataset_name", "Active Dataset")
@@ -514,7 +522,20 @@ async def ask_insightgrid_endpoint(payload: dict = Body(...)):
     raw_context = payload.get("context")
     history = payload.get("history")
     raw_rel = payload.get("evidence_relationships", [])
-    
+    investigation_id = payload.get("investigation_id")
+    active_node_id = payload.get("active_node_id")
+    source_insight_id = payload.get("source_insight_id")
+    raw_action = payload.get("action")
+    raw_insight = payload.get("insight")
+    raw_investigation = payload.get("investigation")
+
+    dataset_id = payload.get("dataset_id")
+    analysis_id = payload.get("analysis_id")
+    if not dataset_id and isinstance(raw_context, dict):
+        dataset_id = raw_context.get("dataset_id")
+        if not analysis_id:
+            analysis_id = raw_context.get("analysis_id")
+
     evidence_items = []
     for item in raw_evidence:
         if isinstance(item, dict):
@@ -522,6 +543,14 @@ async def ask_insightgrid_endpoint(payload: dict = Body(...)):
                 evidence_items.append(EvidenceItem(**item))
             except Exception:
                 pass
+
+    if not dataset_id and evidence_items:
+        dataset_id = evidence_items[0].dataset_id
+        if not analysis_id:
+            analysis_id = evidence_items[0].analysis_id
+
+    if not dataset_id:
+        raise HTTPException(status_code=400, detail="Invalid dataset_id: dataset_id is required")
 
     evidence_relationships = []
     for rel in raw_rel:
@@ -538,12 +567,49 @@ async def ask_insightgrid_endpoint(payload: dict = Body(...)):
         except Exception:
             pass
 
-    result = answer_question_grounded_in_evidence(
+    action = None
+    if raw_action and isinstance(raw_action, dict):
+        try:
+            action = CopilotAction(**raw_action)
+        except Exception:
+            pass
+
+    insight = None
+    if raw_insight and isinstance(raw_insight, dict):
+        try:
+            insight = InsightItem(**raw_insight)
+        except Exception:
+            pass
+
+    investigation = None
+    if raw_investigation and isinstance(raw_investigation, dict):
+        try:
+            investigation = InvestigationContext(**raw_investigation)
+        except Exception:
+            pass
+
+    request = AskInsightGridRequest(
         question=question,
-        dataset_name=dataset_name,
+        dataset_id=dataset_id,
+        analysis_id=analysis_id,
         evidence_items=evidence_items,
+        evidence_relationships=evidence_relationships if evidence_relationships else None,
+        dataset_name=dataset_name,
         context=context,
         history=history,
-        evidence_relationships=evidence_relationships if evidence_relationships else None
+        investigation_id=investigation_id,
+        active_node_id=active_node_id,
+        source_insight_id=source_insight_id,
+        action=action
     )
-    return result.model_dump()
+
+    try:
+        result = answer_evidence_aware_copilot(
+            request=request,
+            insight=insight,
+            investigation=investigation
+        )
+        return result.model_dump()
+    except ValueError as val_err:
+        raise HTTPException(status_code=400, detail=str(val_err))
+

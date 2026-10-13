@@ -197,3 +197,41 @@ V1.4.4.2: Evidence Strength & Finding Confidence Layer
   - React Frontend: Status badges (`[HIGH CONFIDENCE]`, `[CONFLICTING]`, etc.), evidence signal counts, and "Next to verify" guidance chips.
   - Test Suite: 26 dedicated unit and integration tests in `tests/test_v1_4_4_2_evidence_strength.py` (110/110 tests passing overall, 0 frontend build errors).
 
+---
+
+### 🔹 InsightGrid V1.4.4.3 — Evidence-Aware Copilot
+*Grounded conversational intelligence explaining findings using verified evidence, relationships, strength, and confidence.*
+
+- **Core Architectural Paradigm**:
+  - The backend establishes analytical facts; the LLM strictly explains those facts.
+  - Zero LLM invention of evidence IDs, node IDs, numerical percentages, or arbitrary dimensions.
+- **Support for 7 Core Analytical Questions / Intents**:
+  1. *"Why is this finding important?"* (`explanation`): Details finding significance, severity, and analytical context.
+  2. *"What evidence supports this finding?"* (`evidence`): Formulates itemized breakdown of verified supporting evidence, metrics, and deterministic strengths.
+  3. *"Is there evidence that contradicts it?"* (`contradiction`): Accurately surfaces verified contradictions, or explicitly states: *"No verified contradictory evidence was found in the available analytical evidence for this finding. (Note: This indicates the absence of detected contradictions within currently observed data, not universal proof)."*
+  4. *"How confident are we in this finding?"* (`confidence`): Explains qualitative confidence (`high`, `medium`, `low`, `conflicting`) and exact rationale without fabricating percentages.
+  5. *"Summarize what we have found so far."* (`summary`): Synthesizes active finding, supporting/contradicting evidence counts, and current hierarchy.
+  6. *"What should I investigate next?"* (`next_step`): Suggests allowlisted dimensions from active decomposition node; detects terminal decomposition states.
+  7. *"What additional analysis could strengthen this conclusion?"* (`additional_analysis`): Proposes verified schema-grounded checks (temporal holdouts, cohort segmentation, outlier audits).
+- **Server-Side Validation & Isolation**:
+  - Rejects cross-dataset and cross-analysis contamination with strict validation.
+  - Scopes evidence and relationships to active dataset and analysis runs.
+  - Ensures active node IDs belong to active investigation chains.
+- **Allowlisted Copilot Actions**:
+  - Structured actions: `investigate_dimension`, `view_evidence`, `return_to_investigation`, and `none`.
+  - Server-side validation downgrades arbitrary or unverified dimensions/targets.
+- **Anti-Hallucination Post-Processing**:
+  - `sanitize_llm_references` intercepts LLM completions, validating all mentioned evidence and node IDs and stripping any unverified tokens.
+- **Prompt Injection Defense & Evidence Boundaries**:
+  - System prompt safeguards against override attempts.
+  - Out-of-scope inquiries immediately return structured Evidence Limitation Notices.
+- **Frontend Intelligence Studio Integration**:
+  - Interactive quick prompts for the 7 core questions.
+  - Color-coded Confidence badges (`HIGH`, `MEDIUM`, `LOW`, `CONFLICTING`).
+  - Contradiction warning pills and supporting evidence chips.
+  - Action buttons triggering direct drill-down on allowlisted dimensions.
+- **Test Suite & Verification**:
+  - 32 dedicated tests in `tests/test_v1_4_4_3_evidence_aware_copilot.py` (142/142 tests passing across full suite).
+  - 100% clean frontend build (`npm run build` passing with 0 errors).
+
+
