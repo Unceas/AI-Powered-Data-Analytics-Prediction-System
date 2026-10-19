@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { 
   WorkspaceState, 
-  WorkspaceContextValue, 
   WorkspaceInvestigation, 
   WorkspacePredictionContext,
   Insight, 
   Dataset 
 } from '../types';
+import { WorkspaceContext } from './useWorkspace';
 
 const INITIAL_WORKSPACE_STATE: WorkspaceState = {
   dataset_id: null,
@@ -21,8 +21,6 @@ const INITIAL_WORKSPACE_STATE: WorkspaceState = {
     active_dimensions: []
   }
 };
-
-const WorkspaceContext = createContext<WorkspaceContextValue | undefined>(undefined);
 
 export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [workspace, setWorkspace] = useState<WorkspaceState>(INITIAL_WORKSPACE_STATE);
@@ -265,12 +263,4 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       {children}
     </WorkspaceContext.Provider>
   );
-};
-
-export const useWorkspace = (): WorkspaceContextValue => {
-  const context = useContext(WorkspaceContext);
-  if (!context) {
-    throw new Error('useWorkspace must be used within a WorkspaceProvider');
-  }
-  return context;
 };

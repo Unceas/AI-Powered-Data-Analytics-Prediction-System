@@ -3,6 +3,8 @@
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 /* Dashboard Initialization Workspace Layout */
@@ -3293,15 +3295,16 @@
   background: var(--bg-color);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md, 6px);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  transition: all 0.15s ease;
+  min-height: 36px;
+  transition: var(--transition-fast, all 0.15s ease);
 }
 
 .decomp-dim-chip:hover:not(:disabled) {
@@ -3309,6 +3312,11 @@
   color: var(--accent-color);
   border-color: var(--accent-border);
   transform: translateY(-1px);
+}
+
+.decomp-dim-chip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .decomp-dim-chip:disabled {
@@ -3326,3 +3334,95 @@
   border-radius: 6px;
   text-align: center;
 }
+
+/* ========================================================
+   RESPONSIVE DASHBOARD LAYOUTS & CONTAINER REFLOWS
+   (ISSUE-RESP-002)
+   ======================================================== */
+
+.table-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-container .correlation-matrix-table {
+  min-width: 480px;
+}
+
+.table-empty-state {
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+@media (max-width: 1024px) {
+  .dashboard-top-section {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .tables-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-middle-section.split-layout {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .hero-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .proactive-findings-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+
+  .dataset-intelligence-overview-hero {
+    padding: 1.15rem !important;
+  }
+
+  .executive-operations-report-panel {
+    padding: 1.15rem !important;
+  }
+
+  .dashboard-pipeline-card {
+    padding: 1.15rem !important;
+  }
+
+  .dashboard-tables-section {
+    padding: 1.15rem !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .hero-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .proactive-findings-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .executive-snapshot-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.65rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .executive-snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -101,12 +101,29 @@
   padding: 0;
   margin-left: 2px;
   border-radius: 50%;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
+  position: relative;
+}
+
+.dimension-remove-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .dimension-remove-btn:hover {
   color: var(--danger, #ef4444);
+}
+
+.dimension-remove-btn:focus-visible,
+.workspace-quick-action-btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 1px;
 }
 
 .workspace-context-actions {

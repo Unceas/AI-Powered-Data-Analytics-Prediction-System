@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Cpu, ShieldAlert, AlertCircle, Brain } from 'lucide-react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '../../context/useWorkspace';
 import api from '../../utils/api';
 import './PipelineTabs.css';
 
@@ -19,10 +19,11 @@ export function MachineLearning({ activeDataset, onModelTrained, onAnomalyDetect
 
   // Synchronize target column with active workspace context
   useEffect(() => {
-    if (workspace.prediction_context?.target && !targetCol) {
-      setTargetCol(workspace.prediction_context.target);
+    const ctxTarget = workspace.prediction_context?.target;
+    if (ctxTarget && !targetCol) {
+      setTargetCol(ctxTarget);
     }
-  }, [workspace.prediction_context?.target]);
+  }, [workspace.prediction_context?.target, targetCol]);
 
   const mlResult = activeDataset?.mlResult || null;
   const anomalyResult = activeDataset?.anomalyResult || null;

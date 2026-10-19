@@ -70,19 +70,28 @@
 
 .toggle-btn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.25rem;
-  border-radius: 0.25rem;
-  transition: all 0.2s;
+  border-radius: var(--radius-sm, 0.25rem);
+  transition: var(--transition-fast, all 0.2s);
+  min-width: 32px;
+  min-height: 32px;
 }
 
 .toggle-btn:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
+}
+
+.toggle-btn:focus-visible,
+.nav-btn:focus-visible,
+.theme-toggle:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .sidebar-nav {
@@ -459,3 +468,77 @@
 .node-meta {
   font-weight: 500;
 }
+
+/* ========================================================
+   RESPONSIVE WORKSPACE NAVIGATION & OFF-CANVAS DRAWER
+   ======================================================== */
+
+.desktop-toggle-btn {
+  display: flex;
+}
+
+.mobile-close-btn {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-toggle-btn {
+    display: none !important;
+  }
+
+  .mobile-close-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--touch-target-min, 44px) !important;
+    min-height: var(--touch-target-min, 44px) !important;
+    padding: 0.5rem;
+    border-radius: var(--radius-md, 6px);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: var(--z-backdrop, 999);
+    animation: sidebarBackdropFade 0.25s ease-out;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px !important;
+    max-width: 85vw;
+    height: 100vh;
+    z-index: var(--z-drawer, 1000);
+    transform: translateX(-100%);
+    transition: var(--transition-drawer, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease);
+    box-shadow: none;
+    touch-action: pan-y;
+  }
+
+  .sidebar.expanded,
+  .sidebar.collapsed {
+    width: 260px !important;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-modal, 0 0 35px rgba(0, 0, 0, 0.6));
+  }
+}
+
+@keyframes sidebarBackdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+

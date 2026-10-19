@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, 
   FileSpreadsheet,
@@ -28,7 +28,7 @@ import {
   ReferenceLine
 } from 'recharts';
 import { BrandIcon } from './BrandIcon';
-import { useWorkspace } from '../context/WorkspaceContext';
+import { useWorkspace } from '../context/useWorkspace';
 import api from '../utils/api';
 import './Dashboard.css';
 
@@ -52,6 +52,59 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
   const [activePopover, setActivePopover] = useState<'health' | 'reliability' | null>(null);
   const [activeInvestigationModal, setActiveInvestigationModal] = useState<any | null>(null);
   const [isDecomposing, setIsDecomposing] = useState<boolean>(false);
+
+  // Investigation Modal Accessibility refs and focus management (ISSUE-A11Y-002)
+  const modalContainerRef = useRef<HTMLDivElement>(null);
+  const modalCloseBtnRef = useRef<HTMLButtonElement>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (activeInvestigationModal) {
+      previousActiveElementRef.current = document.activeElement as HTMLElement;
+      const timer = setTimeout(() => {
+        modalCloseBtnRef.current?.focus();
+      }, 50);
+
+      const handleModalKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setActiveInvestigationModal(null);
+          return;
+        }
+
+        // Trap focus inside investigation modal
+        if (e.key === 'Tab' && modalContainerRef.current) {
+          const focusables = modalContainerRef.current.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusables.length === 0) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleModalKeyDown);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('keydown', handleModalKeyDown);
+      };
+    } else {
+      if (previousActiveElementRef.current && typeof previousActiveElementRef.current.focus === 'function') {
+        previousActiveElementRef.current.focus();
+      }
+    }
+  }, [activeInvestigationModal]);
 
   const handleDecomposeStep = async (dimension: string) => {
     if (!activeInvestigationModal) return;
@@ -162,22 +215,20 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
 
   const chartData = generateChartData();
 
-  // Feature weights data simulation
+  // Grounded feature weights extraction
   const getFeatureWeights = () => {
-    if (activeDataset?.processedData?.columns && activeDataset?.status?.isModelTrained) {
-      return activeDataset.processedData.columns.slice(0, 6).map((col: string, idx: number) => ({
-        name: col,
-        weight: 0.35 - (idx * 0.05) > 0.05 ? Number((0.35 - (idx * 0.05)).toFixed(3)) : 0.05
+    if (activeDataset?.mlResult?.feature_importance && Object.keys(activeDataset.mlResult.feature_importance).length > 0) {
+      return Object.entries(activeDataset.mlResult.feature_importance)
+        .map(([name, weight]) => ({ name, weight: Number(weight) }))
+        .sort((a, b) => b.weight - a.weight);
+    }
+    if (Array.isArray(activeDataset?.mlResult?.drivers) && activeDataset.mlResult.drivers.length > 0) {
+      return activeDataset.mlResult.drivers.map((d: any) => ({
+        name: d.feature || d.name,
+        weight: typeof d.importance === 'number' ? d.importance : (typeof d.weight === 'number' ? d.weight : 0)
       }));
     }
-    return [
-      { name: 'dropout_risk', weight: 0.342 },
-      { name: 'absences', weight: 0.231 },
-      { name: 'gpa_cumulative', weight: 0.189 },
-      { name: 'study_hours', weight: 0.112 },
-      { name: 'age_encoded', weight: 0.082 },
-      { name: 'gender', weight: 0.044 }
-    ];
+    return [];
   };
 
   const featureWeights = getFeatureWeights();
@@ -203,7 +254,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
     );
     
     if (log) {
-      const cleanTime = log.timestamp.replace(/[\[\]]/g, '');
+      const cleanTime = log.timestamp.replace(/[[\]]/g, '');
       return { status: 'complete', time: cleanTime };
     }
     
@@ -277,13 +328,14 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
 
   if (activeDataset) {
     if (pipelineStatus.isAnalyzed || engineState === 'ANALYZING' || engineState === 'RUNNING INFERENCE' || engineState === 'SYNTHESIZING INSIGHTS' || engineState === 'COMPLETE') {
+      const anomalyCount = activeDataset.anomalyResult?.anomalies_detected ?? 0;
       reasoningNodes.push({
         id: 'node-1',
         title: 'Critical Outlier Vectors',
-        desc: `Isolation Forest identified ${activeDataset.anomalyResult?.anomalies_detected || 3} statistical anomaly vectors.`,
+        desc: `Isolation Forest identified ${anomalyCount} statistical anomaly vectors.`,
         time: '12:02:19',
         linkType: 'anomaly',
-        linkedMetric: 'dropout_risk',
+        linkedMetric: activeDataset.anomalyResult?.anomalous_features?.[0] || 'Anomalies',
         confidence: '95.4% CI',
         severity: 'HIGH',
         source: 'Isolation Forest',
@@ -295,36 +347,45 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
       });
     }
 
-    if (pipelineStatus.isModelTrained || engineState === 'RUNNING INFERENCE' || engineState === 'SYNTHESIZING INSIGHTS' || engineState === 'COMPLETE') {
+    if (featureWeights.length > 0 && (pipelineStatus.isModelTrained || engineState === 'RUNNING INFERENCE' || engineState === 'SYNTHESIZING INSIGHTS' || engineState === 'COMPLETE')) {
+      const topFw = featureWeights[0];
       reasoningNodes.push({
         id: 'node-2',
         title: 'Feature Attribution Weights',
-        desc: `Feature '${featureWeights[0].name}' displays a heavy prediction weight contribution of ${(featureWeights[0].weight * 100).toFixed(1)}%.`,
+        desc: `Feature '${topFw.name}' displays a leading prediction weight contribution of ${(topFw.weight * 100).toFixed(1)}%.`,
         time: '12:02:34',
         linkType: 'feature',
-        linkedMetric: featureWeights[0].name,
-        confidence: `${(featureWeights[0].weight * 100).toFixed(1)}% weight`,
+        linkedMetric: topFw.name,
+        confidence: `${(topFw.weight * 100).toFixed(1)}% weight`,
         severity: 'MEDIUM',
-        source: 'RandomForestClassifier',
+        source: activeDataset.mlResult?.model_type || 'Prediction Studio',
         action: () => {
           setActiveChartTab('weights');
-          setHighlightedFeature(featureWeights[0].name);
+          setHighlightedFeature(topFw.name);
           setHighlightedAnomaly(false);
         }
       });
     }
 
     if (pipelineStatus.isInsightsGenerated || engineState === 'SYNTHESIZING INSIGHTS' || engineState === 'COMPLETE') {
+      const accScore = activeDataset.mlResult?.metrics?.accuracy !== undefined
+        ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%`
+        : activeDataset.mlResult?.metrics?.r2_score !== undefined
+        ? `${(activeDataset.mlResult.metrics.r2_score * 100).toFixed(1)}%`
+        : null;
+
       reasoningNodes.push({
         id: 'node-3',
         title: 'Supervised Fit Convergence',
-        desc: `Random Forest model converged successfully. Out-of-bag accuracy score settled at ${(activeDataset.mlResult?.metrics?.accuracy * 100 || 91.2).toFixed(1)}%.`,
+        desc: accScore
+          ? `Predictive model converged successfully. Validation performance settled at ${accScore}.`
+          : 'Predictive pipeline convergence completed across available training partitions.',
         time: '12:02:51',
         linkType: 'model',
-        linkedMetric: 'Accuracy',
-        confidence: `${(activeDataset.mlResult?.metrics?.accuracy * 100 || 91.2).toFixed(1)}% score`,
+        linkedMetric: accScore ? 'Accuracy' : 'Evaluation',
+        confidence: accScore ? `${accScore} score` : '--',
         severity: 'INFO',
-        source: 'Prediction Studio',
+        source: activeDataset.mlResult?.model_type || 'Prediction Studio',
         action: () => {
           setActiveChartTab('confidence');
           setHighlightedFeature(null);
@@ -524,7 +585,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
             <div className="hero-stat-box">
               <span className="stat-label">Selected Model</span>
               <span className="stat-value-text text-accent">
-                {activeDataset.mlResult?.model_type || (activeDataset.status.isModelTrained ? 'RandomForestClassifier' : 'Standby Base')}
+                {activeDataset.mlResult?.model_type || (activeDataset.status.isModelTrained ? 'Trained Model' : 'Standby')}
               </span>
             </div>
             <div className="hero-stat-box">
@@ -534,19 +595,19 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   ? `${(activeDataset.mlResult.metrics.accuracy * 100).toFixed(1)}%`
                   : activeDataset.mlResult?.metrics?.r2_score !== undefined
                   ? `${(activeDataset.mlResult.metrics.r2_score * 100).toFixed(1)}%`
-                  : '94.0%'}
+                  : '--'}
               </span>
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Insights Generated</span>
               <span className="stat-value-numeric text-accent">
-                {activeDataset.insights?.length || 14}
+                {activeDataset.insights ? activeDataset.insights.length : 0}
               </span>
             </div>
             <div className="hero-stat-box">
               <span className="stat-label">Anomalies Detected</span>
               <span className="stat-value-numeric text-danger">
-                {activeDataset.anomalyResult?.anomalies_detected || '13'}
+                {activeDataset.anomalyResult?.anomalies_detected !== undefined ? activeDataset.anomalyResult.anomalies_detected : '--'}
               </span>
             </div>
             <div className="hero-stat-box">
@@ -674,10 +735,10 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
         const mediumCount = insightsList.filter((ins: any) => ins.severity === 'Medium').length;
         const lowCount = insightsList.filter((ins: any) => ins.severity === 'Low').length;
         const totalInsightsCount = insightsList.length;
-        const anomaliesCount = activeDataset.anomalyResult?.anomalies_detected || 0;
+        const anomaliesCount = activeDataset.anomalyResult?.anomalies_detected ?? (activeDataset.status?.isAnalyzed ? 0 : '--');
         const recommendedActionsCount = insightsList.filter((ins: any) => ins.recommendation).length;
-        const healthScore = activeDataset.dataset_health_score || 94;
-        const reliabilityScore = activeDataset.reliability_score || 91;
+        const healthScore = activeDataset.dataset_health_score ?? activeDataset.understanding?.quality_score ?? null;
+        const reliabilityScore = activeDataset.reliability_score ?? activeDataset.mlResult?.reliability_score ?? null;
 
         return (
           <div className="executive-snapshot-section">
@@ -698,9 +759,13 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   <span className="card-badge health">SYS</span>
                 </div>
                 <div className="card-main">
-                  <span className="card-value">{healthScore}<span className="card-value-denom">/100</span></span>
+                  <span className="card-value">
+                    {healthScore !== null ? <>{healthScore}<span className="card-value-denom">/100</span></> : '--'}
+                  </span>
                   <span className="card-status-text text-success">
-                    {healthScore >= 90 ? 'OPTIMAL' : healthScore >= 75 ? 'NOMINAL' : 'DEGRADED'}
+                    {healthScore !== null 
+                      ? (healthScore >= 90 ? 'OPTIMAL' : healthScore >= 75 ? 'NOMINAL' : 'DEGRADED')
+                      : 'STANDBY'}
                   </span>
                 </div>
                 <div className="card-footer-action">
@@ -715,19 +780,35 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                     </div>
                     <div className="detail-item">
                       <span className="detail-lbl">Outliers (IQR)</span>
-                      <span className="detail-val text-danger">{(activeDataset.dataset_health_details?.outliers_pct ?? 4.2).toFixed(1)}%</span>
+                      <span className="detail-val text-danger">
+                        {activeDataset.dataset_health_details?.outliers_pct !== undefined 
+                          ? `${activeDataset.dataset_health_details.outliers_pct.toFixed(1)}%` 
+                          : '--'}
+                      </span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-lbl">Duplicate Rows</span>
-                      <span className="detail-val">{(activeDataset.dataset_health_details?.duplicates_pct ?? 0).toFixed(1)}%</span>
+                      <span className="detail-val">
+                        {activeDataset.dataset_health_details?.duplicates_pct !== undefined 
+                          ? `${activeDataset.dataset_health_details.duplicates_pct.toFixed(1)}%` 
+                          : '--'}
+                      </span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-lbl">Class Imbalance</span>
-                      <span className="detail-val">{(activeDataset.dataset_health_details?.imbalance_ratio ?? 15.5).toFixed(1)}%</span>
+                      <span className="detail-val">
+                        {activeDataset.dataset_health_details?.imbalance_ratio !== undefined 
+                          ? `${activeDataset.dataset_health_details.imbalance_ratio.toFixed(1)}%` 
+                          : '--'}
+                      </span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-lbl">Invalid Values</span>
-                      <span className="detail-val">{(activeDataset.dataset_health_details?.invalid_pct ?? 0).toFixed(1)}%</span>
+                      <span className="detail-val">
+                        {activeDataset.dataset_health_details?.invalid_pct !== undefined 
+                          ? `${activeDataset.dataset_health_details.invalid_pct.toFixed(1)}%` 
+                          : '--'}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -743,9 +824,13 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   <span className="card-badge reliability">ML</span>
                 </div>
                 <div className="card-main">
-                  <span className="card-value">{reliabilityScore}<span className="card-value-denom">/100</span></span>
+                  <span className="card-value">
+                    {reliabilityScore !== null ? <>{reliabilityScore}<span className="card-value-denom">/100</span></> : '--'}
+                  </span>
                   <span className="card-status-text text-accent">
-                    {reliabilityScore >= 90 ? 'HIGH STABILITY' : reliabilityScore >= 75 ? 'STABLE' : 'UNSTABLE'}
+                    {reliabilityScore !== null
+                      ? (reliabilityScore >= 90 ? 'HIGH STABILITY' : reliabilityScore >= 75 ? 'STABLE' : 'UNSTABLE')
+                      : 'STANDBY'}
                   </span>
                 </div>
                 <div className="card-footer-action">
@@ -756,19 +841,35 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   <div className="card-detail-dropdown animate-slide-down" onClick={(e) => e.stopPropagation()}>
                     <div className="detail-item">
                       <span className="detail-lbl">OOB Accuracy / R²</span>
-                      <span className="detail-val text-accent">{(activeDataset.reliability_details?.cross_validation_score ?? 90.8).toFixed(1)}%</span>
+                      <span className="detail-val text-accent">
+                        {activeDataset.reliability_details?.cross_validation_score !== undefined 
+                          ? `${activeDataset.reliability_details.cross_validation_score.toFixed(1)}%` 
+                          : '--'}
+                      </span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-lbl">Sample Size Fit</span>
-                      <span className="detail-val">{(activeDataset.reliability_details?.sample_size_factor ?? 100).toFixed(1)}%</span>
+                      <span className="detail-val">
+                        {activeDataset.reliability_details?.sample_size_factor !== undefined 
+                          ? `${activeDataset.reliability_details.sample_size_factor.toFixed(1)}%` 
+                          : '--'}
+                      </span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-lbl">Feature Count Fit</span>
-                      <span className="detail-val">{(activeDataset.reliability_details?.feature_count_factor ?? 100).toFixed(1)}%</span>
+                      <span className="detail-val">
+                        {activeDataset.reliability_details?.feature_count_factor !== undefined 
+                          ? `${activeDataset.reliability_details.feature_count_factor.toFixed(1)}%` 
+                          : '--'}
+                      </span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-lbl">Distribution Balance</span>
-                      <span className="detail-val">{(activeDataset.reliability_details?.class_distribution_balance ?? 88).toFixed(1)}%</span>
+                      <span className="detail-val">
+                        {activeDataset.reliability_details?.class_distribution_balance !== undefined 
+                          ? `${activeDataset.reliability_details.class_distribution_balance.toFixed(1)}%` 
+                          : '--'}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -781,7 +882,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   <span className="card-badge insights">AI</span>
                 </div>
                 <div className="card-main">
-                  <span className="card-value">{totalInsightsCount || 14}</span>
+                  <span className="card-value">{totalInsightsCount}</span>
                   <span className="card-status-text text-accent">INFERENCES COMPILED</span>
                 </div>
                 <div className="card-footer-action">
@@ -796,7 +897,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   <span className="card-badge anomalies">IF</span>
                 </div>
                 <div className="card-main">
-                  <span className="card-value text-danger">{anomaliesCount || 13}</span>
+                  <span className="card-value text-danger">{anomaliesCount}</span>
                   <span className="card-status-text text-danger">OUTLIER ELEMENTS</span>
                 </div>
                 <div className="card-footer-action">
@@ -811,12 +912,12 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   <span className="card-badge critical">RISK</span>
                 </div>
                 <div className="card-main">
-                  <span className="card-value text-danger">{criticalCount || 2}</span>
+                  <span className="card-value text-danger">{criticalCount}</span>
                   <div className="priority-matrix-pills">
-                    <span className="pill critical" title="Critical Severity">C: {criticalCount || 2}</span>
-                    <span className="pill high" title="High Severity">H: {highCount || 4}</span>
-                    <span className="pill medium" title="Medium Severity">M: {mediumCount || 5}</span>
-                    <span className="pill low" title="Low Severity">L: {lowCount || 3}</span>
+                    <span className="pill critical" title="Critical Severity">C: {criticalCount}</span>
+                    <span className="pill high" title="High Severity">H: {highCount}</span>
+                    <span className="pill medium" title="Medium Severity">M: {mediumCount}</span>
+                    <span className="pill low" title="Low Severity">L: {lowCount}</span>
                   </div>
                 </div>
                 <div className="card-footer-action">
@@ -831,7 +932,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                   <span className="card-badge actions">DEC</span>
                 </div>
                 <div className="card-main">
-                  <span className="card-value text-success">{recommendedActionsCount || 4}</span>
+                  <span className="card-value text-success">{recommendedActionsCount}</span>
                   <span className="card-status-text text-success">ACTION CENTER ITEMS</span>
                 </div>
                 <div className="card-footer-action">
@@ -884,7 +985,7 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
             <h3>Live Activity Log</h3>
             <span className="console-stream-status">STREAMING</span>
           </div>
-          <div className="dashboard-console-logs">
+          <div className="dashboard-console-logs" role="log" aria-live="polite">
             {activeDataset.logs && activeDataset.logs.length > 0 ? (
               activeDataset.logs.map((log: any, idx: number) => (
                 <div className="console-log-line" key={idx}>
@@ -1525,28 +1626,35 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                     <ReferenceLine y={1.2} stroke="var(--border-color)" strokeDasharray="3 3" />
                   </AreaChart>
                 ) : activeChartTab === 'weights' ? (
-                  <BarChart data={featureWeights} layout="vertical" margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.3} horizontal={false} />
-                    <XAxis type="number" stroke="var(--text-secondary)" fontSize={10} tickLine={false} />
-                    <YAxis dataKey="name" type="category" stroke="var(--text-secondary)" fontSize={10} tickLine={false} width={80} />
-                    <Tooltip 
-                      contentStyle={{ background: 'var(--card-bg)', borderColor: 'var(--border-color)', borderRadius: '6px' }}
-                      itemStyle={{ color: 'var(--text-primary)', fontSize: '12px' }}
-                    />
-                    <Bar dataKey="weight" radius={[0, 4, 4, 0]} barSize={12}>
-                      {featureWeights.map((entry: any, index: number) => {
-                        const isHighlighted = entry.name === highlightedFeature;
-                        return (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={isHighlighted ? 'var(--accent-color)' : 'var(--text-muted)'}
-                            opacity={isHighlighted ? 1 : 0.4}
-                            style={{ transition: 'fill 0.3s ease' }}
-                          />
-                        );
-                      })}
-                    </Bar>
-                  </BarChart>
+                  featureWeights.length > 0 ? (
+                    <BarChart data={featureWeights} layout="vertical" margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.3} horizontal={false} />
+                      <XAxis type="number" stroke="var(--text-secondary)" fontSize={10} tickLine={false} />
+                      <YAxis dataKey="name" type="category" stroke="var(--text-secondary)" fontSize={10} tickLine={false} width={80} />
+                      <Tooltip 
+                        contentStyle={{ background: 'var(--card-bg)', borderColor: 'var(--border-color)', borderRadius: '6px' }}
+                        itemStyle={{ color: 'var(--text-primary)', fontSize: '12px' }}
+                      />
+                      <Bar dataKey="weight" radius={[0, 4, 4, 0]} barSize={12}>
+                        {featureWeights.map((entry: any, index: number) => {
+                          const isHighlighted = entry.name === highlightedFeature;
+                          return (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={isHighlighted ? 'var(--accent-color)' : 'var(--text-muted)'}
+                              opacity={isHighlighted ? 1 : 0.4}
+                              style={{ transition: 'fill 0.3s ease' }}
+                            />
+                          );
+                        })}
+                      </Bar>
+                    </BarChart>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', fontSize: '0.85rem', gap: '0.5rem', textAlign: 'center', padding: '1rem' }}>
+                      <Activity size={24} style={{ opacity: 0.5 }} />
+                      <span>No feature attribution data available. Train a predictive model to extract feature importances.</span>
+                    </div>
+                  )
                 ) : activeChartTab === 'anomalies' ? (
                   <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.3} />
@@ -1627,19 +1735,19 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
                 <>
                   <div className="metric-box">
                     <span className="lbl">R² Score</span>
-                    <span className="val">{(activeDataset.mlResult?.metrics?.r2_score || 0.885).toFixed(3)}</span>
+                    <span className="val">{activeDataset.mlResult?.metrics?.r2_score !== undefined ? activeDataset.mlResult.metrics.r2_score.toFixed(3) : '--'}</span>
                   </div>
                   <div className="metric-box">
                     <span className="lbl">MSE</span>
-                    <span className="val">{(activeDataset.mlResult?.metrics?.mse || 1245.8).toFixed(1)}</span>
+                    <span className="val">{activeDataset.mlResult?.metrics?.mse !== undefined ? activeDataset.mlResult.metrics.mse.toFixed(1) : '--'}</span>
                   </div>
                   <div className="metric-box">
                     <span className="lbl">RMSE</span>
-                    <span className="val">{(activeDataset.mlResult?.metrics?.mse ? Math.sqrt(activeDataset.mlResult.metrics.mse) : 35.3).toFixed(1)}</span>
+                    <span className="val">{activeDataset.mlResult?.metrics?.rmse !== undefined ? activeDataset.mlResult.metrics.rmse.toFixed(1) : (activeDataset.mlResult?.metrics?.mse !== undefined ? Math.sqrt(activeDataset.mlResult.metrics.mse).toFixed(1) : '--')}</span>
                   </div>
                   <div className="metric-box">
                     <span className="lbl">OOB Score</span>
-                    <span className="val">{(activeDataset.mlResult?.metrics?.oob_score || 0.874 * 100).toFixed(1)}%</span>
+                    <span className="val">{activeDataset.mlResult?.metrics?.oob_score !== undefined ? `${(activeDataset.mlResult.metrics.oob_score * 100).toFixed(1)}%` : '--'}</span>
                   </div>
                 </>
               )}
@@ -1661,120 +1769,165 @@ export function Dashboard({ activeDataset, datasets, onSelectDataset, onNavigate
           {/* Table 1: Correlation Matrix */}
           <div className="raw-table-card">
             <h4 className="table-subtitle">Pearson Correlation Matrix</h4>
-            <div className="correlation-matrix-grid">
-              <table className="correlation-matrix-table">
-                <thead>
-                  <tr>
-                    <th>Feature</th>
-                    <th>dropout_risk</th>
-                    <th>absences</th>
-                    <th>gpa_cumulative</th>
-                    <th>study_hours</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>dropout_risk</strong></td>
-                    <td className="heat-cell v-1">1.00</td>
-                    <td className="heat-cell v-high">0.74</td>
-                    <td className="heat-cell v-neg-high">-0.62</td>
-                    <td className="heat-cell v-neg-mid">-0.48</td>
-                  </tr>
-                  <tr>
-                    <td><strong>absences</strong></td>
-                    <td className="heat-cell v-high">0.74</td>
-                    <td className="heat-cell v-1">1.00</td>
-                    <td className="heat-cell v-neg-high">-0.51</td>
-                    <td className="heat-cell v-neg-low">-0.24</td>
-                  </tr>
-                  <tr>
-                    <td><strong>gpa_cumulative</strong></td>
-                    <td className="heat-cell v-neg-high">-0.62</td>
-                    <td className="heat-cell v-neg-high">-0.51</td>
-                    <td className="heat-cell v-1">1.00</td>
-                    <td className="heat-cell v-mid">0.59</td>
-                  </tr>
-                  <tr>
-                    <td><strong>study_hours</strong></td>
-                    <td className="heat-cell v-neg-mid">-0.48</td>
-                    <td className="heat-cell v-neg-low">-0.24</td>
-                    <td className="heat-cell v-mid">0.59</td>
-                    <td className="heat-cell v-1">1.00</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            {(() => {
+              const matrix = activeDataset?.analyticsData?.correlation_matrix;
+              const cols = matrix ? Object.keys(matrix) : [];
+              if (!matrix || cols.length === 0) {
+                return (
+                  <div className="table-empty-state" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                    No correlation matrix available. Upload and analyze continuous numerical data.
+                  </div>
+                );
+              }
+              return (
+                <div className="correlation-matrix-grid table-scroll-container">
+                  <table className="correlation-matrix-table">
+                    <thead>
+                      <tr>
+                        <th>Feature</th>
+                        {cols.map(c => (
+                          <th key={c} title={c}>{c.length > 14 ? `${c.slice(0, 12)}…` : c}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cols.map(row => (
+                        <tr key={row}>
+                          <td><strong title={row}>{row.length > 14 ? `${row.slice(0, 12)}…` : row}</strong></td>
+                          {cols.map(col => {
+                            const val = matrix[row]?.[col];
+                            if (val === null || val === undefined || typeof val !== 'number') {
+                              return <td key={col} className="heat-cell">--</td>;
+                            }
+                            const absVal = Math.abs(val);
+                            let cellClass = 'heat-cell';
+                            if (absVal >= 0.99) cellClass += ' v-1';
+                            else if (val >= 0.6) cellClass += ' v-high';
+                            else if (val >= 0.3) cellClass += ' v-mid';
+                            else if (val <= -0.6) cellClass += ' v-neg-high';
+                            else if (val <= -0.3) cellClass += ' v-neg-mid';
+                            else if (val < 0) cellClass += ' v-neg-low';
+                            return (
+                              <td key={col} className={cellClass}>
+                                {val.toFixed(2)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Table 2: Raw Feature Attribution weights */}
           <div className="raw-table-card">
             <h4 className="table-subtitle">Gini Impurity Feature Weights</h4>
-            <table className="correlation-matrix-table">
-              <thead>
-                <tr>
-                  <th>Feature Rank</th>
-                  <th>Feature Name</th>
-                  <th>Weight Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {featureWeights.map((fw: any, idx: number) => (
-                  <tr key={idx}>
-                    <td><strong>#{idx + 1}</strong></td>
-                    <td>{fw.name}</td>
-                    <td>{(fw.weight).toFixed(4)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {featureWeights.length > 0 ? (
+              <div className="table-scroll-container">
+                <table className="correlation-matrix-table">
+                  <thead>
+                    <tr>
+                      <th>Feature Rank</th>
+                      <th>Feature Name</th>
+                      <th>Weight Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {featureWeights.map((fw: any, idx: number) => (
+                      <tr key={idx}>
+                        <td><strong>#{idx + 1}</strong></td>
+                        <td>{fw.name}</td>
+                        <td>{(fw.weight).toFixed(4)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="table-empty-state" style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                No feature attribution weights available. Train a predictive model to evaluate feature importance.
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Contextual Investigation Modal: Progressive Decomposition Chain (InsightGrid V1.4 Iteration 2) */}
       {activeInvestigationModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.65)',
-          backdropFilter: 'blur(5px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1rem'
-        }}>
-          <div className="card animate-fade-in" style={{
-            maxWidth: '680px',
-            width: '100%',
-            background: 'var(--card-bg)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '14px',
-            padding: '1.5rem',
-            boxShadow: '0 25px 35px -5px rgba(0, 0, 0, 0.6)',
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setActiveInvestigationModal(null);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(5px)',
             display: 'flex',
-            flexDirection: 'column',
-            maxHeight: '90vh'
-          }}>
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 'var(--z-modal, 1000)' as any,
+            padding: '1rem'
+          }}
+        >
+          <div 
+            ref={modalContainerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="investigation-dialog-title"
+            aria-describedby="investigation-dialog-desc"
+            className="card animate-fade-in" 
+            style={{
+              maxWidth: '680px',
+              width: '100%',
+              background: 'var(--card-bg)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-xl, 14px)',
+              padding: '1.5rem',
+              boxShadow: 'var(--shadow-modal, 0 25px 35px -5px rgba(0, 0, 0, 0.6))',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: '90vh'
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Search size={18} className="text-accent" />
-                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                <h3 id="investigation-dialog-title" style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
                   Investigation: {activeInvestigationModal.primary_feature}
                 </h3>
               </div>
               <button 
+                ref={modalCloseBtnRef}
                 onClick={() => setActiveInvestigationModal(null)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}
+                aria-label="Close investigation dialog"
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: 'var(--text-secondary)', 
+                  cursor: 'pointer', 
+                  fontSize: '1.2rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '44px',
+                  minHeight: '44px',
+                  borderRadius: 'var(--radius-sm, 4px)'
+                }}
               >
                 ✕
               </button>
             </div>
 
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+            <p id="investigation-dialog-desc" style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
               {activeInvestigationModal.summary}
             </p>
 

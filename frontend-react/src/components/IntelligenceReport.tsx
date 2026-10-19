@@ -43,21 +43,20 @@ export function IntelligenceReport({ activeDataset }: IntelligenceReportProps) {
   const chartData = generateChartData();
 
   // Feature weights data simulation
+  // Grounded feature weights extraction
   const getFeatureWeights = () => {
-    if (activeDataset?.processedData?.columns && activeDataset?.status?.isModelTrained) {
-      return activeDataset.processedData.columns.slice(0, 6).map((col: string, idx: number) => ({
-        name: col,
-        weight: 0.35 - (idx * 0.05) > 0.05 ? Number((0.35 - (idx * 0.05)).toFixed(3)) : 0.05
+    if (activeDataset?.mlResult?.feature_importance && Object.keys(activeDataset.mlResult.feature_importance).length > 0) {
+      return Object.entries(activeDataset.mlResult.feature_importance)
+        .map(([name, weight]) => ({ name, weight: Number(weight) }))
+        .sort((a, b) => b.weight - a.weight);
+    }
+    if (Array.isArray(activeDataset?.mlResult?.drivers) && activeDataset.mlResult.drivers.length > 0) {
+      return activeDataset.mlResult.drivers.map((d: any) => ({
+        name: d.feature || d.name,
+        weight: typeof d.importance === 'number' ? d.importance : (typeof d.weight === 'number' ? d.weight : 0)
       }));
     }
-    return [
-      { name: 'dropout_risk', weight: 0.342 },
-      { name: 'absences', weight: 0.231 },
-      { name: 'gpa_cumulative', weight: 0.189 },
-      { name: 'study_hours', weight: 0.112 },
-      { name: 'age_encoded', weight: 0.082 },
-      { name: 'gender', weight: 0.044 }
-    ];
+    return [];
   };
 
   const featureWeights = getFeatureWeights();
@@ -65,12 +64,16 @@ export function IntelligenceReport({ activeDataset }: IntelligenceReportProps) {
 
   // Executive Summary text generation
   const getExecutiveSummaryText = () => {
-    const outlierCount = activeDataset.anomalyResult?.anomalies_detected || 0;
+    const outlierCount = activeDataset.anomalyResult?.anomalies_detected ?? 0;
     const predSummary = activeDataset.mlResult?.prediction?.summary || "Target outcome analyzed across validation splits.";
-    const reliability = activeDataset.mlResult?.reliability || "High";
+    const reliability = activeDataset.mlResult?.reliability || (activeDataset.mlResult ? "High" : "Standby");
     const topFeature = (activeDataset.mlResult?.drivers && activeDataset.mlResult.drivers.length > 0)
       ? activeDataset.mlResult.drivers[0].feature
-      : (featureWeights[0]?.name || 'Primary Factor');
+      : (featureWeights[0]?.name || null);
+
+    const driverSentence = topFeature
+      ? `Statistical analysis highlights "${topFeature}" as a primary influencing factor on outcomes.`
+      : "Predictive feature attribution analysis is on standby awaiting model training.";
 
     return `This executive intelligence report summarizes the analytical findings and predictive evaluation for the "${activeDataset.name}" dataset.
 
@@ -78,19 +81,21 @@ Key Findings & Predictive Outcomes:
 ${predSummary} (Reliability Assessment: ${reliability}).
 
 Analytical Drivers & Risk Patterns:
-Statistical analysis highlights "${topFeature}" as a primary influencing factor on outcomes. Additionally, multivariate outlier screening flagged ${outlierCount} distinct anomaly records that warrant targeted operational review.
+${driverSentence} Additionally, multivariate outlier screening flagged ${outlierCount} distinct anomaly records that warrant targeted operational review.
 
 Recommended Next Actions:
 Focus operational initiatives on the primary influencing factors and review flagged outlier records in the detailed diagnostics section to support data-driven decision-making.`;
   };
 
   const renderHeatmapTable = () => {
-    const matrix = activeDataset.analyticsData?.correlation_matrix || {
-      'dropout_risk': { 'dropout_risk': 1.0, 'absences': 0.74, 'gpa_cumulative': -0.62, 'study_hours': -0.48 },
-      'absences': { 'dropout_risk': 0.74, 'absences': 1.0, 'gpa_cumulative': -0.51, 'study_hours': -0.24 },
-      'gpa_cumulative': { 'dropout_risk': -0.62, 'absences': -0.51, 'gpa_cumulative': 1.0, 'study_hours': 0.59 },
-      'study_hours': { 'dropout_risk': -0.48, 'absences': -0.24, 'gpa_cumulative': 0.59, 'study_hours': 1.0 }
-    };
+    const matrix = activeDataset.analyticsData?.correlation_matrix;
+    if (!matrix || Object.keys(matrix).length === 0) {
+      return (
+        <div style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+          No correlation matrix available for this dataset. Upload and analyze continuous numerical data.
+        </div>
+      );
+    }
     const cols = Object.keys(matrix);
     return (
       <table className="report-correlation-matrix-table">
@@ -105,7 +110,10 @@ Focus operational initiatives on the primary influencing factors and review flag
             <tr key={row}>
               <td style={{ fontWeight: 'bold' }}>{row}</td>
               {cols.map(col => {
-                const val = matrix[row][col];
+                const val = matrix[row]?.[col];
+                if (val === null || val === undefined || typeof val !== 'number') {
+                  return <td key={col}>--</td>;
+                }
                 const absVal = Math.abs(val);
                 const bgColor = val > 0 
                   ? `rgba(212, 175, 55, ${absVal * 0.3})` 
@@ -124,12 +132,14 @@ Focus operational initiatives on the primary influencing factors and review flag
   };
 
   const renderStatsTable = () => {
-    const stats = activeDataset.analyticsData?.descriptive_statistics || {
-      'dropout_risk': { 'count': 5000, 'mean': 0.18, 'std': 0.38, 'min': 0, 'max': 1 },
-      'absences': { 'count': 5000, 'mean': 3.12, 'std': 2.45, 'min': 0, 'max': 15 },
-      'gpa_cumulative': { 'count': 5000, 'mean': 2.85, 'std': 0.74, 'min': 1.2, 'max': 4.0 },
-      'study_hours': { 'count': 5000, 'mean': 12.4, 'std': 5.21, 'min': 2, 'max': 30 }
-    };
+    const stats = activeDataset.analyticsData?.descriptive_statistics;
+    if (!stats || Object.keys(stats).length === 0) {
+      return (
+        <div style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+          No descriptive statistics available for this dataset.
+        </div>
+      );
+    }
     const cols = Object.keys(stats);
     return (
       <table className="report-stats-table">
@@ -145,7 +155,7 @@ Focus operational initiatives on the primary influencing factors and review flag
               <td style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>{stat}</td>
               {cols.map(col => (
                 <td key={col}>
-                  {stats[col][stat] !== undefined ? stats[col][stat].toLocaleString(undefined, { maximumFractionDigits: 3 }) : '-'}
+                  {stats[col]?.[stat] !== undefined ? Number(stats[col][stat]).toLocaleString(undefined, { maximumFractionDigits: 3 }) : '-'}
                 </td>
               ))}
             </tr>
@@ -252,11 +262,11 @@ Focus operational initiatives on the primary influencing factors and review flag
             <div className="dataset-structure-grid">
               <div className="struct-card">
                 <span className="lbl">Total Rows</span>
-                <span className="val">{activeDataset.stats?.rows?.toLocaleString() || '5,000'}</span>
+                <span className="val">{activeDataset.stats?.rows !== undefined ? activeDataset.stats.rows.toLocaleString() : (activeDataset.understanding?.row_count !== undefined ? activeDataset.understanding.row_count.toLocaleString() : '--')}</span>
               </div>
               <div className="struct-card">
                 <span className="lbl">Total Columns</span>
-                <span className="val">{activeDataset.stats?.columns || '18'}</span>
+                <span className="val">{activeDataset.stats?.columns !== undefined ? activeDataset.stats.columns : (activeDataset.understanding?.column_count !== undefined ? activeDataset.understanding.column_count : '--')}</span>
               </div>
               <div className="struct-card">
                 <span className="lbl">Target Variable</span>
@@ -323,14 +333,20 @@ Focus operational initiatives on the primary influencing factors and review flag
               Gini impurity importance values for predicting the target variable <code>{targetCol}</code>:
             </p>
             <div className="report-chart-container" style={{ width: '100%', height: 260 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={featureWeights} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                  <XAxis type="number" stroke="#475569" fontSize={10} />
-                  <YAxis dataKey="name" type="category" stroke="#475569" fontSize={10} width={100} />
-                  <Bar dataKey="weight" fill="#D4AF37" radius={[0, 4, 4, 0]} barSize={14} isAnimationActive={false} />
-                </BarChart>
-              </ResponsiveContainer>
+              {featureWeights.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={featureWeights} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                    <XAxis type="number" stroke="#475569" fontSize={10} />
+                    <YAxis dataKey="name" type="category" stroke="#475569" fontSize={10} width={100} />
+                    <Bar dataKey="weight" fill="#D4AF37" radius={[0, 4, 4, 0]} barSize={14} isAnimationActive={false} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.88rem', border: '1px dashed #cbd5e1', borderRadius: '6px' }}>
+                  Feature attribution weights unavailable. Train a predictive model to evaluate feature importance.
+                </div>
+              )}
             </div>
           </div>
 
@@ -356,9 +372,9 @@ Focus operational initiatives on the primary influencing factors and review flag
               </ResponsiveContainer>
             </div>
             <div className="anomaly-drivers-box">
-              <strong>Detected Anomalies:</strong> {activeDataset.anomalyResult?.anomalies_detected || 3} vectors | 
+              <strong>Detected Anomalies:</strong> {activeDataset.anomalyResult?.anomalies_detected !== undefined ? activeDataset.anomalyResult.anomalies_detected : '--'} vectors | 
               <strong> Contamination Parameter:</strong> 5.0% | 
-              <strong> Leading Driver:</strong> <code>{featureWeights[0]?.name || 'contract_type'}</code>
+              <strong> Leading Driver:</strong> <code>{featureWeights[0]?.name || activeDataset.mlResult?.drivers?.[0]?.feature || '--'}</code>
             </div>
           </div>
         </div>

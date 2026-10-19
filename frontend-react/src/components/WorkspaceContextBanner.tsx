@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWorkspace } from '../context/WorkspaceContext';
+import { useWorkspace } from '../context/useWorkspace';
 import { Search, Brain, MessageSquareCode, TrendingUp, X, Database } from 'lucide-react';
 import './WorkspaceContextBanner.css';
 

@@ -1,99 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap');
+@import './styles/tokens.css';
 
-:root {
-  /* Premium Light Theme - Warm Sand & Editorial Ivory */
-  --bg-color: #FAF8F5;          /* Light Sand background */
-  --sidebar-bg: #F5F2EB;        /* Warm Ivory sidebar */
-  --card-bg: #FFFFFF;           /* Crisp white card surface */
-  --active-card-bg: #FAF8F5;    /* Active card highlight */
-  --focused-bg: #EAE6DC;        /* Focused input/component */
-  --text-primary: #1C1917;      /* Graphite / Near Black primary text */
-  --text-secondary: #57534E;    /* Muted Graphite secondary text */
-  --text-muted: #A8A29E;        /* Sandy Stone muted captions */
-  --border-color: rgba(28, 25, 23, 0.08); /* Warm border overlay */
-  
-  --accent-rgb: 212, 175, 55;   /* Metallic Gold RGB */
-  --accent-color: #D4AF37;      /* Metallic Gold */
-  --accent-hover: #B59328;      /* Muted Gold hover */
-  --accent-light: rgba(212, 175, 55, 0.05);
-  --accent-border: rgba(212, 175, 55, 0.15);
-
-  --yellow-hover-bg: #FAF6E8;   /* Warm Ivory hover highlight */
-  --yellow-hover-border: #D4AF37; /* Metallic Gold hover border */
-  --yellow-hover-glow: rgba(212, 175, 55, 0.15);
-  
-  --brand-icon-bg: #cbd5e1;
-  --brand-icon-signal-muted: #b5942b;
-  --brand-icon-signal-bright: #D4AF37;
-  --brand-icon-insight: #1c1917;
-
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  
-  --sidebar-border: rgba(28, 25, 23, 0.06);
-  
-  --font-family: 'Manrope', sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-
-  /* Card Padding & Gaps */
-  --card-padding: 1.25rem;
-  --element-gap: 1.25rem;
-  
-  /* Text Size Scale */
-  --fs-xs: 0.75rem;
-  --fs-sm: 0.8125rem;
-  --fs-base: 0.875rem;
-  --fs-md: 0.9375rem;
-  --fs-lg: 1rem;
-  --fs-xl: 1.125rem;
-  --fs-2xl: 1.25rem;
-  --fs-3xl: 1.5rem;
-  
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="dark"] {
-  /* Premium Dark Theme - Graphite & Gold Terminal */
-  --bg-color: #080808;          /* Layer 0: Near Black */
-  --sidebar-bg: #111111;        /* Layer 1: Charcoal Navigation */
-  --card-bg: #181818;           /* Layer 2: Surface Cards */
-  --active-card-bg: #202020;    /* Layer 3: Elevated Cards */
-  --focused-bg: #282828;        /* Layer 4: Focused Components */
-
-  --text-primary: #F5F2EB;      /* Warm White */
-  --text-secondary: #C9C4B8;    /* Muted Warm White */
-  --text-muted: #8E8A80;        /* Sandy Stone */
-  --border-color: rgba(255, 255, 255, 0.05); /* Faint gray borders */
-  
-  --accent-rgb: 212, 175, 55;  /* Gold Accent RGB */
-  --accent-color: #D4AF37;      /* Gold Accent */
-  --accent-hover: #E5C354;      /* Hover Gold */
-  --accent-light: rgba(212, 175, 55, 0.05);
-  --accent-border: rgba(212, 175, 55, 0.15);
-
-  --yellow-hover-bg: #201D17;   /* Warm dark sand hover */
-  --yellow-hover-border: #D4AF37; /* Metallic Gold border */
-  --yellow-hover-glow: rgba(212, 175, 55, 0.12);
-  
-  --brand-icon-bg: #2a2b30;
-  --brand-icon-signal-muted: #8a7224;
-  --brand-icon-signal-bright: #D4AF37;
-  --brand-icon-insight: #F5F2EB;
-
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-
-  --sidebar-border: rgba(255, 255, 255, 0.04);
-  
-  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
 
 /* Dynamic Font Scales */
 html[data-font-size="compact"] {
@@ -265,13 +172,35 @@ td.num, td.numeric, td.mono, td.heat-cell, .metric-val, .metric-v, .session-time
 button {
   cursor: pointer;
   font-family: inherit;
-  outline: none;
 }
 
 input, select, textarea {
   font-family: inherit;
+}
+
+/* ========================================================
+   ACCESSIBILITY: VISIBLE KEYBOARD FOCUS (ISSUE-A11Y-001)
+   ======================================================== */
+:focus {
   outline: none;
 }
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible,
+a:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
 
 /* Card Styling (Polished, flat borders, soft shadows) */
 .card {

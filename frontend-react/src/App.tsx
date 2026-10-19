@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { Hero } from './components/Hero';
 import { DataManager } from './components/DataManager';
@@ -14,7 +15,8 @@ import html2canvas from 'html2canvas';
 import { IntelligenceReport } from './components/IntelligenceReport';
 import { LandingExperience } from './components/LandingExperience';
 import { BrandIcon } from './components/BrandIcon';
-import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
+import { WorkspaceProvider } from './context/WorkspaceContext';
+import { useWorkspace } from './context/useWorkspace';
 import { WorkspaceContextBanner } from './components/WorkspaceContextBanner';
 import './App.css';
 
@@ -32,6 +34,8 @@ function AppContent() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState('dashboard');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileToggleBtnRef = useRef<HTMLButtonElement | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [viewMode, setViewMode] = useState<'product' | 'workspace'>(() => {
     return (localStorage.getItem('insightgrid-viewmode') as 'product' | 'workspace') || 'product';
@@ -215,7 +219,7 @@ function AppContent() {
       
       const candidateTargets = understandRes.data.candidate_targets || [];
       const columns = processRes.data.columns || [];
-      let targetCol = candidateTargets.length > 0 ? candidateTargets[0] : (columns[0] || 'target');
+      const targetCol = candidateTargets.length > 0 ? candidateTargets[0] : (columns[0] || 'target');
 
       addLog(id, `Training candidate models on target: ${targetCol}...`);
       const predictFormData = new FormData();
@@ -542,12 +546,44 @@ function AppContent() {
       <Sidebar 
         status={pipelineStatus} 
         currentView={currentView}
-        onNavigate={setCurrentView}
+        onNavigate={(view) => {
+          setCurrentView(view);
+          setMobileNavOpen(false);
+        }}
         activeDataset={activeDataset}
-        onExitWorkspace={handleExitWorkspace}
+        onExitWorkspace={() => {
+          handleExitWorkspace();
+          setMobileNavOpen(false);
+        }}
+        mobileOpen={mobileNavOpen}
+        onCloseMobile={() => setMobileNavOpen(false)}
+        triggerRef={mobileToggleBtnRef}
       />
       
       <main className="main-content">
+        {/* Mobile Header Bar with Hamburger Menu */}
+        <header className="mobile-header-bar">
+          <button 
+            ref={mobileToggleBtnRef}
+            type="button"
+            className="mobile-nav-toggle-btn"
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Open navigation menu"
+            aria-expanded={mobileNavOpen}
+          >
+            <Menu size={20} />
+          </button>
+          <div className="mobile-header-brand" onClick={() => setCurrentView('dashboard')}>
+            <BrandIcon size={22} className="logo-img" />
+            <span className="mobile-brand-title">INSIGHTGRID</span>
+          </div>
+          <div className="mobile-header-dataset">
+            <span className="mobile-dataset-tag" title={activeDataset?.name || 'No Dataset'}>
+              {activeDataset ? activeDataset.name.split('.')[0].slice(0, 12) : 'Standby'}
+            </span>
+          </div>
+        </header>
+
         <Hero activeDataset={activeDataset} isGeneratingReport={isGeneratingReport} />
         <WorkspaceContextBanner onNavigate={setCurrentView} />
         

@@ -87,13 +87,12 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
     { id: 'synthesis', name: 'Contextual Synthesis', status: pipelineStatus.isInsightsGenerated ? 'complete' : engineState === 'SYNTHESIZING INSIGHTS' ? 'active' : 'pending', desc: 'LLM natural language grounding' }
   ];
 
-  let progressPercentage = 0;
   const completedCount = steps.filter(s => s.status === 'complete').length;
-  if (engineState === 'COMPLETE') {
-    progressPercentage = 100;
-  } else {
-    progressPercentage = Math.round((completedCount / steps.length) * 100);
-    if (engineState !== 'IDLE' && progressPercentage < 10) progressPercentage = 10;
+  let progressPercentage = engineState === 'COMPLETE' 
+    ? 100 
+    : Math.round((completedCount / steps.length) * 100);
+  if (engineState !== 'IDLE' && progressPercentage < 10) {
+    progressPercentage = 10;
   }
 
   return (
@@ -253,7 +252,7 @@ export function Diagnostics({ activeDataset, datasets, onSelectDataset }: Diagno
               </div>
             </div>
 
-            <div className="console-output-area">
+            <div className="console-output-area" role="log" aria-live="polite">
               {filteredLogs.length === 0 ? (
                 <div className="console-empty">No trace output matches search criteria.</div>
               ) : (

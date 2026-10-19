@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, FileText, ChevronRight, Brain, Bot, Download, ShieldCheck, AlertTriangle, ArrowRight } from 'lucide-react';
-import { useWorkspace } from '../context/WorkspaceContext';
+import { useWorkspace } from '../context/useWorkspace';
 import api from '../utils/api';
 import './AIChatPage.css';
 import type { Dataset, CopilotAction } from '../types';
@@ -86,7 +86,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
         }
       ]);
     }
-  }, [activeDatasetId]);
+  }, [activeDataset]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -207,7 +207,7 @@ export function AIChatPage({ datasets, activeDatasetId, onSelectDataset, onGener
             <div className="active-grounding-meta">
               <h4 className="grounding-title">Grounded Context Elements</h4>
               <ul className="grounding-list">
-                <li><span>Target Column:</span> <strong>{workspace.prediction_context?.target || (activeDataset.mlResult ? 'dropout_risk' : 'Not set')}</strong></li>
+                <li><span>Target Column:</span> <strong>{workspace.prediction_context?.target || activeDataset.mlResult?.target_column || activeDataset.understanding?.candidate_targets?.[0] || 'Not set'}</strong></li>
                 <li><span>Features Parsed:</span> <strong>{activeDataset.stats.columns}</strong></li>
                 <li><span>Inference Mode:</span> <strong>{activeDataset.status.isModelTrained ? 'ACTIVE' : 'STANDBY'}</strong></li>
                 <li><span>Confidence Band:</span> <strong>95% CI (Fitted)</strong></li>
